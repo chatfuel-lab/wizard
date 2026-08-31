@@ -1,0 +1,654 @@
+# Chatfuel GraphQL — deals / leads operations.
+# A "deal" is a Contact with a salesStageV2 value; the Deals board is a
+# kanban over contacts grouped by the 6 fixed stages:
+# New, Sorting, Ready, WorkingOn, Won, Lost.
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+
+fragment DealAssignee on ContactAssignee {
+  __typename
+  ... on PublicUserAccount {
+    id
+    name
+    isUnknown
+    profilePicture {
+      id
+      url
+    }
+  }
+  ... on FuelyAIAssignee {
+    fakeField
+  }
+}
+
+# A deal's money and dates are CUSTOM CONTACT ATTRIBUTES — there is no Deal
+# entity. `value` is a single object, and for a CUSTOM attribute the server
+# answers the String branch. The other branches are selected anyway so a system
+# attribute still reads correctly.
+fragment DealAttributeValue on BotAttributeValue {
+  __typename
+  ... on BotAttributeValueString {
+    stringValue
+  }
+  ... on BotAttributeValueLong {
+    longValue
+  }
+  ... on BotAttributeValueDouble {
+    doubleValue
+  }
+  ... on BotAttributeValueBoolean {
+    booleanValue
+  }
+  ... on BotAttributeValueDatetime {
+    datetimeValue
+  }
+}
+
+fragment DealAttribute on ContactAttribute {
+  id
+  attr {
+    name
+    type
+    dataType
+  }
+  value {
+    ...DealAttributeValue
+  }
+}
+
+# __typename on Contact is REQUIRED — without it fields come back missing.
+#
+# `attributes(names:)` needs $fieldNames declared by EVERY operation that
+# spreads this fragment. Pass the configured deal-field names — never null,
+# which means every attribute the contact has. Names that do not exist yet are
+# silently omitted from the result rather than erroring, so the board can ask
+# for all of them from the first render.
+fragment DealContact on Contact {
+  __typename
+  id
+  name
+  profilePictureUrl
+  updatedAt
+  salesStageV2
+  lastSalesStageUpdateTime
+  lastConversationMessageTime
+  unreadMessagesCount
+  unhandledSwitchToHuman
+  note
+  assignee {
+    ...DealAssignee
+  }
+  conversation {
+    __typename
+    id
+    status
+  }
+  attributes(names: $fieldNames) {
+    ...DealAttribute
+  }
+  ... on WhatsappContact {
+    phone
+  }
+}
+
+# The detail panel: everything on the card plus the conversation platform.
+fragment DealDetail on Contact {
+  ...DealContact
+  conversation {
+    __typename
+    id
+    status
+    platform
+  }
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# One kanban column per query — salesStageV2Filter is SINGULAR here
+# (unlike the chat list, which takes a list). Run one query per stage.
+query DealsColumn(
+  $botID: BotID!
+  $first: Int!
+  $after: ContactSearchCursor
+  $assigneeFilter: ContactAssigneeFilter!
+  $stage: SalesStageV2!
+  $fieldNames: [AttributeName!]
+) {
+  bot(id: $botID) {
+    id
+    contactDealsConnection(
+      first: $first
+      after: $after
+      assigneeFilter: $assigneeFilter
+      salesStageV2Filter: $stage
+    ) {
+      edges {
+        cursor
+        node {
+          ...DealContact
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+# Per-stage totals. (contactDealsTotalsByStages is not in this schema — use this.)
+query DealsTotals($botID: BotID!, $filter: DealsByStagesFilter!) {
+  bot(id: $botID) {
+    id
+    contactDealsByStages(filter: $filter) {
+      New
+      Sorting
+      Ready
+      WorkingOn
+      Won
+      Lost
+    }
+  }
+}
+
+# ============================================================
+# Mutations
+# ============================================================
+
+# Move a deal to another stage (kanban drag & drop).
+mutation DealSetStage($contactID: ContactID!, $stage: SalesStageV2!) {
+  contactSetSalesStage(id: $contactID, salesStageV2: $stage) {
+    __typename
+    id
+    salesStageV2
+    lastSalesStageUpdateTime
+    updatedAt
+  }
+}
+
+# ============================================================
+# Subscriptions
+# ============================================================
+
+# Board live updates. Handle BOTH union branches; on Add/Update re-insert
+# the edge into the right column sorted by lastSalesStageUpdateTime desc,
+# on Remove drop it from every column.
+subscription DealsUpdates(
+  $botID: BotID!
+  $assigneeFilter: ContactAssigneeFilter!
+  $fieldNames: [AttributeName!]
+) {
+  contactsDealUpdates(botID: $botID, assigneeFilter: $assigneeFilter) {
+    __typename
+    ... on ContactListUpdateStopped {
+      willResumeAt
+    }
+    ... on ContactsDealUpdatesBatch {
+      updates {
+        action
+        edge {
+          cursor
+          node {
+            ...DealContact
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Deal fields — custom contact attributes
+# ============================================================
+
+# The attribute catalog, used ONLY to resolve aliases: a bot may already carry
+# "Deal Amount" or a localized name, and binding to it beats silently creating
+# a second attribute beside it. Nothing waits on this query — unknown names are
+# omitted from contact.attributes rather than erroring, so the board asks for
+# every configured name from the first render.
+#
+# Call it twice: once for a general page, once with inputSubstring: "deal", so
+# the names still surface on a bot with hundreds of attributes.
+query DealFieldsCatalog(
+  $botID: BotID!
+  $locale: DashboardLocale!
+  $platforms: [Platform!]!
+  $attributeTypes: [AttributeType!]!
+  $filters: [BotAttributeFilter!]!
+  $orderBy: BotAttributeOrderByInput!
+  $inputSubstring: String
+  $first: Int
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: $locale
+      platforms: $platforms
+      attributeTypes: $attributeTypes
+      filters: $filters
+      orderBy: $orderBy
+      inputSubstring: $inputSubstring
+      first: $first
+    ) {
+      edges {
+        node {
+          botAttribute {
+            name
+            type
+            dataType
+            aliases {
+              locale
+              alias
+            }
+          }
+          usersCount
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# ============================================================
+# Detail panel
+# ============================================================
+
+query DealGet($botID: BotID!, $contactID: ContactID!, $fieldNames: [AttributeName!]) {
+  bot(id: $botID) {
+    id
+    contact(id: $contactID) {
+      ...DealDetail
+    }
+  }
+}
+
+# One open deal, live. Unlike the board subscription this takes a contactID,
+# so an edit made anywhere else lands in the panel without a refetch.
+subscription DealLiveContact(
+  $botID: BotID!
+  $contactID: ContactID!
+  $fieldNames: [AttributeName!]
+) {
+  contactUpdated(botID: $botID, contactID: $contactID) {
+    ...DealDetail
+  }
+}
+
+# The owner picker. assigneeID for contactSetAssignee is member.user.id — a
+# UserAccountID — NOT member.id, which is a BotTeamMemberID.
+query DealsTeam($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    members {
+      id
+      role {
+        roleTypeV2
+      }
+      user {
+        id
+        name
+        isUnknown
+        profilePicture {
+          id
+          url
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutations — fields, name, note, assignee
+# ============================================================
+
+# attrValue is always a String. The module's canonical forms: money "1500.50"
+# with no symbol or separators, dates as MILLISECOND timestamps, percent as a
+# bare integer. Writing an attribute that does not exist yet creates it —
+# that is how a deal field comes into being.
+#
+# Do NOT reach for botAttributeCreateDefaultVal to "create" a field: it sets a
+# BOT-WIDE default value, so every contact would read back a non-empty
+# "deal amount" and every IS_NOT_EMPTY heuristic would die.
+mutation DealSetField(
+  $contactID: ContactID!
+  $attrName: AttributeName!
+  $attrValue: String!
+  $fieldNames: [AttributeName!]
+) {
+  contactAttributeUpdate(id: $contactID, attrName: $attrName, attrValue: $attrValue) {
+    ...DealDetail
+  }
+}
+
+# Clearing a field is a DELETE, not a write of "". An empty string is a value:
+# it would keep the attribute alive and counted.
+mutation DealClearField(
+  $contactID: ContactID!
+  $attrName: AttributeName!
+  $fieldNames: [AttributeName!]
+) {
+  contactAttributeDelete(id: $contactID, attrName: $attrName) {
+    ...DealDetail
+  }
+}
+
+mutation DealRename($contactID: ContactID!, $name: String!) {
+  contactUpdateName(id: $contactID, name: $name) {
+    __typename
+    id
+    name
+  }
+}
+
+mutation DealSetNote($contactID: ContactID!, $note: String) {
+  contactSetNote(id: $contactID, note: $note) {
+    __typename
+    id
+    note
+  }
+}
+
+mutation DealAssign(
+  $contactID: ContactID!
+  $assigneeID: UserAccountID!
+  $fieldNames: [AttributeName!]
+) {
+  contactSetAssignee(id: $contactID, assigneeID: $assigneeID) {
+    ...DealDetail
+  }
+}
+
+mutation DealAssignAI($contactID: ContactID!, $fieldNames: [AttributeName!]) {
+  contactSetFuelyAIAssignee(id: $contactID) {
+    ...DealDetail
+  }
+}
+
+mutation DealUnassign($contactID: ContactID!, $fieldNames: [AttributeName!]) {
+  contactRemoveAssignee(id: $contactID) {
+    ...DealDetail
+  }
+}
+
+# ============================================================
+# Table view — engine B (contactChatsConnection)
+# ============================================================
+# The unlock: salesStageV2Filter is a LIST here, so one query isolates deals
+# across all six stages AND searches server-side over name + phone. Sort is
+# fixed to lastConversationMessageTime desc — there is no orderBy.
+#
+# Trap: the CONNECTION has no time arguments; only ContactChatsCountFilter
+# carries lastMessageTimeAfter/Before. Never offer a time filter on the table:
+# the rows would be filtered client-side while the count came from the server,
+# and the two numbers would disagree by construction.
+#
+# Deals with no conversation may or may not appear here — the SDL does not say.
+# Do not guess: compare this count against DealsTotals and state the difference
+# ("showing 118 of 124 deals; 6 have no conversation") when it is non-zero.
+
+query DealsTableChats(
+  $botID: BotID!
+  $first: Int!
+  $after: ContactSearchCursor
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $stages: [SalesStageV2!]!
+  $textInputFilter: String
+  $fieldNames: [AttributeName!]
+) {
+  bot(id: $botID) {
+    id
+    contactChatsConnection(
+      first: $first
+      after: $after
+      assigneeFilter: $assigneeFilter
+      unreadOnly: $unreadOnly
+      salesStageV2Filter: $stages
+      textInputFilter: $textInputFilter
+    ) {
+      edges {
+        cursor
+        node {
+          ...DealContact
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+query DealsTableCount($botID: BotID!, $filter: ContactChatsCountFilter!) {
+  bot(id: $botID) {
+    id
+    contactChatsCountV2(filter: $filter)
+  }
+}
+
+# Live table. Its arguments must match DealsTableChats EXACTLY (minus paging)
+# or the stream and the list describe different sets — the same filter-lock
+# invariant the board's subscription holds.
+subscription DealsTableUpdates(
+  $botID: BotID!
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $stages: [SalesStageV2!]!
+  $textInputFilter: String
+  $fieldNames: [AttributeName!]
+) {
+  contactsChatUpdates(
+    botID: $botID
+    assigneeFilter: $assigneeFilter
+    unreadOnly: $unreadOnly
+    salesStageV2Filter: $stages
+    textInputFilter: $textInputFilter
+  ) {
+    __typename
+    ... on ContactListUpdateStopped {
+      willResumeAt
+    }
+    ... on ContactsChatUpdatesBatch {
+      updates {
+        action
+        edge {
+          cursor
+          node {
+            ...DealContact
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Table view — engine C (contactsConnection + SegmentInput)
+# ============================================================
+# Arbitrary attribute predicates and sort on ANY attribute name — at the cost
+# of deal isolation (SegmentInput cannot reach salesStageV2) and of live
+# updates (there is no subscription for this shape). Route here only when a
+# filter needs predicates or a sort engine B cannot express, and say so in the
+# UI. Custom attributes always report dataType String, so orderBy sorts as
+# text: "9" comes after "1000".
+
+query DealsAttributeSearch(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $first: Int!
+  $after: ContactSearchCursor
+  $segment: SegmentInput
+  $orderBy: ContactSearchOrderByInput
+  $fieldNames: [AttributeName!]
+) {
+  bot(id: $botID) {
+    id
+    contactsConnection(
+      platforms: $platforms
+      first: $first
+      after: $after
+      segment: $segment
+      orderBy: $orderBy
+    ) {
+      edges {
+        cursor
+        node {
+          ...DealContact
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+query DealsSegmentCount($botID: BotID!, $platforms: [Platform!]!, $segment: SegmentInput) {
+  bot(id: $botID) {
+    id
+    contactsCount(platforms: $platforms, segment: $segment)
+  }
+}
+
+# ============================================================
+# CSV export
+# ============================================================
+# Async: start returns a Task, then poll DealsExportTask or subscribe
+# DealsExportUpdated. An empty `attributes` list exports ALL attributes.
+#
+# These fragments duplicate contacts' TaskInfo/FileInfo on purpose: a module
+# may not import another module's generated documents, and reusing the same
+# fragment NAME is allowed only on a byte-identical body — a trap the day one
+# side edits. Unique names instead.
+
+fragment DealsFileInfo on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment DealsTaskInfo on Task {
+  id
+  statuses {
+    startedAt
+    type
+  }
+  completedPoints
+  totalPoints
+  deadline
+  data {
+    __typename
+    ... on CSVContactsExport {
+      id
+      file {
+        ...DealsFileInfo
+      }
+    }
+  }
+}
+
+mutation DealsExportBySegment(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $segment: SegmentInput
+  $attributes: [AttributeName!]!
+) {
+  csvContactExportStartBySegment(
+    botID: $botID
+    platforms: $platforms
+    segment: $segment
+    attributes: $attributes
+  ) {
+    ...DealsTaskInfo
+  }
+}
+
+mutation DealsExportByIDs(
+  $botID: BotID!
+  $contactIDs: [ContactID!]!
+  $attributes: [AttributeName!]!
+) {
+  csvContactExportStartByIDsList(
+    botID: $botID
+    contactIDs: $contactIDs
+    attributes: $attributes
+  ) {
+    ...DealsTaskInfo
+  }
+}
+
+query DealsExportTask($id: TaskID!) {
+  getTask(id: $id) {
+    ...DealsTaskInfo
+  }
+}
+
+subscription DealsExportUpdated($id: TaskID!) {
+  taskUpdated(id: $id) {
+    ...DealsTaskInfo
+  }
+}
+
+# Cancel takes a String!, not a TaskID! — and CSVContactsExport.id is also a
+# String!. It is the export's own id (task.data.id), not Task.id. Select both
+# and fall back to Task.id if the cancel is rejected.
+mutation DealsExportCancel($botID: BotID!, $id: String!) {
+  csvContactExportCancel(botID: $botID, id: $id) {
+    id
+    lastActiveCSVContactsExportTask {
+      ...DealsTaskInfo
+    }
+  }
+}
+
+# An export survives a page reload — pick it back up on mount.
+query DealsExportRestore($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    lastActiveCSVContactsExportTask {
+      ...DealsTaskInfo
+    }
+  }
+}
+
+# ============================================================
+# Saved views — per-user storage
+# ============================================================
+# The operations moved to the core skill as `UserStorageGet` / `UserStorageSet`.
+# They were never about deals: an arbitrary id and an arbitrary string, named
+# after the first module that happened to want them. Live chat wanted the same
+# mechanism and could not have it, because import boundaries let a module reach
+# `~api/generated/core` and its own namespace and nothing else. See
+# ../chatfuel-core/examples/operations.graphql.
+
+# ============================================================
+# Live "something changed" indicator
+# ============================================================
+
+query DealsIndicator($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    dealsPageIndicatorActive
+  }
+}
+
+subscription DealsIndicatorUpdates($botID: BotID!) {
+  contactsDealsPageIndicatorUpdates(botID: $botID) {
+    active
+  }
+}

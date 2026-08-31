@@ -1,0 +1,1262 @@
+/*
+ * Chatfuel module design tokens — Tailwind v4 CSS-first theme.
+ *
+ * This file only contributes theme variables; the APP owns the single
+ * `@import "tailwindcss";` entry, and this file must be @import-ed into that
+ * same CSS graph (separate CSS entries compile independently in v4).
+ *
+ * Components use only the semantic utilities these tokens define
+ * (bg-surface, text-text-muted, rounded-card, shadow-overlay, z-popover,
+ * duration-fast, ease-standard, …). No component carries a `dark:` variant and
+ * no component hardcodes a color — so theming, including dark mode, stays a
+ * tokens-only edit to this one file.
+ *
+ * `@theme static` keeps every variable in :root even when no utility currently
+ * uses it. Without it Tailwind tree-shakes unused theme vars, and the design
+ * system gallery — which reads token values back with getComputedStyle — would
+ * render them as a phantom "—".
+ *
+ * Palette: a neutral grey ramp and the Chatfuel violet, shared with the
+ * marketing site so a scaffolded app and the site read as one product. The
+ * names are this app's own; only the values are shared.
+ *
+ * One caveat worth knowing before reaching for `bg-accent/50`-style opacity
+ * modifiers: Tailwind compiles them to a color-mix() over the variable, guarded
+ * by @supports, with a hex fallback baked from the LIGHT value at build time.
+ * Engines with color-mix (all current ones) theme correctly; the fallback path
+ * would keep the light tint. This is also why the dark values below are mapped
+ * in duplicated blocks rather than with light-dark(), which would end up nested
+ * inside that same color-mix().
+ */
+@theme static {
+  /* ── surfaces ─────────────────────────────────────────────────────── */
+  --color-surface: #fafafb; /* page */
+  --color-surface-raised: #ffffff; /* cards, topbar, rail */
+  --color-surface-sunken: #f7f7f8; /* inset rows, chips, board columns */
+  --color-surface-hover: #eeeef0;
+  --color-surface-overlay: #ffffff; /* popover / menu / dialog panel */
+  --color-surface-inverse: #131316; /* tooltip / toast body */
+  /* Tinted fills that sit on WHATEVER is behind them — a secondary button over a
+     card, a kbd inside a menu row. Alpha rather than a grey step, so one value
+     works on every surface in the ramp. */
+  --color-translucent: rgb(19 19 22 / 0.04);
+  --color-translucent-strong: rgb(19 19 22 / 0.06);
+
+  --color-border: #e3e3e7;
+  --color-border-strong: #d9d9de; /* table column rules, sticky-header underline */
+  --color-border-subtle: #eeeef0; /* hairlines inside cards */
+
+  /* ── text ─────────────────────────────────────────────────────────── */
+  --color-text: #131316;
+  --color-text-muted: #5e5f6e;
+  --color-text-faint: #9394a1;
+  --color-text-inverse: #fafafb; /* on surface-inverse */
+
+  /* ── accent + status ──────────────────────────────────────────────── */
+  --color-accent: #7c3aed;
+  --color-accent-hover: #6d28d9;
+  --color-accent-soft: #f5f3ff;
+  --color-accent-fg: #ffffff;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-success: #16a34a;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #ea580c;
+  --color-warning-soft: #fff7ed;
+  --color-info: #2563eb;
+  --color-info-soft: #eff6ff;
+
+  /* ── interaction ──────────────────────────────────────────────────── */
+  --color-focus: #8b5cf6;
+  --color-scrim: rgb(19 19 22 / 0.4);
+  --color-row-hover: #f7f7f8;
+  --color-row-selected: #f5f3ff;
+  --color-row-selected-hover: #ede9fe;
+  --color-skeleton: #eeeef0;
+  --color-skeleton-highlight: #f7f7f8;
+  --color-control-knob: #ffffff; /* switch thumb — stays light on both tracks */
+
+  /* ── pipeline ramp ────────────────────────────────────────────────────
+     Ordered, perceptually stepped cool→warm. Six values because a sales
+     pipeline has six stages; also serves as a categorical ramp if a
+     pipeline chart lands. Terminal stages keep success/danger instead. */
+  --color-pipeline-1: #8b5cf6;
+  --color-pipeline-2: #0ea5e9;
+  --color-pipeline-3: #14b8a6;
+  --color-pipeline-4: #eab308;
+  --color-pipeline-5: #f97316;
+  --color-pipeline-6: #a855f7;
+
+  /* ── canvas semantics ─────────────────────────────────────────────────
+     A canvas is not a page: it is the one surface in the product that is
+     explicitly BEHIND everything, and the only place a 1px line has to stay
+     readable at 10% zoom and stay quiet at 250%. These are its own roles
+     rather than reuses of surface/border because a rebrand tunes a canvas by
+     a different rule than it tunes a table — the grid must recede further
+     than any border ever should, and the edges must carry more than one. */
+  --color-canvas: #f7f7f8;
+  --color-canvas-grid: #d9d9de;
+  --color-edge: #9394a1;
+  --color-edge-hover: #5e5f6e;
+  --color-edge-selected: #7c3aed;
+  /* The edge being dragged, before it has a target. */
+  --color-edge-ghost: #d9d9de;
+  --color-handle: #9394a1;
+  --color-handle-active: #7c3aed;
+  /* Marquee. The fill carries its own alpha rather than relying on an opacity
+     utility, because the rectangle is one <rect> and an opacity would fade its
+     stroke with it. */
+  --color-selection-fill: rgb(124 58 237 / 0.1);
+  --color-selection-stroke: #7c3aed;
+  /* Alignment guides — deliberately not the accent: a guide appears WHILE a
+     node is selected, and two indigo lines meeting at a selected node is one
+     line too many to read. */
+  --color-guide: #f43f5e;
+
+  /* ── chat semantics ───────────────────────────────────────────────── */
+  --color-bubble-in: #ffffff;
+  --color-bubble-in-fg: #131316;
+  --color-bubble-out: #7c3aed;
+  --color-bubble-out-fg: #f5f3ff;
+
+  /* ── run semantics ────────────────────────────────────────────────
+     A tool call's step card, which the four status colours could not spell.
+
+     `running` is not `info`. Info is an ALERT tone — a blue box with a border
+     and an icon, meaning "read this" — and a run group is four steps in a row,
+     three of which will be running at some point. Four blue alerts stacked in a
+     thread is a page of warnings about nothing. It is not `accent` either:
+     accent means "selected" everywhere else in this system, and it is the
+     outgoing chat bubble's own colour, so a running step beside a message the
+     operator just sent would read as part of it.
+
+     `skipped` is not `text-faint`. Faint is the placeholder/timestamp step of
+     the TEXT ramp, so a skipped step and the timestamp next to it would render
+     identically — and "this did not run" is a state, not a de-emphasis. It gets
+     its own neutral, one step above faint, plus the soft tint the other states
+     have, so a step's glyph chip is filled in every state rather than in three
+     of four. */
+  --color-run-active: #8b5cf6;
+  --color-run-active-soft: #f5f3ff;
+  --color-run-skipped: #7d7e8b;
+  --color-run-skipped-soft: #eeeef0;
+
+  /* ── event palette ────────────────────────────────────────────────────
+     Eight categorical tones for calendar events — one per specialist, per
+     service, per status, whatever the view colours by. Three values each:
+     the SOLID is a bar, a dot, a chart segment; the SOFT is a block fill; the
+     FG is text on that soft fill. Blue, teal, violet, pink, orange, lime,
+     cyan, fuchsia. Indigo is deliberately absent: it is the accent, and the
+     accent means "selected" everywhere in the system — a booking that
+     happened to be indigo would look picked when it is not.
+
+     Not the pipeline ramp: that one is ORDERED (cool→warm, a stage is later
+     than the one before it). Event tones are nominal — nothing about tone 5
+     is "more" than tone 2 — so they are spread round the wheel for maximum
+     distance between neighbours rather than stepped along it. */
+  --color-event-1: #3b82f6;
+  --color-event-1-soft: #dbeafe;
+  --color-event-1-fg: #1e40af;
+  --color-event-2: #14b8a6;
+  --color-event-2-soft: #ccfbf1;
+  --color-event-2-fg: #0f766e;
+  --color-event-3: #8b5cf6;
+  --color-event-3-soft: #ede9fe;
+  --color-event-3-fg: #6d28d9;
+  --color-event-4: #ec4899;
+  --color-event-4-soft: #fce7f3;
+  --color-event-4-fg: #be185d;
+  --color-event-5: #f97316;
+  --color-event-5-soft: #ffedd5;
+  --color-event-5-fg: #c2410c;
+  --color-event-6: #84cc16;
+  --color-event-6-soft: #ecfccb;
+  --color-event-6-fg: #4d7c0f;
+  --color-event-7: #06b6d4;
+  --color-event-7-soft: #cffafe;
+  --color-event-7-fg: #0e7490;
+  --color-event-8: #d946ef;
+  --color-event-8-soft: #fae8ff;
+  --color-event-8-fg: #a21caf;
+
+  /* ── calendar semantics ───────────────────────────────────────────────
+     The time grid's own roles. `now` is not `danger` even though both are
+     red: the now-line is a landmark, not a warning, and a rebrand that cools
+     the danger red must be able to leave the clock hand alone. Off-hours is
+     a shading (most of every day is off-hours, so it has to be quiet); busy
+     and blocked are hatches — busy is "someone else has this", blocked is
+     "nobody may have this" (a break, a closed day) — and available is the
+     green a free slot in the wizard turns. */
+  --color-now: #ef4444;
+  --color-off-hours: #ebebee;
+  --color-busy: #9394a1;
+  --color-busy-soft: #f7f7f8;
+  --color-blocked: #5e5f6e;
+  --color-available: #16a34a;
+  --color-available-soft: #dcfce7;
+
+  /* ── channel semantics ────────────────────────────────────────────────
+     One pair per messaging platform: the SOLID is the glyph, the SOFT is
+     the tinted circle behind it (the channel badge on an automation card,
+     the platform column in a table). Brand-adjacent, deliberately not
+     brand-exact — calm enough to sit in a row of five without one shouting,
+     and every solid clears 3:1 on its own soft in both themes (the WhatsApp
+     green is darker than the brand's for exactly that reason). Widget is the
+     product's own channel, so it is the accent, not a sixth hue. */
+  --color-channel-instagram: #d62976;
+  --color-channel-instagram-soft: #fbe7f0;
+  --color-channel-whatsapp: #1f8f4f;
+  --color-channel-whatsapp-soft: #e6f6ec;
+  --color-channel-facebook: #1877f2;
+  --color-channel-facebook-soft: #e7f0fe;
+  --color-channel-tiktok: #131316;
+  --color-channel-tiktok-soft: #eeeef0;
+  --color-channel-widget: #7c3aed;
+  --color-channel-widget-soft: #f5f3ff;
+
+  /* ── radius ───────────────────────────────────────────────────────────
+     Semantic, not a t-shirt scale: a rebrand is one edit per role. */
+  --radius-control: 0.375rem; /* buttons, inputs, selects — 6px reads as a control, 8px read as a pill at field height */
+  --radius-card: 0.75rem; /* cards, dialogs, popovers */
+  --radius-chip: 0.25rem; /* tags, kbd */
+  --radius-bubble: 1rem; /* chat bubbles */
+  --radius-island: 0.875rem; /* floating toolbars/palettes — a touch rounder than a card */
+  --radius-pill: 9999px; /* buttons — the site's shape; NOT inputs, see Button.tsx */
+
+  /* ── elevation ────────────────────────────────────────────────────────
+     Tint colors are indirected through plain :root vars (below) so the
+     dark theme re-tints all four shadows in three lines. */
+  --shadow-raised: 0 1px 2px 0 var(--elevation-tint);
+  --shadow-overlay: 0 8px 24px -6px var(--elevation-tint), 0 0 0 1px var(--elevation-ring);
+  --shadow-modal: 0 24px 48px -12px var(--elevation-tint-strong), 0 0 0 1px var(--elevation-ring);
+  --shadow-drag: 0 16px 32px -10px var(--elevation-tint-strong), 0 4px 10px -4px var(--elevation-tint);
+  /* Islands float over a canvas rather than over the page, so they sit between
+     raised and overlay: clearly detached, but not competing with a dialog. */
+  --shadow-island: 0 4px 12px -3px var(--elevation-tint), 0 0 0 1px var(--elevation-ring);
+  /* Hairline elevation — the site's card treatment. A card is a surface step plus
+     a 1px inset ring, not a lifted plane; the ring reads at any zoom and does not
+     smudge the grey ramp the way a drop shadow at 4% does. */
+  --shadow-card-inset: inset 0 0 0 1px var(--hairline-inset);
+  --shadow-secondary-button: inset 0 0 0 1px var(--hairline-ring), 0 1px 2px var(--elevation-tint);
+
+  /* ── motion ───────────────────────────────────────────────────────── */
+  --transition-duration-instant: 80ms;
+  --transition-duration-fast: 120ms;
+  --transition-duration-base: 180ms;
+  --transition-duration-slow: 260ms;
+  --transition-delay-tooltip: 400ms;
+
+  --ease-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-entrance: cubic-bezier(0.165, 0.84, 0.44, 1); /* decelerate in */
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1); /* accelerate out */
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+
+  /* ── z-index ──────────────────────────────────────────────────────────
+     One ordered ladder so no component invents a magic number.
+     NOTE the namespace is --z-index-*, not --z-* — that is what makes
+     Tailwind emit the `z-sticky` / `z-overlay` utilities. */
+  --z-index-sticky: 10; /* sticky table header, pinned first column */
+  --z-index-island: 15; /* toolbars/palettes floating over a canvas */
+  --z-index-rail: 20; /* topbar / nav rail */
+  --z-index-dropdown: 30; /* inline, non-portaled menus */
+  --z-index-drag: 40; /* drag layer */
+  --z-index-overlay: 50; /* scrim + dialog / drawer panel */
+  --z-index-popover: 60; /* portaled popovers — above modals */
+  --z-index-toast: 70;
+  --z-index-tooltip: 80;
+
+  /* ── density + chrome dimensions ──────────────────────────────────── */
+  --height-topbar: 3rem;
+  --height-field: 2.25rem;
+  --height-field-sm: 1.75rem;
+  --height-row-compact: 2rem;
+  --height-row-cozy: 2.5rem;
+  --height-row-comfortable: 3rem;
+  /* 44px — the WCAG 2.5.8 AAA target size. Opt-in via the `touch-target`
+     utility below; do NOT retune --height-field under (pointer: coarse), that
+     would resize every control in the system on any touch-capable laptop. */
+  --height-touch: 2.75rem;
+
+  /* ── time grid ────────────────────────────────────────────────────────
+     One hour of the calendar, per density, and the floor under an event.
+     PIXELS, and mirrored in lib/timeGrid.ts (HOUR_PX / MIN_EVENT_PX):
+     event geometry — top, height, the minute under the pointer — is
+     arithmetic done in JS on the same numbers the CSS rules are drawn with,
+     and lib/timeGrid.test.ts parses this file to prove they agree, the way
+     lib/layout.test.ts does for the bands. rem would break that: the rules
+     would scale with the root font size and the events would not.
+     `--height-event-min` is the height a 15-minute block is padded UP to at
+     the compact density (12px of real estate), so its one line stays legible. */
+  --height-hour-compact: 48px;
+  --height-hour-cozy: 64px;
+  --height-hour-comfortable: 80px;
+  --height-event-min: 20px;
+
+  /* ── layout band thresholds ───────────────────────────────────────────
+     The --container-* namespace generates BOTH `max-w-*` AND the container
+     query variants (`@wide:`, `@max-wide:`), so one token set does both jobs.
+     These three are the SAME numbers as lib/layout.ts's Band boundaries, and
+     lib/layout.test.ts asserts that by parsing this file — a drift here is a
+     real bug, not a style nit: at exactly 900px the CSS would say one thing
+     and the JS another.
+
+       @max-compact:  ⟺ band === 'compact'
+       @compact:      ⟺ band !== 'compact'
+       @max-wide:     ⟺ band ∈ {compact, narrow}
+       @wide:         ⟺ band ∈ {wide, inline}
+       @inline:       ⟺ band === 'inline'
+
+     PIXELS, not rem, and deliberately so: container queries in rem resolve
+     against the ROOT font size, while ResizeObserver reports pixels. A host
+     with `html { font-size: 18px }` would silently desynchronize the two. */
+  --container-compact: 600px;
+  --container-wide: 900px;
+  --container-inline: 1280px;
+
+  /* ── content measure ──────────────────────────────────────────────────
+     Same namespace, but these are max-widths for content columns, not band
+     thresholds. They also emit `@form:`-style variants; that is meaningless
+     and harmless — ignore it. */
+  --container-drawer: 26rem; /* Drawer default width: max-w-drawer */
+  --container-auth: 26rem; /* AuthLayout width="sm": sign in, reset, verify */
+  --container-auth-wide: 32rem; /* AuthLayout width="md": sign up, invite acceptance */
+  --container-form: 40rem; /* a settings form column */
+  --container-composer: 42rem; /* the column something is WRITTEN in — wider than a form, because a caption and a strip of thumbnails share it */
+  --container-prose: 44rem; /* long text */
+  --container-app: 80rem; /* centred page max width */
+
+  /* ── layout widths ────────────────────────────────────────────────────
+     Semantic roles, not a t-shirt scale — the same argument the radius block
+     makes: a rebrand is one edit per role. --width-list and --width-inspector
+     being equal today is a coincidence, not a synonym.
+     `w-*` resolves --width, --spacing and --container, so these emit w-*.
+     `max-w-*` does NOT: it reads the --container-* namespace alone, so a
+     max-width for one of these has to be written as max-w-[var(--width-…)] or
+     the rule is never generated and the element silently takes whatever width
+     its parent offers — a missing class is a missing rule, not an error. */
+  --width-rail: 3.5rem;
+  --width-rail-expanded: 13rem; /* NavRail variant="expanded" */
+  --width-nav-panel: 12rem; /* SideNav's second column, beside the group rail */
+  --width-sidenav: 16rem; /* automations ScopeNav, flow-builder FlowPicker */
+  --width-list: 20rem; /* livechat / coworker master list */
+  --width-inspector: 20rem; /* flow-builder InspectorPanel */
+  --width-panel: 24rem; /* deals detail panel */
+  --width-column: 18rem; /* deals board column — the only copy of it */
+  --width-column-rail: 2.75rem; /* collapsed board column */
+  --width-time-gutter: 3.5rem; /* time grid hour labels — wide enough for "12:00 PM" */
+  --width-time-column: 8rem; /* time grid day/resource column MINIMUM; columns flex wider */
+
+  /* ── spacing ──────────────────────────────────────────────────────────
+     `p-gutter` compiles to `padding: var(--spacing-gutter)` (verified in the
+     built CSS), so the fluid steps below re-assign the VARIABLE inside a
+     container query rather than adding responsive classes. That retunes every
+     existing p-gutter / gap-gutter in the repo at once — the same technique
+     the prefers-reduced-motion block uses on --transition-duration-*. */
+  --spacing-gutter: 1rem; /* page padding: p-gutter / gap-gutter */
+  --spacing-gutter-tight: 0.75rem;
+  --spacing-gutter-loose: 1.5rem;
+
+  /* ── viewport breakpoints ─────────────────────────────────────────────
+     Tailwind's stock values, declared explicitly so @theme static puts them
+     in :root and the gallery can read them back (Tailwind's own defaults live
+     in a non-static @theme and get tree-shaken).
+
+     These drive `content/shell` CHROME ONLY. Module code must never use sm:/md:/
+     lg:/xl:/2xl: — a module can be 700px wide inside a 2560px viewport, so the
+     viewport answers the wrong question. Use the @container variants above. */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+
+  /* ── focus ────────────────────────────────────────────────────────────
+     Defaults for the bare `ring` utility; the `focus-ring` utility below
+     is what components actually use. */
+  --default-ring-color: var(--color-focus);
+  --default-ring-width: 2px;
+
+  /* ── typography ───────────────────────────────────────────────────────
+     One family token; anything numeric that can change uses `tabular-nums`.
+
+     The size scale is SEMANTIC (role, not measurement), so a rebrand retunes
+     roles rather than hunting `text-sm` call sites. Line height is baked, but
+     WEIGHT IS NOT: the repo writes `text-sm font-semibold` and a size token
+     that silently also set weight would surprise.
+
+     Adoption is deliberately lazy — these are used by the layout primitives
+     and by lines a retrofit is already editing. There is no repo-wide
+     text-sm → text-body sweep: that is a thousand-line diff with no visible
+     change. --text-micro is the one concrete win, it retires the arbitrary
+     `text-[11px]` values. New `text-[Npx]` is banned by pass 11(h). */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Headings only, set by the base layer below. A second family is what makes a
+     heading read as one at 17px, where a weight step alone does not. */
+  --font-display: 'Manrope Variable', 'Geist Variable', ui-sans-serif, sans-serif;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.33;
+  --text-title--letter-spacing: -0.012em;
+  --text-heading: 1.0625rem;
+  --text-heading--line-height: 1.4;
+  --text-heading--letter-spacing: -0.012em;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+  --text-body--letter-spacing: -0.011em;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.5;
+  --text-label--letter-spacing: -0.013em;
+  --text-meta: 0.8125rem;
+  --text-meta--line-height: 1.5;
+  --text-meta--letter-spacing: -0.01em;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0em;
+  /* nano is a real role, not one step further down a ramp: a count or a glyph
+     centred inside a chip, a circle or a 16px hit area, where the digits are
+     small because the container is, not because the text matters less.
+
+     Its line height is 1rem rather than the 0.75rem that would "fit" 10px
+     text, because 1rem is the height those containers already are — the one
+     site that had said so out loud wrote `leading-4` beside its `text-[10px]`,
+     and that class could then be dropped rather than kept as an override.
+     (It would have won either way: Tailwind emits the size utility's height as
+     `var(--tw-leading, var(--text-nano--line-height))`, so an explicit
+     `leading-*` beats the baked value by variable, not by source order. The
+     point of 1rem is that no site has to say it.) */
+  --text-nano: 0.625rem;
+  --text-nano--line-height: 1rem;
+  --text-nano--letter-spacing: 0em;
+
+  /* The upper register. Nothing in a data-dense screen is this big; an auth
+     screen, an empty state and an onboarding panel are, and before these existed
+     they were written as one-off arbitrary sizes. Same numbers as the site. */
+  --text-title-4: 1.5rem;
+  --text-title-4--line-height: 1.33;
+  --text-title-4--letter-spacing: -0.015em;
+  --text-title-3: 2rem;
+  --text-title-3--line-height: 1.125;
+  --text-title-3--letter-spacing: -0.02em;
+  --text-title-2: 2.5rem;
+  --text-title-2--line-height: 1.1;
+  --text-title-2--letter-spacing: -0.025em;
+  --text-title-1: 3.5rem;
+  --text-title-1--line-height: 1.1;
+  --text-title-1--letter-spacing: -0.03em;
+  --text-display: 4.5rem;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.035em;
+
+  /* Tailwind's stock sizes, redefined ONTO THE SAME RAMP.
+     `text-xs` and `text-sm` have ~660 call sites between them; renaming every one
+     to a role is a blind diff with no visible change, while leaving them on
+     Tailwind's own numbers would run two type scales side by side — a 14px
+     text-sm one row above a 15px text-body. So they become aliases: text-xs IS
+     micro, text-sm IS label, text-base IS body. New code still writes roles;
+     pass 11(h) still bans text-[Npx]. */
+  --text-xs: var(--text-micro);
+  --text-xs--line-height: var(--text-micro--line-height);
+  --text-xs--letter-spacing: var(--text-micro--letter-spacing);
+  --text-sm: var(--text-label);
+  --text-sm--line-height: var(--text-label--line-height);
+  --text-sm--letter-spacing: var(--text-label--letter-spacing);
+  --text-base: var(--text-body);
+  --text-base--line-height: var(--text-body--line-height);
+  --text-base--letter-spacing: var(--text-body--letter-spacing);
+  --text-lg: var(--text-heading);
+  --text-lg--line-height: var(--text-heading--line-height);
+  --text-lg--letter-spacing: var(--text-heading--letter-spacing);
+  --text-xl: var(--text-title);
+  --text-xl--line-height: var(--text-title--line-height);
+  --text-xl--letter-spacing: var(--text-title--letter-spacing);
+  --text-2xl: var(--text-title-4);
+  --text-2xl--line-height: var(--text-title-4--line-height);
+  --text-2xl--letter-spacing: var(--text-title-4--letter-spacing);
+
+  /* ── keyframes ────────────────────────────────────────────────────────
+     Declared inside @theme so Tailwind hoists them alongside the
+     animate-* utilities. Timing functions are INLINED rather than var()
+     because the keyframe extractor scans these values literally. */
+  --animate-fade-in: fade-in 160ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-fade-out: fade-out 120ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-scale-in: scale-in 160ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-scale-out: scale-out 120ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-slide-in-right: slide-in-right 240ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-slide-out-right: slide-out-right 180ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-slide-in-left: slide-in-left 240ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-slide-out-left: slide-out-left 180ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-slide-in-bottom: slide-in-bottom 240ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-slide-out-bottom: slide-out-bottom 180ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-slide-in-top: slide-in-top 200ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-slide-out-top: slide-out-top 160ms cubic-bezier(0.3, 0, 1, 1) both;
+  --animate-shimmer: shimmer 1400ms linear infinite;
+  /* Indeterminate progress: a short bar sweeping a full-width track. Uses
+     transform rather than width so it stays on the compositor. */
+  --animate-progress: progress 1200ms cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* A refusal: the field that would not take the value nudges sideways once
+     and settles. 120ms is --transition-duration-fast, inlined for the same
+     reason the timing functions above are; components reach it as
+     `motion-safe:animate-shake`, and the reduced-motion block turns it off. */
+  --animate-shake: shake 120ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  /* The streaming caret. A hard blink rather than a fade: the two stops are 1%
+     apart, so the interpolation between them is imperceptible and the block
+     snaps on and off the way a terminal cursor does. A fade reads as a pulsing
+     highlight, which is a different signal. Reduced motion turns it off below
+     and the caret simply stands there, which still says "not finished". */
+  --animate-caret: caret 1060ms linear infinite;
+
+  /* The scrim owns the presence lifetime for the whole overlay, so its exit
+     must be at least as long as the slowest panel exit (slide-out, 180ms) —
+     otherwise the tree unmounts while the panel is still sliding. */
+  --animate-scrim-in: fade-in 180ms cubic-bezier(0.165, 0.84, 0.44, 1) both;
+  --animate-scrim-out: fade-out 180ms cubic-bezier(0.3, 0, 1, 1) both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(-2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes scale-out {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.97) translateY(-2px);
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes slide-out-right {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes slide-out-left {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes slide-in-bottom {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes slide-out-bottom {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes slide-in-top {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes slide-out-top {
+    from {
+      opacity: 1;
+      transform: none;
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+  @keyframes progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(400%);
+    }
+  }
+  @keyframes shake {
+    0%,
+    100% {
+      transform: none;
+    }
+    30% {
+      transform: translateX(-3px);
+    }
+    70% {
+      transform: translateX(3px);
+    }
+  }
+  @keyframes caret {
+    0%,
+    49% {
+      opacity: 1;
+    }
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
+/*
+ * Raw constants. These are consumed by the tokens above or read from inline
+ * styles; they are deliberately NOT in @theme, because they are not meant to
+ * generate utilities and Tailwind's var-dependency tracking could drop them.
+ */
+:root {
+  /* Cast in the foreground grey, not black: at low alpha on white, black reads as
+     dirt. The dark blocks flip all five to black/white alpha. */
+  --elevation-tint: rgb(19 19 22 / 0.06);
+  --elevation-tint-strong: rgb(19 19 22 / 0.12);
+  --elevation-ring: rgb(19 19 22 / 0.06);
+  --hairline-inset: rgb(19 19 22 / 0.04);
+  --hairline-ring: rgb(19 19 22 / 0.08);
+
+  /* ::selection, set by the base layer. Not --color-selection-fill/stroke — those
+     are the canvas marquee and are a different thing that happens to share a word. */
+  --selection-bg: #ddd6fe;
+
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* Avatar renders its deterministic per-name color as oklch(L C H), so the
+     dark theme flips four numbers instead of fourteen hex values. The hue
+     list itself lives in primitives/Avatar.tsx. */
+  --avatar-bg-l: 92%;
+  --avatar-bg-c: 0.05;
+  --avatar-fg-l: 42%;
+  --avatar-fg-c: 0.14;
+
+  /* Dark palette, declared once. The two blocks below only re-map these onto
+     the semantic names; both blocks must declare an identical property set so
+     they cannot drift apart. */
+  --dark-surface: #0b0b0e;
+  --dark-surface-raised: #131316;
+  --dark-surface-sunken: #1a1a1f;
+  --dark-surface-hover: #232329;
+  --dark-surface-overlay: #202027; /* a step ABOVE sunken: the fields inside a dialog sit on sunken */
+  --dark-surface-inverse: #fafafb;
+  --dark-translucent: rgb(255 255 255 / 0.05);
+  --dark-translucent-strong: rgb(255 255 255 / 0.08);
+  --dark-border: #2a2a31;
+  --dark-border-strong: #3a3a44;
+  --dark-border-subtle: #1f1f24;
+  --dark-text: #f4f4f6;
+  --dark-text-muted: #9394a1;
+  --dark-text-faint: #6e6f7c;
+  --dark-text-inverse: #131316;
+  --dark-accent: #8b5cf6;
+  --dark-accent-hover: #a78bfa;
+  --dark-accent-soft: #241a45;
+  --dark-accent-fg: #ffffff;
+  --dark-danger: #f87171;
+  --dark-danger-soft: #2a1416;
+  --dark-success: #4ade80;
+  --dark-success-soft: #0f2417;
+  --dark-warning: #fb923c;
+  --dark-warning-soft: #2a1a0c;
+  --dark-info: #60a5fa;
+  --dark-info-soft: #10203c;
+  --dark-focus: #a78bfa;
+  --dark-scrim: rgb(0 0 0 / 0.65);
+  --dark-row-hover: #1a1a1f;
+  --dark-row-selected: #241a45;
+  --dark-row-selected-hover: #2f2159;
+  --dark-skeleton: #1a1a1f;
+  --dark-skeleton-highlight: #26262d;
+  --dark-control-knob: #e3e3e7;
+  --dark-bubble-in: #1a1a1f;
+  --dark-bubble-in-fg: #f4f4f6;
+  --dark-bubble-out: #7c3aed;
+  --dark-bubble-out-fg: #f5f3ff;
+
+  /* Run semantics. The violet lifts a step on near-black the way the event
+     solids do; the softs are low-alpha tints of the same hue rather than opaque
+     near-blacks, so a step chip sits on the raised card and on the sunken group
+     stack alike without a second value per surface. */
+  --dark-run-active: #a78bfa;
+  --dark-run-active-soft: rgb(167 139 250 / 0.16);
+  --dark-run-skipped: #6e6f7c;
+  --dark-run-skipped-soft: rgb(110 111 124 / 0.16);
+
+  /* The canvas goes DARKER than the page rather than lighter, which is the
+     opposite of what raised surfaces do. It is the floor: nodes are cards
+     lifted off it, and a floor lighter than the things standing on it inverts
+     the depth cue the whole canvas is read by. */
+  --dark-canvas: #0e0e12;
+  --dark-canvas-grid: #2a2a31;
+  --dark-edge: #55565f;
+  --dark-edge-hover: #9394a1;
+  --dark-edge-selected: #a78bfa;
+  --dark-edge-ghost: #3a3a44;
+  --dark-handle: #55565f;
+  --dark-handle-active: #a78bfa;
+  --dark-selection-fill: rgb(167 139 250 / 0.16);
+  --dark-selection-stroke: #a78bfa;
+  --dark-guide: #fb7185;
+
+  /* Calendar. The solids lift one step (a saturated mid-tone on near-black
+     reads dull); the softs are the SAME hue at ~18% lightness so a block is a
+     tinted card rather than a neon slab; the fgs are the pastel that stays
+     legible on that tint. Off-hours goes darker than the surface, not
+     lighter — same argument as the canvas floor. */
+  --dark-event-1: #60a5fa;
+  --dark-event-1-soft: #172554;
+  --dark-event-1-fg: #bfdbfe;
+  --dark-event-2: #2dd4bf;
+  --dark-event-2-soft: #0f2f2b;
+  --dark-event-2-fg: #99f6e4;
+  --dark-event-3: #a78bfa;
+  --dark-event-3-soft: #24173f;
+  --dark-event-3-fg: #ddd6fe;
+  --dark-event-4: #f472b6;
+  --dark-event-4-soft: #3b1229;
+  --dark-event-4-fg: #fbcfe8;
+  --dark-event-5: #fb923c;
+  --dark-event-5-soft: #3a1c0a;
+  --dark-event-5-fg: #fed7aa;
+  --dark-event-6: #a3e635;
+  --dark-event-6-soft: #1f2e0a;
+  --dark-event-6-fg: #d9f99d;
+  --dark-event-7: #22d3ee;
+  --dark-event-7-soft: #0b2b33;
+  --dark-event-7-fg: #a5f3fc;
+  --dark-event-8: #e879f9;
+  --dark-event-8-soft: #371339;
+  --dark-event-8-fg: #f5d0fe;
+  --dark-now: #f87171;
+  --dark-off-hours: #141418; /* one step above the dark surface — #0b0b0e was invisible against it */
+  --dark-busy: #55565f;
+  --dark-busy-soft: #1a1a1f;
+  --dark-blocked: #6e6f7c;
+  --dark-available: #4ade80;
+  --dark-available-soft: #0f2417;
+
+  /* Channels. The solids lift one step, like the event tones; the softs are
+     low-alpha tints of the SAME hue rather than opaque near-blacks, so a
+     channel circle sits on the raised card and the sunken row alike without
+     a second value per surface. TikTok inverts: its glyph is near-white on
+     dark, on a faint white tint. Widget follows the accent — the dark accent
+     hover, which is what stays legible at glyph size on its own tint. */
+  --dark-channel-instagram: #e8559a;
+  --dark-channel-instagram-soft: rgb(232 85 154 / 0.16);
+  --dark-channel-whatsapp: #34c76a;
+  --dark-channel-whatsapp-soft: rgb(52 199 106 / 0.16);
+  --dark-channel-facebook: #4d94f7;
+  --dark-channel-facebook-soft: rgb(77 148 247 / 0.16);
+  --dark-channel-tiktok: #f4f4f6;
+  --dark-channel-tiktok-soft: rgb(244 244 246 / 0.1);
+  --dark-channel-widget: #a78bfa;
+  --dark-channel-widget-soft: rgb(167 139 250 / 0.16);
+}
+
+/*
+ * Dark mode.
+ *
+ * @theme compiles into `@layer theme`, and unlayered rules always beat layered
+ * ones regardless of source order — so these overrides win no matter where the
+ * app places the @import. No !important, no ordering fragility.
+ *
+ * `color-scheme` is not cosmetic: forms/Select.tsx is a real native <select>,
+ * and without it the dropdown popup, scrollbars and autofill stay light.
+ *
+ * The media rule is scoped to :root:not([data-theme]) so an explicit choice —
+ * either value — disables it. The attribute selector is deliberately NOT
+ * :root-prefixed, so an embed host can put data-theme on its wrapper element
+ * instead of <html>.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --color-surface: var(--dark-surface);
+    --color-surface-raised: var(--dark-surface-raised);
+    --color-surface-sunken: var(--dark-surface-sunken);
+    --color-surface-hover: var(--dark-surface-hover);
+    --color-surface-overlay: var(--dark-surface-overlay);
+    --color-surface-inverse: var(--dark-surface-inverse);
+    --color-translucent: var(--dark-translucent);
+    --color-translucent-strong: var(--dark-translucent-strong);
+    --color-border: var(--dark-border);
+    --color-border-strong: var(--dark-border-strong);
+    --color-border-subtle: var(--dark-border-subtle);
+    --color-text: var(--dark-text);
+    --color-text-muted: var(--dark-text-muted);
+    --color-text-faint: var(--dark-text-faint);
+    --color-text-inverse: var(--dark-text-inverse);
+    --color-accent: var(--dark-accent);
+    --color-accent-hover: var(--dark-accent-hover);
+    --color-accent-soft: var(--dark-accent-soft);
+    --color-accent-fg: var(--dark-accent-fg);
+    --color-danger: var(--dark-danger);
+    --color-danger-soft: var(--dark-danger-soft);
+    --color-success: var(--dark-success);
+    --color-success-soft: var(--dark-success-soft);
+    --color-warning: var(--dark-warning);
+    --color-warning-soft: var(--dark-warning-soft);
+    --color-info: var(--dark-info);
+    --color-info-soft: var(--dark-info-soft);
+    --color-focus: var(--dark-focus);
+    --color-scrim: var(--dark-scrim);
+    --color-row-hover: var(--dark-row-hover);
+    --color-row-selected: var(--dark-row-selected);
+    --color-row-selected-hover: var(--dark-row-selected-hover);
+    --color-skeleton: var(--dark-skeleton);
+    --color-skeleton-highlight: var(--dark-skeleton-highlight);
+    --color-control-knob: var(--dark-control-knob);
+    --color-bubble-in: var(--dark-bubble-in);
+    --color-bubble-in-fg: var(--dark-bubble-in-fg);
+    --color-bubble-out: var(--dark-bubble-out);
+    --color-bubble-out-fg: var(--dark-bubble-out-fg);
+
+    /* run */
+    --color-run-active: var(--dark-run-active);
+    --color-run-active-soft: var(--dark-run-active-soft);
+    --color-run-skipped: var(--dark-run-skipped);
+    --color-run-skipped-soft: var(--dark-run-skipped-soft);
+    --color-canvas: var(--dark-canvas);
+    --color-canvas-grid: var(--dark-canvas-grid);
+    --color-edge: var(--dark-edge);
+    --color-edge-hover: var(--dark-edge-hover);
+    --color-edge-selected: var(--dark-edge-selected);
+    --color-edge-ghost: var(--dark-edge-ghost);
+    --color-handle: var(--dark-handle);
+    --color-handle-active: var(--dark-handle-active);
+    --color-selection-fill: var(--dark-selection-fill);
+    --color-selection-stroke: var(--dark-selection-stroke);
+    --color-guide: var(--dark-guide);
+
+    /* calendar */
+    --color-event-1: var(--dark-event-1);
+    --color-event-1-soft: var(--dark-event-1-soft);
+    --color-event-1-fg: var(--dark-event-1-fg);
+    --color-event-2: var(--dark-event-2);
+    --color-event-2-soft: var(--dark-event-2-soft);
+    --color-event-2-fg: var(--dark-event-2-fg);
+    --color-event-3: var(--dark-event-3);
+    --color-event-3-soft: var(--dark-event-3-soft);
+    --color-event-3-fg: var(--dark-event-3-fg);
+    --color-event-4: var(--dark-event-4);
+    --color-event-4-soft: var(--dark-event-4-soft);
+    --color-event-4-fg: var(--dark-event-4-fg);
+    --color-event-5: var(--dark-event-5);
+    --color-event-5-soft: var(--dark-event-5-soft);
+    --color-event-5-fg: var(--dark-event-5-fg);
+    --color-event-6: var(--dark-event-6);
+    --color-event-6-soft: var(--dark-event-6-soft);
+    --color-event-6-fg: var(--dark-event-6-fg);
+    --color-event-7: var(--dark-event-7);
+    --color-event-7-soft: var(--dark-event-7-soft);
+    --color-event-7-fg: var(--dark-event-7-fg);
+    --color-event-8: var(--dark-event-8);
+    --color-event-8-soft: var(--dark-event-8-soft);
+    --color-event-8-fg: var(--dark-event-8-fg);
+    --color-now: var(--dark-now);
+    --color-off-hours: var(--dark-off-hours);
+    --color-busy: var(--dark-busy);
+    --color-busy-soft: var(--dark-busy-soft);
+    --color-blocked: var(--dark-blocked);
+    --color-available: var(--dark-available);
+    --color-available-soft: var(--dark-available-soft);
+
+    /* channels */
+    --color-channel-instagram: var(--dark-channel-instagram);
+    --color-channel-instagram-soft: var(--dark-channel-instagram-soft);
+    --color-channel-whatsapp: var(--dark-channel-whatsapp);
+    --color-channel-whatsapp-soft: var(--dark-channel-whatsapp-soft);
+    --color-channel-facebook: var(--dark-channel-facebook);
+    --color-channel-facebook-soft: var(--dark-channel-facebook-soft);
+    --color-channel-tiktok: var(--dark-channel-tiktok);
+    --color-channel-tiktok-soft: var(--dark-channel-tiktok-soft);
+    --color-channel-widget: var(--dark-channel-widget);
+    --color-channel-widget-soft: var(--dark-channel-widget-soft);
+
+    --elevation-tint: rgb(0 0 0 / 0.5);
+    --elevation-tint-strong: rgb(0 0 0 / 0.7);
+    --elevation-ring: rgb(255 255 255 / 0.08);
+    --hairline-inset: rgb(255 255 255 / 0.06);
+    --hairline-ring: rgb(255 255 255 / 0.1);
+    --selection-bg: #4c1d95;
+
+    --avatar-bg-l: 30%;
+    --avatar-bg-c: 0.06;
+    --avatar-fg-l: 88%;
+    --avatar-fg-c: 0.1;
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-surface: var(--dark-surface);
+  --color-surface-raised: var(--dark-surface-raised);
+  --color-surface-sunken: var(--dark-surface-sunken);
+  --color-surface-hover: var(--dark-surface-hover);
+  --color-surface-overlay: var(--dark-surface-overlay);
+  --color-surface-inverse: var(--dark-surface-inverse);
+  --color-translucent: var(--dark-translucent);
+  --color-translucent-strong: var(--dark-translucent-strong);
+  --color-border: var(--dark-border);
+  --color-border-strong: var(--dark-border-strong);
+  --color-border-subtle: var(--dark-border-subtle);
+  --color-text: var(--dark-text);
+  --color-text-muted: var(--dark-text-muted);
+  --color-text-faint: var(--dark-text-faint);
+  --color-text-inverse: var(--dark-text-inverse);
+  --color-accent: var(--dark-accent);
+  --color-accent-hover: var(--dark-accent-hover);
+  --color-accent-soft: var(--dark-accent-soft);
+  --color-accent-fg: var(--dark-accent-fg);
+  --color-danger: var(--dark-danger);
+  --color-danger-soft: var(--dark-danger-soft);
+  --color-success: var(--dark-success);
+  --color-success-soft: var(--dark-success-soft);
+  --color-warning: var(--dark-warning);
+  --color-warning-soft: var(--dark-warning-soft);
+  --color-info: var(--dark-info);
+  --color-info-soft: var(--dark-info-soft);
+  --color-focus: var(--dark-focus);
+  --color-scrim: var(--dark-scrim);
+  --color-row-hover: var(--dark-row-hover);
+  --color-row-selected: var(--dark-row-selected);
+  --color-row-selected-hover: var(--dark-row-selected-hover);
+  --color-skeleton: var(--dark-skeleton);
+  --color-skeleton-highlight: var(--dark-skeleton-highlight);
+  --color-control-knob: var(--dark-control-knob);
+  --color-bubble-in: var(--dark-bubble-in);
+  --color-bubble-in-fg: var(--dark-bubble-in-fg);
+  --color-bubble-out: var(--dark-bubble-out);
+  --color-bubble-out-fg: var(--dark-bubble-out-fg);
+
+  /* run */
+  --color-run-active: var(--dark-run-active);
+  --color-run-active-soft: var(--dark-run-active-soft);
+  --color-run-skipped: var(--dark-run-skipped);
+  --color-run-skipped-soft: var(--dark-run-skipped-soft);
+  --color-canvas: var(--dark-canvas);
+  --color-canvas-grid: var(--dark-canvas-grid);
+  --color-edge: var(--dark-edge);
+  --color-edge-hover: var(--dark-edge-hover);
+  --color-edge-selected: var(--dark-edge-selected);
+  --color-edge-ghost: var(--dark-edge-ghost);
+  --color-handle: var(--dark-handle);
+  --color-handle-active: var(--dark-handle-active);
+  --color-selection-fill: var(--dark-selection-fill);
+  --color-selection-stroke: var(--dark-selection-stroke);
+  --color-guide: var(--dark-guide);
+
+  /* calendar */
+  --color-event-1: var(--dark-event-1);
+  --color-event-1-soft: var(--dark-event-1-soft);
+  --color-event-1-fg: var(--dark-event-1-fg);
+  --color-event-2: var(--dark-event-2);
+  --color-event-2-soft: var(--dark-event-2-soft);
+  --color-event-2-fg: var(--dark-event-2-fg);
+  --color-event-3: var(--dark-event-3);
+  --color-event-3-soft: var(--dark-event-3-soft);
+  --color-event-3-fg: var(--dark-event-3-fg);
+  --color-event-4: var(--dark-event-4);
+  --color-event-4-soft: var(--dark-event-4-soft);
+  --color-event-4-fg: var(--dark-event-4-fg);
+  --color-event-5: var(--dark-event-5);
+  --color-event-5-soft: var(--dark-event-5-soft);
+  --color-event-5-fg: var(--dark-event-5-fg);
+  --color-event-6: var(--dark-event-6);
+  --color-event-6-soft: var(--dark-event-6-soft);
+  --color-event-6-fg: var(--dark-event-6-fg);
+  --color-event-7: var(--dark-event-7);
+  --color-event-7-soft: var(--dark-event-7-soft);
+  --color-event-7-fg: var(--dark-event-7-fg);
+  --color-event-8: var(--dark-event-8);
+  --color-event-8-soft: var(--dark-event-8-soft);
+  --color-event-8-fg: var(--dark-event-8-fg);
+  --color-now: var(--dark-now);
+  --color-off-hours: var(--dark-off-hours);
+  --color-busy: var(--dark-busy);
+  --color-busy-soft: var(--dark-busy-soft);
+  --color-blocked: var(--dark-blocked);
+  --color-available: var(--dark-available);
+  --color-available-soft: var(--dark-available-soft);
+
+  /* channels */
+  --color-channel-instagram: var(--dark-channel-instagram);
+  --color-channel-instagram-soft: var(--dark-channel-instagram-soft);
+  --color-channel-whatsapp: var(--dark-channel-whatsapp);
+  --color-channel-whatsapp-soft: var(--dark-channel-whatsapp-soft);
+  --color-channel-facebook: var(--dark-channel-facebook);
+  --color-channel-facebook-soft: var(--dark-channel-facebook-soft);
+  --color-channel-tiktok: var(--dark-channel-tiktok);
+  --color-channel-tiktok-soft: var(--dark-channel-tiktok-soft);
+  --color-channel-widget: var(--dark-channel-widget);
+  --color-channel-widget-soft: var(--dark-channel-widget-soft);
+
+  --elevation-tint: rgb(0 0 0 / 0.5);
+  --elevation-tint-strong: rgb(0 0 0 / 0.7);
+  --elevation-ring: rgb(255 255 255 / 0.08);
+  --hairline-inset: rgb(255 255 255 / 0.06);
+  --hairline-ring: rgb(255 255 255 / 0.1);
+  --selection-bg: #4c1d95;
+
+  --avatar-bg-l: 30%;
+  --avatar-bg-c: 0.06;
+  --avatar-fg-l: 88%;
+  --avatar-fg-c: 0.1;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+}
+
+/*
+ * Reduced motion, handled at the token level rather than with a blunt
+ * `* { animation: none }` reset — that would also freeze Spinner's
+ * animate-spin, which is worse UX than letting it spin. Directional and
+ * scaling entrances collapse to a plain fade.
+ *
+ * WAAPI animations cannot see this block; those paths consult
+ * prefersReducedMotion() in lib/motion.ts instead.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration-instant: 1ms;
+    --transition-duration-fast: 1ms;
+    --transition-duration-base: 1ms;
+    --transition-duration-slow: 1ms;
+
+    --animate-fade-in: fade-in 1ms linear both;
+    --animate-fade-out: fade-out 1ms linear both;
+    --animate-scale-in: fade-in 1ms linear both;
+    --animate-scale-out: fade-out 1ms linear both;
+    --animate-slide-in-right: fade-in 1ms linear both;
+    --animate-slide-out-right: fade-out 1ms linear both;
+    --animate-slide-in-left: fade-in 1ms linear both;
+    --animate-slide-out-left: fade-out 1ms linear both;
+    --animate-slide-in-bottom: fade-in 1ms linear both;
+    --animate-slide-out-bottom: fade-out 1ms linear both;
+    --animate-slide-in-top: fade-in 1ms linear both;
+    --animate-slide-out-top: fade-out 1ms linear both;
+    --animate-scrim-in: fade-in 1ms linear both;
+    --animate-scrim-out: fade-out 1ms linear both;
+    --animate-shimmer: none;
+    /* The sweeping bar stops; Progress falls back to a static striped track,
+       which still reads as "working" without moving anything. */
+    --animate-progress: none;
+    /* The refused value still gets its message; only the nudge goes. */
+    --animate-shake: none;
+    /* The caret stops blinking and stays lit — still visibly "writing". */
+    --animate-caret: none;
+  }
+}
+
+/*
+ * Fluid page gutter.
+ *
+ * ModuleRoot stamps [data-band-scope] on its INNER element, because a container
+ * element cannot match its own container query — the outer div is
+ * @container/module, the inner one reads it.
+ *
+ * Re-assigning the variable (rather than shipping p-gutter-sm / p-gutter-lg
+ * classes) means every p-gutter, px-gutter and gap-gutter already written
+ * anywhere in the repo becomes fluid the moment its module adopts ModuleRoot.
+ * Outside a ModuleRoot the :root value stands.
+ */
+[data-band-scope] {
+  --spacing-gutter: var(--spacing-gutter-tight);
+}
+@container module (min-width: 900px) {
+  [data-band-scope] {
+    --spacing-gutter: 1rem;
+  }
+}
+@container module (min-width: 1280px) {
+  [data-band-scope] {
+    --spacing-gutter: var(--spacing-gutter-loose);
+  }
+}
+
+/*
+ * The custom utilities.
+ *
+ * focus-ring uses OUTLINE rather than `ring` (a box-shadow): data-dense screens
+ * are full of overflow-hidden scroll containers and sticky cells, which clip a
+ * box-shadow ring. An outline is never clipped.
+ */
+@utility focus-ring {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: var(--focus-ring-offset);
+}
+
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-skeleton) 25%,
+    var(--color-skeleton-highlight) 37%,
+    var(--color-skeleton) 63%
+  );
+  background-size: 400% 100%;
+}
+
+/*
+ * Opt-in touch target. Applied per control (a board card's menu trigger, a
+ * collapsed column's expand button, NavRail items) — never globally, and never
+ * by retuning --height-field under (pointer: coarse), which would resize every
+ * button in the system on any touch-capable laptop.
+ */
+@utility touch-target {
+  min-height: var(--height-touch);
+  min-width: var(--height-touch);
+}
+
+/*
+ * The canvas dot grid.
+ *
+ * The gradient lives here rather than in the component for one reason: pass
+ * 11(b) forbids a raw color anywhere in content/ui/src, and a radial-gradient
+ * assembled in TSX would have to name one. Here the color is a token and the
+ * rule is checkable.
+ *
+ * What the component still owns is the part that genuinely changes every
+ * frame — `background-size` from the zoom and `background-position` from the
+ * pan — as an inline style. Those are two numbers on an element that is
+ * already re-rendering; the paint recipe is not.
+ *
+ * `background-attachment: local` is deliberate: the grid scrolls with the
+ * canvas content rather than staying pinned to the element, so a canvas that
+ * is scrolled rather than transformed still moves its dots.
+ */
+@utility canvas-grid {
+  background-color: var(--color-canvas);
+  background-image: radial-gradient(circle, var(--color-canvas-grid) 1px, transparent 1px);
+  background-attachment: local;
+}
+
+/*
+ * The time grid's paint recipes.
+ *
+ * Same reason as canvas-grid: pass 11(b) forbids a raw colour in TSX, and a
+ * gradient assembled in a component would have to name one. Here every stop is
+ * a token and the rule is checkable.
+ *
+ * `time-grid-rules` draws the hour line and the half-hour line of ONE hour and
+ * tiles it down the column. The tile height is `--time-grid-hour`, which the
+ * component sets inline from the density (48/64/80px — the --height-hour-*
+ * tokens above); everything else is fixed. The half-hour stop is expressed as
+ * 50% because a percentage in a background-image resolves against the TILE
+ * (background-size), not the element — so it stays half an hour whatever the
+ * density. `background-position-y` is the component's second knob: a range
+ * that starts at 07:30 offsets the tile by half an hour so the hour rule still
+ * lands on 08:00.
+ *
+ * The three shadings are one family, chosen by one word:
+ *   off-hours — outside business hours. A flat tint, not stripes: night is
+ *               most of every column, and a hatch across sixteen hours of it
+ *               is texture nobody asked for.
+ *   busy      — someone else has this time (another booking, a synced
+ *               calendar). Stripes of --color-busy over --color-busy-soft.
+ *   blocked   — nobody may have this time (a break, a closed day). Denser,
+ *               darker stripes over the plain surface, so a break inside a
+ *               working day reads as a stronger "no" than a merely busy hour.
+ * All three are backgrounds so the same element can also carry a border or a
+ * label; the component stacks them under the events, in that order.
+ */
+@utility time-grid-rules {
+  background-image:
+    linear-gradient(to bottom, var(--color-border) 0, var(--color-border) 1px, transparent 1px),
+    linear-gradient(
+      to bottom,
+      transparent calc(50% - 0.5px),
+      var(--color-border-subtle) calc(50% - 0.5px),
+      var(--color-border-subtle) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    );
+  background-size: 100% var(--time-grid-hour, 64px);
+  background-repeat: repeat-y;
+}
+
+@utility hatch-off-hours {
+  background-color: var(--color-off-hours);
+}
+
+@utility hatch-busy {
+  background-color: var(--color-busy-soft);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 5px,
+    var(--color-busy) 5px,
+    var(--color-busy) 6px
+  );
+}
+
+@utility hatch-blocked {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0,
+    transparent 4px,
+    var(--color-blocked) 4px,
+    var(--color-blocked) 5px
+  );
+}

@@ -1,0 +1,17 @@
+{
+  // The half of this package that runs under node's own type stripping, which
+  // erases syntax rather than compiling it: the two prepack scripts and every
+  // module they reach. An enum or a parameter property in there typechecks
+  // under the ordinary project and then fails at prepack on whichever machine
+  // publishes. The roots are the `.mjs` entry points rather than a list of the
+  // files to hold to the rule, so adding an import is enough to be covered.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "files": ["scripts/pack-content.mjs", "scripts/pack-smoke.mjs"]
+}

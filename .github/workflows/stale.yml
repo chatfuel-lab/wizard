@@ -1,0 +1,33 @@
+name: Stale
+
+on:
+  schedule:
+    - cron: '13 3 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
+        with:
+          days-before-stale: 60
+          days-before-close: 14
+          # A confirmed bug does not stop being a bug because nobody spoke for
+          # two months, and a pinned issue is pinned on purpose.
+          exempt-issue-labels: 'bug,security,pinned,roadmap'
+          exempt-pr-labels: 'pinned'
+          stale-issue-message: >
+            No activity here for 60 days. It will close in 14 more unless something
+            says otherwise - a comment is enough to keep it open.
+          stale-pr-message: >
+            No activity here for 60 days. It will close in 14 more unless something
+            says otherwise - a comment is enough to keep it open.
+          close-issue-message: 'Closing after 74 days without activity. Reopen it if it is still real.'
+          close-pr-message: 'Closing after 74 days without activity. Reopen it if you are still on it.'

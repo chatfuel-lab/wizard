@@ -1,0 +1,48 @@
+{
+  "id": "deals",
+  "name": "Deals",
+  "description": "Board, table and forecast over contacts by salesStageV2: Pointer-Events drag-and-drop that works on touch, keyboard stage moves, per-card optimistic rollback, live updates, a detail panel, and deal amount / close date / company carried as custom contact attributes.",
+  "status": "ready",
+  "requires": [
+    "contacts"
+  ],
+  "recommends": [],
+  "skill": {
+    "installAs": "chatfuel-deals"
+  },
+  "app": {
+    "env": [
+      {
+        "name": "CHATFUEL_TOKEN",
+        "secret": true
+      },
+      {
+        "name": "VITE_CHATFUEL_WORKSPACE_ID",
+        "resolve": "workspacePick"
+      },
+      {
+        "name": "CHATFUEL_API_BASE",
+        "default": "https://panel.chatfuel.com"
+      }
+    ],
+    "embed": {
+      "roots": [
+        "src/modules/deals"
+      ],
+      "entryComponent": "DealsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "People",
+      "action": "View",
+      "requiredFor": "reading the deals board"
+    },
+    {
+      "object": "People",
+      "action": "Edit",
+      "requiredFor": "moving cards between stages, editing deal fields, name, note and owner"
+    }
+  ]
+}

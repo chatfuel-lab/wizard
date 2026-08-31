@@ -1,0 +1,897 @@
+# Chatfuel GraphQL — contacts / people operations (chatfuel-contacts skill).
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment FileInfo on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment BotAttributeInfo on BotAttribute {
+  name
+  aliases {
+    locale
+    alias
+  }
+  dataType
+  type
+}
+
+fragment AttributeValue on BotAttributeValue {
+  __typename
+  ... on BotAttributeValueString {
+    id
+    stringValue
+  }
+  ... on BotAttributeValueLong {
+    id
+    longValue
+  }
+  ... on BotAttributeValueDouble {
+    id
+    doubleValue
+  }
+  ... on BotAttributeValueBoolean {
+    id
+    booleanValue
+  }
+  ... on BotAttributeValueDatetime {
+    id
+    datetimeValue
+  }
+}
+
+fragment ContactAttributeInfo on ContactAttribute {
+  id
+  attr {
+    ...BotAttributeInfo
+  }
+  value {
+    ...AttributeValue
+  }
+}
+
+fragment AssigneeInfo on ContactAssignee {
+  __typename
+  ... on PublicUserAccount {
+    id
+    name
+    isUnknown
+    profilePicture {
+      ...FileInfo
+    }
+  }
+  ... on FuelyAIAssignee {
+    fakeField
+  }
+}
+
+# __typename on Contact is REQUIRED — without it fields come back missing.
+fragment ContactFull on Contact {
+  __typename
+  id
+  name
+  updatedAt
+  profilePictureUrl
+  note
+  salesStageV2
+  lastSalesStageUpdateTime
+  lastConversationMessageTime
+  unreadMessagesCount
+  unhandledSwitchToHuman
+  scope {
+    __typename
+    id
+  }
+  attributes {
+    ...ContactAttributeInfo
+  }
+  assignee {
+    ...AssigneeInfo
+  }
+  conversation {
+    __typename
+    id
+    status
+  }
+  ... on WhatsappContact {
+    phone
+  }
+  ... on InstagramContact {
+    username
+    availableForDMs
+  }
+  ... on TikTokContact {
+    username
+    availableForDMs
+  }
+}
+
+fragment TaskInfo on Task {
+  id
+  statuses {
+    startedAt
+    type
+  }
+  completedPoints
+  totalPoints
+  deadline
+  data {
+    __typename
+    ... on CSVContactsExport {
+      id
+      file {
+        ...FileInfo
+      }
+    }
+  }
+}
+
+fragment CSVImportInfo on CSVContactImport {
+  id
+  platform
+  file {
+    ...FileInfo
+  }
+  columns {
+    columnIndex
+    columnPreview
+    attribute {
+      ...BotAttributeInfo
+    }
+  }
+  validationErrors {
+    __typename
+    ... on CSVContactImportCommonError {
+      commonErrCode
+    }
+    ... on CSVContactImportColumnError {
+      columnErrCode
+      columnIndex
+    }
+  }
+  partialContactsErrors {
+    id
+    count
+    description
+  }
+  declinedContactsErrors {
+    id
+    count
+    description
+  }
+  createdContacts
+  updatedContacts
+  declinedContacts
+  createdAt
+  startedAt
+  finishedAt
+  updatedAt
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# Contact list with search/filter. segment is an inline SegmentInput built
+# client-side (client generates UUIDs for segment/filter ids).
+# NOTE: root-level searchContacts/countContacts are not in this schema — use these
+# bot-level fields instead.
+query ContactsList(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $first: Int!
+  $after: ContactSearchCursor
+  $segment: SegmentInput
+  $orderBy: ContactSearchOrderByInput
+) {
+  bot(id: $botID) {
+    id
+    contactsConnection(
+      platforms: $platforms
+      first: $first
+      after: $after
+      segment: $segment
+      orderBy: $orderBy
+    ) {
+      edges {
+        cursor
+        node {
+          ...ContactFull
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+# contactsCount respects the current user's assignee restrictions;
+# contactsTotalCount ignores them (e.g. for broadcast size estimates).
+query ContactsCount($botID: BotID!, $platforms: [Platform!]!, $segment: SegmentInput) {
+  bot(id: $botID) {
+    id
+    contactsCount(platforms: $platforms, segment: $segment)
+    contactsTotalCount(platforms: $platforms, segment: $segment)
+  }
+}
+
+query ContactGet($botID: BotID!, $contactID: ContactID!) {
+  bot(id: $botID) {
+    id
+    contact(id: $contactID) {
+      ...ContactFull
+    }
+  }
+}
+
+# Attribute catalog (for filter builders / column pickers).
+query BotAttributesCatalog(
+  $botID: BotID!
+  $locale: DashboardLocale!
+  $platforms: [Platform!]!
+  $attributeTypes: [AttributeType!]!
+  $filters: [BotAttributeFilter!]!
+  $orderBy: BotAttributeOrderByInput!
+  $inputSubstring: String
+  $first: Int
+  $after: BotAttributeCursor
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: $locale
+      platforms: $platforms
+      attributeTypes: $attributeTypes
+      filters: $filters
+      orderBy: $orderBy
+      inputSubstring: $inputSubstring
+      first: $first
+      after: $after
+    ) {
+      edges {
+        node {
+          botAttribute {
+            ...BotAttributeInfo
+          }
+          usersCount
+          defaultValue
+          flowsCount
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+query BotContactScopes($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      id
+      ... on WhatsAppPhoneContactScope {
+        phone {
+          id
+          displayPhoneNumber
+        }
+      }
+    }
+  }
+}
+
+query ExportTaskStatus($id: TaskID!) {
+  getTask(id: $id) {
+    ...TaskInfo
+  }
+}
+
+query LatestCsvImport($botID: BotID!, $platform: Platform!) {
+  bot(id: $botID) {
+    id
+    latestCSVContactsImport(platform: $platform) {
+      ...CSVImportInfo
+    }
+  }
+}
+
+# ============================================================
+# Mutations — contact fields
+# ============================================================
+
+mutation ContactUpdateName($contactID: ContactID!, $name: String!) {
+  contactUpdateName(id: $contactID, name: $name) {
+    __typename
+    id
+    name
+  }
+}
+
+mutation ContactSetNote($contactID: ContactID!, $note: String) {
+  contactSetNote(id: $contactID, note: $note) {
+    __typename
+    id
+    note
+  }
+}
+
+# attrValue is always a String; for datetime attributes pass a millisecond
+# timestamp string, e.g. "1720456863000".
+mutation ContactAttributeUpdate($contactID: ContactID!, $attrName: AttributeName!, $attrValue: String!) {
+  contactAttributeUpdate(id: $contactID, attrName: $attrName, attrValue: $attrValue) {
+    ...ContactFull
+  }
+}
+
+mutation ContactAttributeDelete($contactID: ContactID!, $attrName: AttributeName!) {
+  contactAttributeDelete(id: $contactID, attrName: $attrName) {
+    ...ContactFull
+  }
+}
+
+# The only contact-create in the API (WhatsApp only).
+mutation WhatsAppContactCreate($botID: BotID!, $data: WhatsappContactCreateInput!) {
+  whatsappContactCreateV2(botID: $botID, data: $data) {
+    ...ContactFull
+  }
+}
+
+# ============================================================
+# Mutations — assignment
+# ============================================================
+
+mutation ContactSetAssignee($contactID: ContactID!, $assigneeID: UserAccountID!) {
+  contactSetAssignee(id: $contactID, assigneeID: $assigneeID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+mutation ContactSetFuelyAIAssignee($contactID: ContactID!) {
+  contactSetFuelyAIAssignee(id: $contactID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+mutation ContactRemoveAssignee($contactID: ContactID!) {
+  contactRemoveAssignee(id: $contactID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+# ============================================================
+# CSV export (async: poll getTask or subscribe taskUpdated)
+# ============================================================
+
+# Empty attributes list = export all attributes.
+mutation CsvExportBySegment(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $segment: SegmentInput
+  $attributes: [AttributeName!]!
+) {
+  csvContactExportStartBySegment(
+    botID: $botID
+    platforms: $platforms
+    segment: $segment
+    attributes: $attributes
+  ) {
+    ...TaskInfo
+  }
+}
+
+mutation CsvExportByIDs($botID: BotID!, $contactIDs: [ContactID!]!, $attributes: [AttributeName!]!) {
+  csvContactExportStartByIDsList(botID: $botID, contactIDs: $contactIDs, attributes: $attributes) {
+    ...TaskInfo
+  }
+}
+
+subscription ExportTaskUpdated($id: TaskID!) {
+  taskUpdated(id: $id) {
+    ...TaskInfo
+  }
+}
+
+# ============================================================
+# CSV import (REST upload -> create -> map columns -> start -> subscribe)
+# ============================================================
+# Step 0 is REST: POST {base}/api/filestorage/upload/bot?fileType=Document&botID=...
+# (multipart field "file") -> returns the FileID used below.
+
+mutation CsvImportCreate(
+  $botID: BotID!
+  $fileID: FileID!
+  $platform: Platform!
+  $locale: DashboardLocale!
+) {
+  csvContactImportCreate(botID: $botID, fileID: $fileID, platform: $platform, locale: $locale) {
+    ...CSVImportInfo
+  }
+}
+
+mutation CsvImportUpdateColumns(
+  $botID: BotID!
+  $importID: CSVContactImportID!
+  $request: CSVContactImportColumnsUpdate!
+) {
+  csvContactImportUpdateColumns(botID: $botID, id: $importID, request: $request) {
+    ...CSVImportInfo
+  }
+}
+
+mutation CsvImportStart($botID: BotID!, $importID: CSVContactImportID!) {
+  csvContactImportStart(botID: $botID, id: $importID) {
+    ...CSVImportInfo
+  }
+}
+
+subscription CsvImportUpdated($botID: BotID!, $importID: CSVContactImportID!) {
+  csvContactImportUpdated(botID: $botID, id: $importID) {
+    ...CSVImportInfo
+  }
+}
+
+# ============================================================
+# The workspace
+#
+# Two engines list contacts and they are NOT interchangeable — see
+# references/guide.md "the two engines":
+#
+#   contactsConnection + SegmentInput  — EVERY contact, arbitrary attribute
+#     predicates, orderBy on any attribute, forward and backward paging. No
+#     subscription. This is the default engine of the contacts list.
+#   contactChatsConnection             — only contacts that HAVE a conversation
+#     (a contact created through whatsappContactCreateV2 or a CSV import has
+#     `conversation: null` and never appears here),
+#     but it is the only server-side text search and the only live one.
+#
+# `first` is capped: a large page size fails with a generic error.
+# ============================================================
+
+# A list row. Lighter than ContactFull: it asks only for the attributes the
+# visible columns need, so a 50-row page is not 50 × every attribute the bot
+# has. Every operation spreading it must declare $attrNames — pass the column
+# names, or null for "every attribute", which the list never wants.
+fragment ContactRow on Contact {
+  __typename
+  id
+  name
+  profilePictureUrl
+  updatedAt
+  note
+  salesStageV2
+  lastSalesStageUpdateTime
+  lastConversationMessageTime
+  unreadMessagesCount
+  unhandledSwitchToHuman
+  assignee {
+    ...AssigneeInfo
+  }
+  conversation {
+    __typename
+    id
+    status
+  }
+  attributes(names: $attrNames) {
+    ...ContactAttributeInfo
+  }
+  ... on WhatsappContact {
+    phone
+  }
+  ... on InstagramContact {
+    username
+    availableForDMs
+  }
+  ... on TikTokContact {
+    username
+    availableForDMs
+  }
+}
+
+# Engine "segment": the default list. `before` pages backwards.
+query ContactsRows(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $first: Int!
+  $after: ContactSearchCursor
+  $before: ContactSearchCursor
+  $segment: SegmentInput
+  $orderBy: ContactSearchOrderByInput
+  $attrNames: [AttributeName!]
+) {
+  bot(id: $botID) {
+    id
+    contactsConnection(
+      platforms: $platforms
+      first: $first
+      after: $after
+      before: $before
+      segment: $segment
+      orderBy: $orderBy
+    ) {
+      edges {
+        cursor
+        node {
+          ...ContactRow
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+# Engine "chats": server-side text search over name and phone, unread, stage
+# subset, assignee, and a live twin. `salesStageV2Filter: []` means every
+# stage (identical to listing all six).
+query ContactsChats(
+  $botID: BotID!
+  $first: Int!
+  $after: ContactSearchCursor
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $stages: [SalesStageV2!]!
+  $textInputFilter: String
+  $attrNames: [AttributeName!]
+) {
+  bot(id: $botID) {
+    id
+    contactChatsConnection(
+      first: $first
+      after: $after
+      assigneeFilter: $assigneeFilter
+      unreadOnly: $unreadOnly
+      salesStageV2Filter: $stages
+      textInputFilter: $textInputFilter
+    ) {
+      edges {
+        cursor
+        node {
+          ...ContactRow
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+query ContactsChatsCount($botID: BotID!, $filter: ContactChatsCountFilter!) {
+  bot(id: $botID) {
+    id
+    contactChatsCountV2(filter: $filter)
+  }
+}
+
+# The arguments MUST match the ContactsChats query that opened the list, or
+# the two describe different sets and the merge is wrong.
+subscription ContactsChatUpdates(
+  $botID: BotID!
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $stages: [SalesStageV2!]!
+  $textInputFilter: String
+  $attrNames: [AttributeName!]
+) {
+  contactsChatUpdates(
+    botID: $botID
+    assigneeFilter: $assigneeFilter
+    unreadOnly: $unreadOnly
+    salesStageV2Filter: $stages
+    textInputFilter: $textInputFilter
+  ) {
+    __typename
+    ... on ContactsChatUpdatesBatch {
+      updates {
+        action
+        edge {
+          cursor
+          node {
+            ...ContactRow
+          }
+        }
+      }
+    }
+    ... on ContactListUpdateStopped {
+      willResumeAt
+    }
+  }
+}
+
+# One open contact, live. Fires on attribute writes too.
+subscription ContactLive($botID: BotID!, $contactID: ContactID!) {
+  contactUpdated(botID: $botID, contactID: $contactID) {
+    ...ContactFull
+  }
+}
+
+# The assignee picker. `member.user.id` is the UserAccountID contactSetAssignee
+# wants — `member.id` is a different id and is rejected.
+query ContactsTeam($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    members {
+      id
+      user {
+        id
+        name
+        isUnknown
+        profilePicture {
+          ...FileInfo
+        }
+      }
+    }
+  }
+}
+
+mutation ContactSetStage($contactID: ContactID!, $stage: SalesStageV2!) {
+  contactSetSalesStage(id: $contactID, salesStageV2: $stage) {
+    __typename
+    id
+    salesStageV2
+    lastSalesStageUpdateTime
+    updatedAt
+  }
+}
+
+# Audience: the one call that returns every stage count server-side.
+query ContactsStageTotals($botID: BotID!, $filter: DealsByStagesFilter!) {
+  bot(id: $botID) {
+    id
+    contactDealsByStages(filter: $filter) {
+      New
+      Sorting
+      Ready
+      WorkingOn
+      Won
+      Lost
+    }
+  }
+}
+
+# The record page's Activity tab. Newest first; `before` pages into history.
+# Only the text-bearing types are unpacked — everything else renders from
+# __typename alone. The full per-platform matrix lives in the livechat skill.
+query ContactMessages(
+  $botID: BotID!
+  $contactID: ContactID!
+  $first: Int
+  $before: MessagesCursor
+) {
+  bot(id: $botID) {
+    id
+    contact(id: $contactID) {
+      __typename
+      id
+      conversation {
+        __typename
+        id
+        platform
+        status
+        messages(first: $first, before: $before) {
+          edges {
+            cursor
+            node {
+              __typename
+              id
+              sentTime
+              sender {
+                __typename
+                id
+                name
+              }
+              ... on WhatsAppInTextMessage {
+                text
+              }
+              ... on WhatsAppOutTextMessage {
+                text
+              }
+              ... on WebWidgetTextMessage {
+                text
+              }
+              ... on InstagramInTextMessage {
+                text
+              }
+              ... on InstagramOutTextMessage {
+                text
+              }
+              ... on FacebookInTextMessage {
+                text
+              }
+              ... on FacebookOutTextMessage {
+                text
+              }
+              ... on TikTokInTextMessage {
+                text
+              }
+              ... on TikTokOutTextMessage {
+                text
+              }
+            }
+          }
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+          }
+        }
+      }
+    }
+  }
+}
+
+# A contact's appointments are reachable ONLY as a window over the whole bot:
+# BookingBase has no contact filter, and Contact has no bookings field. Fetch
+# a window and match on contact.id client-side.
+query ContactBookings($botID: BotID!, $startTime: Time!, $endTime: Time!) {
+  bot(id: $botID) {
+    id
+    bookingsV2(startTime: $startTime, endTime: $endTime) {
+      __typename
+      id
+      startTime
+      endTime
+      status
+      service {
+        __typename
+        ... on GoodsService {
+          id
+          title
+        }
+        ... on DeletedGoodsService {
+          id
+        }
+      }
+      ... on Booking {
+        contact {
+          __typename
+          id
+        }
+      }
+      ... on BookingWithGoogleCalendarRef {
+        contact {
+          __typename
+          id
+        }
+      }
+    }
+  }
+}
+
+# Export: cancel takes CSVContactsExport.id (task.data.id), NOT the task id,
+# and it returns the Bot. It also loses the race on a small export: the task
+# can go Created → Cancelled → InProgress → Finished anyway.
+mutation ContactsExportCancel($botID: BotID!, $id: String!) {
+  csvContactExportCancel(botID: $botID, id: $id) {
+    id
+  }
+}
+
+# Only ACTIVE exports come back here — a finished one reads as null, so this
+# restores an in-flight export after a reload and nothing else.
+query ContactsExportRestore($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    lastActiveCSVContactsExportTask {
+      ...TaskInfo
+    }
+  }
+}
+
+# Swap the file of an import that has not started (a wrong CSV, re-picked).
+mutation CsvImportUpdateFile($botID: BotID!, $id: CSVContactImportID!, $fileID: FileID!) {
+  csvContactImportUpdateFile(botID: $botID, id: $id, fileID: $fileID) {
+    ...CSVImportInfo
+  }
+}
+
+# The rejected-rows CSV of the last import. `errorsFile` errors while the
+# import is unfinished or when there is nothing to report, so it is asked for
+# on its own rather than inside CSVImportInfo.
+query CsvImportErrorsFile($botID: BotID!, $platform: Platform!) {
+  bot(id: $botID) {
+    id
+    latestCSVContactsImport(platform: $platform) {
+      id
+      errorsFile(botID: $botID) {
+        ...FileInfo
+      }
+    }
+  }
+}
+
+# The Fields surface. `usedInFlows` is per attribute and takes the bot, so it
+# is asked for one field at a time rather than across the catalog page.
+query ContactFieldUsage(
+  $botID: BotID!
+  $locale: DashboardLocale!
+  $platforms: [Platform!]!
+  $attributeTypes: [AttributeType!]!
+  $inputSubstring: String
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: $locale
+      platforms: $platforms
+      attributeTypes: $attributeTypes
+      filters: []
+      orderBy: { orderBy: ContactsCount, direction: Desc }
+      inputSubstring: $inputSubstring
+      first: 20
+    ) {
+      edges {
+        node {
+          usersCount
+          defaultValue
+          flowsCount
+          botAttribute {
+            ...BotAttributeInfo
+            usedInFlows(botID: $botID) {
+              __typename
+              id
+              name
+              platform
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# A bot-wide default value makes EVERY contact read that attribute as
+# non-empty, which silently changes what every IS_EMPTY / IS_NOT_EMPTY filter
+# means. The UI asks before writing one.
+mutation BotAttributeSetDefault($botID: BotID!, $attributeName: AttributeName!, $defaultValue: String!) {
+  botAttributeCreateDefaultVal(botID: $botID, attributeName: $attributeName, defaultValue: $defaultValue) {
+    id
+  }
+}
+
+mutation BotAttributeUpdateDefault($botID: BotID!, $attributeName: AttributeName!, $defaultValue: String!) {
+  botAttributeUpdateDefaultVal(botID: $botID, attributeName: $attributeName, defaultValue: $defaultValue) {
+    id
+  }
+}
+
+mutation BotAttributeDeleteDefault($botID: BotID!, $attributeName: AttributeName!) {
+  botAttributeDeleteDefaultVal(botID: $botID, attributeName: $attributeName) {
+    id
+  }
+}

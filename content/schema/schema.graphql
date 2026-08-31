@@ -1,0 +1,6896 @@
+# Chatfuel GraphQL schema — the subset these modules are built on.
+# Generated 2026-09-02. Do not edit by hand.
+# Names and types only: no descriptions, no deprecated members.
+
+type AppEnvironment {
+  facebookClientID: String!
+  facebookSDKSrc: String!
+  googleWebClientID: String!
+  googleSDKSrc: String!
+  permissionGroups: [FacebookPermissionGroup!]!
+  permissionGroup(name: FacebookPermissionGroupName!): FacebookPermissionGroup!
+  coworkerWhatsAppProxyPhoneNumber: String
+  l4bConfigIDFacebookMessaging: String!
+  l4bConfigIDWAEmbeddedSignUp: String!
+  instagramPermissionGroups: [InstagramPermissionGroup!]!
+  instagramPermissionGroup(name: InstagramPermissionGroupName!): InstagramPermissionGroup!
+  tiktokPermissionGroups: [TikTokPermissionGroup!]!
+  tiktokPermissionGroup(name: TikTokPermissionGroupName!): TikTokPermissionGroup!
+  homePageCards: [CoworkerHomePageCard!]!
+  introQuestionsStructure: Map
+}
+
+type FacebookPermissionGroup {
+  name: FacebookPermissionGroupName!
+  facebookPermissions: [FacebookPermission!]!
+}
+
+scalar FacebookPermission
+
+enum FacebookPermissionGroupName {
+  Minimal
+  Full
+  WhatsApp
+  AdsRead
+}
+
+type Query {
+  env: AppEnvironment!
+  inviteInfo(inviteToken: BotInviteToken!): Invite!
+  currentUser: CurrentUserAccount!
+  aiAgentTemplates(locale: DashboardLocale!): [AiAgentTemplate!]!
+  file(id: FileID!): File!
+  bot(id: BotID!): Bot!
+  translation(key: String!, locale: DashboardLocale!): String!
+  publicPlatformConnectionLinkGet(id: ID!): PublicPlatformConnectionLink!
+  publicPlatformAccessRefreshLinkGet(id: ID!): PublicPlatformAccessRefreshLink!
+  getSchemaVersion: SchemaVersion!
+  specialistGoogleCalendarLinkInfo(linkID: SpecialistGoogleCalendarLinkID!): SpecialistGoogleCalendarLinkInfo!
+  getTask(id: TaskID!): Task!
+}
+
+type Mutation {
+  makeFacebookOauthUrl(rerequest: Boolean!, facebookPermissionGroupName: FacebookPermissionGroupName!, state: String): String!
+  authByFacebookOAuthCodeWithRefs(code: String!, forceAuthFromCfProductsSwitcher: Boolean!, termsAccepted: Boolean, refs: Map): AuthResult!
+  authByFacebookSDKAccessTokenWithRefs(accessToken: String!, forceAuthFromCfProductsSwitcher: Boolean!, termsAccepted: Boolean, refs: Map): AuthResult!
+  authByFacebookSDKAccessTokenAndroidAppWithRefs(accessToken: String!, termsAccepted: Boolean, refs: Map): AuthResultRegular!
+  makeGoogleOauthUrl(state: String): String!
+  authByGoogleWithRefs(googleCode: String, forceAuthFromCfProductsSwitcher: Boolean!, termsAccepted: Boolean, refs: Map): AuthResult!
+  makeGoogleOauthUrlAndroidApp(state: String, version: Int): String!
+  authByGoogleAndroidAppWithRefs(googleCode: String!, termsAccepted: Boolean, refs: Map, version: Int): AuthResultRegular!
+  makeAppleOauthUrl(state: String): String!
+  authByAppleForIOSApp(appleCode: String!, userFirstName: String, userLastName: String, refs: Map): AuthResultRegular!
+  authByInstagramOAuthCode(code: String!, refs: Map): AuthResultRegular!
+  logout: Boolean!
+  authByOneTimeShortLivedToken(token: String!): AuthResult!
+  createPublicAPIToken: AuthToken!
+  revokePublicAPIToken: Boolean!
+  createBotInviteV2(botID: BotID!, role: BotRoleInputV2!, wlLogin: String): BotInviteCreateResult
+  changeBotMemberRoleV2(memberID: BotTeamMemberID!, newRole: BotRoleInputV2!): TeamMember!
+  removeMemberFromBot(memberID: BotTeamMemberID!): Bot!
+  acceptBotInvite(inviteToken: BotInviteToken!, firstAuth: Boolean!): Bot!
+  botInviteDelete(inviteID: BotInviteID!): Bot!
+  leaveBot(botID: BotID!): CurrentUserAccount!
+  flowTourSaveStep(botID: BotID!, step: FlowTourStep!): FlowTour!
+  flowTourReviewAutomation(botID: BotID!, positive: Boolean!, option: FlowTourReviewOption, feedback: String): FlowTour!
+  setUserDashboardLocale(locale: DashboardLocale!): CurrentUserAccount!
+  setUserStorageItem(id: ID!, value: String!): UserStorageItem!
+  deleteUserStorageItem(id: ID!): UserStorageItem!
+  saveIntroQuestionsReplies(version: Int!, replies: Map!): CurrentUserAccount!
+  updateBlockName(flowID: FlowID!, blockID: BlockID!, name: String!): Block!
+  updateBlockPosition(flowID: FlowID!, blockID: BlockID!, positionX: Int!, positionY: Int!): Block!
+  updateBlockPositionBulk(flowID: FlowID!, update: [BlockPositionBulkUpdate!]!): Flow!
+  deleteBlock(flowID: FlowID!, blockID: BlockID!): Flow!
+  blockSetStartingPoint(flowID: FlowID!, blockID: BlockID!): Flow!
+  blockEnableEntryPoint(flowID: FlowID!, blockID: BlockID!): Flow!
+  blockDisableEntryPoint(flowID: FlowID!, blockID: BlockID!): Flow!
+  sortBlockElements(blockID: BlockID!, elementIDs: [BlockElementID!]!): Block!
+  blockElementDelete(botID: BotID!, elementID: BlockElementID!): Flow!
+  botAttributeCreateDefaultVal(botID: BotID!, attributeName: AttributeName!, defaultValue: String!): Bot!
+  botAttributeUpdateDefaultVal(botID: BotID!, attributeName: AttributeName!, defaultValue: String!): Bot!
+  botAttributeDeleteDefaultVal(botID: BotID!, attributeName: AttributeName!): Bot!
+  instagramSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  instagramSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  instagramSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
+  aiAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!, templateID: AiAgentTemplateID!): Flow!
+  aiAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!, templateID: AiAgentTemplateID!): Flow!
+  aiAgentUpdateKnowledgeItemPrompt(blockElementID: BlockElementID!, knowledgeItemID: AiAgentKnowledgeItemID!, prompt: String!): AiAgentBlock!
+  aiAgentClearAllKnowledgeItemPrompts(blockElementID: BlockElementID!): AiAgentBlock!
+  aiAgentUpdateAdditionalInstructions(blockElementID: BlockElementID!, additionalInstructions: String!): AiAgentBlock!
+  aiAgentCreateRule(blockElementID: BlockElementID!): AiAgentBlock!
+  aiAgentDeleteRule(blockElementID: BlockElementID!, ruleID: ComponentHandleID!): AiAgentBlock!
+  aiAgentUpdateRuleTitle(blockElementID: BlockElementID!, ruleID: ComponentHandleID!, title: String!): AiAgentBlock!
+  aiAgentUpdateRulePrompt(blockElementID: BlockElementID!, ruleID: ComponentHandleID!, prompt: String!): AiAgentBlock!
+  aiAgentCustomUpdatePrompt(blockElementID: BlockElementID!, prompt: String!): AiAgentBlock!
+  aiAgentCustomCreateRule(blockElementID: BlockElementID!): AiAgentBlock!
+  aiAgentCustomDeleteRule(blockElementID: BlockElementID!, ruleID: ComponentHandleID!): AiAgentBlock!
+  aiAgentCustomUpdateRuleTitle(blockElementID: BlockElementID!, ruleID: ComponentHandleID!, title: String!): AiAgentBlock!
+  aiAgentCustomUpdateRulePrompt(blockElementID: BlockElementID!, ruleID: ComponentHandleID!, prompt: String!): AiAgentBlock!
+  clearContactPropertyCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  clearContactPropertyCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  clearContactPropertyCreateInBlock(blockID: BlockID!): ActionBlock!
+  clearContactPropertySetAttribute(blockElementID: BlockElementID!, name: AttributeName!): ActionBlock!
+  defaultReplySetFrequency(blockElementID: BlockElementID!, frequency: DefaultReplyFrequency!): DefaultReplyBlock!
+  redirectToFlowCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  redirectToFlowCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  redirectToFlowSetTargetFlow(blockElementID: BlockElementID!, targetFlowID: FlowID!): RedirectToFlowBlock!
+  redirectToFlowRemoveTargetFlow(blockElementID: BlockElementID!): RedirectToFlowBlock!
+  sendJsonCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  sendJsonCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  sendJsonCreateInBlock(blockID: BlockID!): ActionBlock!
+  sendJsonUpdateHTTPMethod(blockElementID: BlockElementID!, method: SendJsonHTTPMethod!): ActionBlock!
+  sendJsonUpdateURL(blockElementID: BlockElementID!, url: String!): ActionBlock!
+  sendJsonAddHeader(blockElementID: BlockElementID!): ActionBlock!
+  sendJsonUpdateHeaderTitle(blockElementID: BlockElementID!, headerID: SendJsonHeaderID!, title: String!): ActionBlock!
+  sendJsonUpdateHeaderValue(blockElementID: BlockElementID!, headerID: SendJsonHeaderID!, value: String!): ActionBlock!
+  sendJsonDeleteHeader(blockElementID: BlockElementID!, headerID: SendJsonHeaderID!): ActionBlock!
+  sendJsonUpdatePayloadType(blockElementID: BlockElementID!, payloadType: SendJsonPayloadType!): ActionBlock!
+  sendJsonUpdateCustomRequestPayload(blockElementID: BlockElementID!, payload: String!): ActionBlock!
+  sendJsonAddURLParam(blockElementID: BlockElementID!): ActionBlock!
+  sendJsonUpdateURLParamTitle(blockElementID: BlockElementID!, paramID: SendJsonURLParamID!, title: String!): ActionBlock!
+  sendJsonUpdateURLParamValue(blockElementID: BlockElementID!, paramID: SendJsonURLParamID!, value: String!): ActionBlock!
+  sendJsonDeleteURLParam(blockElementID: BlockElementID!, paramID: SendJsonURLParamID!): ActionBlock!
+  sendJsonEnableResponseParsingRules(blockElementID: BlockElementID!): ActionBlock!
+  sendJsonDisableResponseParsingRules(blockElementID: BlockElementID!): ActionBlock!
+  sendJsonResponseAddParsingRule(blockElementID: BlockElementID!): ActionBlock!
+  sendJsonUpdateResponseParsingRuleJSONPath(blockElementID: BlockElementID!, ruleID: SendJsonResponseParsingRuleID!, path: String!): ActionBlock!
+  sendJsonUpdateResponseParsingRuleAttributeName(blockElementID: BlockElementID!, ruleID: SendJsonResponseParsingRuleID!, name: AttributeName!): ActionBlock!
+  sendJsonDeleteResponseParsingRule(blockElementID: BlockElementID!, ruleID: SendJsonResponseParsingRuleID!): ActionBlock!
+  sendJsonTestRequest(blockElementID: BlockElementID!): SendJsonTestResponse!
+  setConditionCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  setConditionCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  setConditionCreateInBlock(blockID: BlockID!): SetConditionBlock!
+  setConditionUpdateSegment(blockElementID: BlockElementID!, request: SegmentInput!): SetConditionBlock!
+  setContactPropertyCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  setContactPropertyCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  setContactPropertyCreateInBlock(blockID: BlockID!): ActionBlock!
+  setContactPropertySetAttribute(blockElementID: BlockElementID!, name: AttributeName!): ActionBlock!
+  setContactPropertySetValue(blockElementID: BlockElementID!, value: String!): ActionBlock!
+  summarizeChatCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  summarizeChatCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  summarizeChatCreateInBlock(blockID: BlockID!): ActionBlock!
+  summarizeChatAddEntry(blockElementID: BlockElementID!, description: String!, name: AttributeName!, addAsFirst: Boolean!): ActionBlock!
+  summarizeChatUpdateEntry(blockElementID: BlockElementID!, id: String!, description: String!, name: AttributeName!): ActionBlock!
+  summarizeChatDeleteEntry(blockElementID: BlockElementID!, id: String!): ActionBlock!
+  triggeredMessageCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  triggeredMessageCreateWithBlockAndWATemplate(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  triggeredMessageSetSegment(blockElementID: BlockElementID!, request: SegmentInput!): TriggeredMessageBlock!
+  tiktokSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  tiktokSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  tiktokSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
+  whatsAppAudioCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppAudioCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppAudioCreateInBlock(blockID: BlockID!): ContentBlock!
+  whatsAppAudioSetAudioFile(blockElementID: BlockElementID!, fileID: FileID!, fileName: String!): ContentBlock!
+  whatsAppAudioSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppAudioSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppDocumentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppDocumentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppDocumentCreateInBlock(blockID: BlockID!): ContentBlock!
+  whatsAppDocumentSetDocumentFile(blockElementID: BlockElementID!, fileID: FileID!, fileName: String!): ContentBlock!
+  whatsAppDocumentSetCaption(blockElementID: BlockElementID!, caption: String!): ContentBlock!
+  whatsAppDocumentSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppDocumentSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppImageCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppImageCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppImageCreateInBlock(blockID: BlockID!): ContentBlock!
+  whatsAppImageSetImageFile(blockElementID: BlockElementID!, fileID: FileID!): ContentBlock!
+  whatsAppImageSetCaption(blockElementID: BlockElementID!, caption: String!): ContentBlock!
+  whatsAppImageSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppImageSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppListCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppListCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppListWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppListSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppListSetBodyText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppListSetButtonTitle(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppListSetRowTitle(blockElementID: BlockElementID!, rowID: ComponentHandleID!, title: String!): ContentBlock!
+  whatsAppListSetRowDescription(blockElementID: BlockElementID!, rowID: ComponentHandleID!, description: String!): ContentBlock!
+  whatsAppListAddRow(blockElementID: BlockElementID!): ContentBlock!
+  whatsAppListDeleteRow(blockElementID: BlockElementID!, rowID: ComponentHandleID!): ContentBlock!
+  whatsAppListReorderRows(blockElementID: BlockElementID!, orderedRowIDs: [ComponentHandleID!]!): ContentBlock!
+  whatsAppOneTimeNotificationCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppOneTimeNotificationCreateWithBlockAndWATemplate(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppOneTimeNotificationUpdateSegment(blockElementID: BlockElementID!, request: SegmentInput!): WhatsAppOneTimeNotificationBlock!
+  whatsAppOneTimeNotificationSend(blockElementID: BlockElementID!): WhatsAppOneTimeNotificationBlock!
+  whatsAppScheduledMessageCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppScheduledMessageCreateWithBlockAndWATemplate(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppScheduledMessageUpdateSegment(blockElementID: BlockElementID!, request: SegmentInput!): WhatsAppScheduledMessageBlock!
+  whatsAppScheduledMessageSetRepeatType(blockElementID: BlockElementID!, repeatType: BroadcastRepeatType!): WhatsAppScheduledMessageBlock!
+  whatsAppScheduledMessageSetFirstSendTime(blockElementID: BlockElementID!, firstSendTime: Time!, correctedWeekdays: [Weekday!]!): WhatsAppScheduledMessageBlock!
+  whatsAppScheduledMessageSetRepeatEveryNDays(blockElementID: BlockElementID!, everyNDays: Int!): WhatsAppScheduledMessageBlock!
+  whatsAppScheduledMessageSetOnCertainDates(blockElementID: BlockElementID!, certainDates: [Time!]!): WhatsAppScheduledMessageBlock!
+  whatsAppScheduledMessageSetWeekdays(blockElementID: BlockElementID!, weekdays: [Weekday!]): WhatsAppScheduledMessageBlock!
+  whatsAppSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
+  whatsAppTemplateCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTemplateCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTemplateSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppTemplateSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppTemplateSetTemplate(blockElementID: BlockElementID!, templateID: WhatsAppTemplateID!): ContentBlock!
+  whatsAppTemplateDeleteTemplate(blockElementID: BlockElementID!): ContentBlock!
+  whatsAppTemplateSetHeaderTextParamValue(blockElementID: BlockElementID!, name: WhatsAppTemplateTextParamName!, value: String!): ContentBlock!
+  whatsAppTemplateSetBodyTextParamValue(blockElementID: BlockElementID!, name: WhatsAppTemplateTextParamName!, value: String!): ContentBlock!
+  whatsAppTemplateSetFooterTextParamValue(blockElementID: BlockElementID!, name: WhatsAppTemplateTextParamName!, value: String!): ContentBlock!
+  whatsAppTemplateSetHeaderImageFile(blockElementID: BlockElementID!, fileID: FileID!): ContentBlock!
+  whatsAppTemplateSetHeaderVideoFile(blockElementID: BlockElementID!, fileID: FileID!): ContentBlock!
+  whatsAppTemplateSetHeaderDocumentFile(blockElementID: BlockElementID!, fileID: FileID!, fileName: String!): ContentBlock!
+  whatsAppTemplateSetURLButtonTextParamValue(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, name: WhatsAppTemplateTextParamName!, value: String!): ContentBlock!
+  whatsAppTemplateSetCopyCodeButtonCodeValue(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, codeValue: String!): ContentBlock!
+  whatsAppTextCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextCreateInBlock(blockID: BlockID!): ContentBlock!
+  whatsAppTextSetText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppTextSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppTextAndButtonsCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextAndButtonsCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextAndButtonsWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppTextAndButtonsSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppTextAndButtonsSetHeaderText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndButtonsSetBodyText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndButtonsSetFooterText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndButtonsSetButtonTitle(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, title: String!): ContentBlock!
+  whatsAppTextAndButtonsAddNewContinueFlowButton(blockElementID: BlockElementID!): ContentBlock!
+  whatsAppTextAndButtonsDeleteButton(blockElementID: BlockElementID!, buttonID: ComponentHandleID!): ContentBlock!
+  whatsAppTextAndButtonsMoveButton(blockElementID: BlockElementID!, orderedButtonIDs: [ComponentHandleID!]!): ContentBlock!
+  whatsAppTextAndURLCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextAndURLCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppTextAndURLWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppTextAndURLSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  whatsAppTextAndURLSetHeaderText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndURLSetBodyText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndURLSetFooterText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  whatsAppTextAndURLSetButtonTitle(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, title: String!): ContentBlock!
+  whatsAppTextAndURLSetButtonURL(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, url: String!): ContentBlock!
+  whatsAppVideoCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppVideoCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  whatsAppVideoCreateInBlock(blockID: BlockID!): ContentBlock!
+  whatsAppVideoSetVideoFile(blockElementID: BlockElementID!, fileID: FileID!, fileName: String!): ContentBlock!
+  whatsAppVideoSetCaption(blockElementID: BlockElementID!, caption: String!): ContentBlock!
+  whatsAppVideoSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  whatsAppVideoSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  widgetEPCreate(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  widgetImageCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  widgetImageCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  widgetImageCreateInBlock(blockID: BlockID!): ContentBlock!
+  widgetImageSetImageFile(blockElementID: BlockElementID!, fileID: FileID!): ContentBlock!
+  widgetImageSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  widgetImageSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  widgetSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  widgetSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  widgetSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
+  widgetTextAndButtonsCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  widgetTextAndButtonsCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  widgetTextAndButtonsCreateInBlock(blockID: BlockID!): ContentBlock!
+  widgetTextAndButtonsSetText(blockElementID: BlockElementID!, text: String!): ContentBlock!
+  widgetTextAndButtonsAddNewContinueFlowButton(blockElementID: BlockElementID!): ContentBlock!
+  widgetTextAndButtonsAddNewOpenURLButton(blockElementID: BlockElementID!): ContentBlock!
+  widgetTextAndButtonsAddNewPhoneButton(blockElementID: BlockElementID!): ContentBlock!
+  widgetTextAndButtonsDeleteButton(blockElementID: BlockElementID!, buttonID: ComponentHandleID!): ContentBlock!
+  widgetTextAndButtonsMoveButton(blockElementID: BlockElementID!, orderedButtonIDs: [ComponentHandleID!]!): ContentBlock!
+  widgetTextAndButtonsSetButtonTitle(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, title: String!): ContentBlock!
+  widgetTextAndButtonsSetButtonURL(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, url: String!): ContentBlock!
+  widgetTextAndButtonsSetWaitForReplies(blockElementID: BlockElementID!, waitForReplies: Boolean!): ContentBlock!
+  widgetTextAndButtonsSetSaveContactReplyToAttribute(blockElementID: BlockElementID!, saveContactReply: Boolean!, attribute: AttributeName): ContentBlock!
+  widgetTextAndButtonsSetButtonPhone(blockElementID: BlockElementID!, buttonID: ComponentHandleID!, phone: String!): ContentBlock!
+  blockToBlockConnectionCreateOrUpdate(flowID: FlowID!, request: BlockToBlockConnectionCreateRequest!): Flow!
+  blockToBlockConnectionDelete(flowID: FlowID!, sourceBlockID: BlockID!): Flow!
+  componentToBlockConnectionCreateOrUpdate(flowID: FlowID!, request: ComponentToBlockConnectionCreateRequest!): Flow!
+  componentToBlockConnectionDelete(flowID: FlowID!, sourceBlockElementID: BlockElementID!, sourceHandleID: ComponentHandleID!): Flow!
+  createFlow(botID: BotID!, platform: Platform!): Bot!
+  updateFlowName(flowID: FlowID!, name: String!): Flow!
+  moveFlowToGroup(flowID: FlowID!, groupID: FlowGroupID!): Bot!
+  removeFlowFromGroup(flowID: FlowID!): Bot!
+  sortFlowsInGroup(groupID: FlowGroupID!, flowIds: [FlowID!]!): FlowGroup!
+  sortUngroupedFlows(botID: BotID!, flowIds: [FlowID!]!): Bot!
+  deleteFlow(flowID: FlowID!): Bot!
+  createFlowGroup(botID: BotID!): Bot!
+  sortFlowGroups(botID: BotID!, flowGroupIds: [FlowGroupID!]!): Bot!
+  updateFlowGroupName(id: FlowGroupID!, name: String!): FlowGroup!
+  deleteFlowGroup(flowGroupId: FlowGroupID!): Bot!
+  fuelyConfigSetCompanyName(botID: BotID!, companyName: String!): Bot!
+  fuelyConfigSetAdditionalInstructions(botID: BotID!, additionalInstructions: String!): Bot!
+  fuelyConfigSetEmail(botID: BotID!, email: String!): Bot!
+  fuelyConfigSetPhone(botID: BotID!, phone: String!): Bot!
+  fuelyConfigSetBusinessHoursSchedule(botID: BotID!, schedule: FuelyBusinessHoursScheduleUpdateInput!): Bot!
+  fuelyConfigSetAddress(botID: BotID!, address: String!): Bot!
+  fuelyConfigSetWebsite(botID: BotID!, website: String!): Bot!
+  fuelyConfigSetFAQs(botID: BotID!, faqs: [FuelyKnowledgeBaseFAQInput!]!): Bot!
+  fuelyConfigSetHowToPay(botID: BotID!, howToPay: String!): Bot!
+  fuelyConfigBookingUpdateNotificationChannel(botID: BotID!, channel: FuelyBookingNotificationChannel!): Bot!
+  fuelyConfigBookingUpdateConfirmation(botID: BotID!, enabled: Boolean!, additionalInfo: String): Bot!
+  fuelyConfigBookingUpdateAppointments(botID: BotID!, update: FuelyConfigBookingAppointmentsUpdateInput!): Bot!
+  fuelyConfigBookingUpdateLocale(botID: BotID!, locale: DashboardLocale!): Bot!
+  keywordRuleCreate(botID: BotID!): KeywordRule!
+  keywordRuleUpdateActionType(botID: BotID!, keywordRuleID: KeywordRuleID!, platform: Platform!, actionType: KeywordRuleActionType!): KeywordRule!
+  keywordRuleUpdateKeywords(botID: BotID!, keywordRuleID: KeywordRuleID!, keywords: [String!]!): KeywordRule!
+  keywordRuleUpdateMatchType(botID: BotID!, keywordRuleID: KeywordRuleID!, matchType: KeywordRuleMatchType!): KeywordRule!
+  keywordRuleDelete(botID: BotID!, keywordRuleID: KeywordRuleID!): Bot!
+  previewResponsesStartInFlow(flowID: FlowID!): PreviewResponsesFlowSession!
+  previewResponsesStartForBot(botID: BotID!, platform: Platform!): PreviewResponsesBotSession!
+  previewResponsesStartForFuelyAutomation(botID: BotID!, fuelyAutomationID: FuelyAutomationID!): PreviewResponsesFuelyAutomationSession!
+  fileStartDownload(id: FileID!): File!
+  createWorkspaceAndBot(initialTitle: String!, timezone: BotTimezone): Bot!
+  copyBot(botID: BotID!): Bot!
+  deleteBot(botID: BotID!): CurrentUserAccount!
+  renameBot(botID: BotID!, newTitle: String!): Bot!
+  botConnectWhatsAppPhone(botID: BotID!, waPhoneID: WhatsAppBusinessPhoneID!): Bot!
+  botReplaceWhatsAppPhone(botID: BotID!, waPhoneID: WhatsAppBusinessPhoneID!): Bot!
+  botDisconnectContactScope(botID: BotID!, contactScopeID: ContactScopeID!): Bot!
+  botConnectInstagramAccount(botID: BotID!, instagramAccountID: InstagramAccountID!): Bot!
+  instagramOAuthFinishAndConnect(code: String!, botID: BotID!): Bot!
+  botConnectTikTokAccount(botID: BotID!, tiktokAccountID: TikTokAccountID!): Bot!
+  tiktokOAuthFinishAndConnect(code: String!, botID: BotID!): Bot!
+  botConnectFacebookPage(botID: BotID!, pageID: FbPageID!): Bot!
+  botStartWhatsAppPhoneAutoConnect(botID: BotID!, excludeWAPhoneIDs: [WhatsAppBusinessPhoneID!]!, wabaIDHint: WhatsappBusinessAccountID, replaceCurrentConnectedPhone: Boolean): Bot!
+  botWhatsAppPhoneAutoConnectionSetFinished(botID: BotID!): Bot!
+  botGenerateWhatsAppLink(botID: BotID!, title: String!, message: String): Bot!
+  botResetAPIToken(botID: BotID!): Bot!
+  botUpdateRolesConfig(botID: BotID!, rolesConfig: RolesConfigInput!): Bot!
+  botUpdateTimezone(botID: BotID!, timezone: BotTimezone!): Bot!
+  botUpdateCountryCode(botID: BotID!, countryCode: CountryCode!): Bot!
+  botUpdateIndustry(botID: BotID!, industry: BotIndustryInput!): Bot!
+  facebookBusinessVerificationSubmissionCreate(businessID: FacebookBusinessID!, phoneNumber: String!, files: [FileID!]!): FacebookBusinessVerificationSubmission!
+  facebookBusinessVerificationSubmissionClarify(businessID: FacebookBusinessID!, files: [FileID!]!): FacebookBusinessVerificationSubmission!
+  facebookBusinessVerificationSubmissionSuccessNotificationMarkRead(businessID: FacebookBusinessID!): FacebookBusinessVerificationSubmission!
+  facebookMessagingOauthMakeUrl(state: String): String!
+  facebookMessagingOauthFinish(code: String!, oAuthType: FbOAuthType!): CurrentUserAccount!
+  goodsProductCreate(botID: BotID!, product: GoodsProductInput!): Bot!
+  goodsProductUpdate(botID: BotID!, itemID: GoodsItemID!, product: GoodsProductInput!): GoodsProduct!
+  goodsProductDelete(botID: BotID!, itemID: GoodsItemID!): Bot!
+  goodsServiceCreate(botID: BotID!, service: GoodsServiceInput!): Bot!
+  goodsServiceUpdate(botID: BotID!, itemID: GoodsItemID!, service: GoodsServiceInput!): GoodsService!
+  goodsServiceDelete(botID: BotID!, itemID: GoodsItemID!): Bot!
+  botPlatformConnectionLinkCreate(botID: BotID!, platform: PlatformOperationLinkPlatform!, onSuccessRedirectURL: String, onFailureRedirectURL: String): PlatformConnectionLink!
+  botPlatformConnectionLinkRevoke(botID: BotID!, linkID: PlatformOperationLinkID!): Bot!
+  botPlatformAccessRefreshLinkCreate(botID: BotID!, platform: PlatformOperationLinkPlatform!, onSuccessRedirectURL: String, onFailureRedirectURL: String): PlatformAccessRefreshLink!
+  botPlatformAccessRefreshLinkRevoke(botID: BotID!, linkID: PlatformOperationLinkID!): Bot!
+  acquirePreVerifiedBusinessPhoneNumber: PreVerifiedBusinessPhoneNumber!
+  publicPlatformConnectionWaEmbeddedSignUpFinishAndConnect(linkID: ID!, code: String!, wabaID: WhatsappBusinessAccountID, waPhoneID: WhatsAppBusinessPhoneID): PublicPlatformConnectionResult!
+  publicPlatformConnectionInstagramOAuthMakeUrl(linkID: ID!, state: String): String!
+  publicPlatformConnectionInstagramOAuthFinishAndConnect(linkID: ID!, code: String!): PublicPlatformConnectionResult!
+  publicPlatformConnectionTiktokOAuthMakeUrl(linkID: ID!, state: String): String!
+  publicPlatformConnectionTiktokOAuthFinishAndConnect(linkID: ID!, code: String!): PublicPlatformConnectionResult!
+  publicPlatformAccessRefreshWaEmbeddedSignUpFinish(linkID: ID!, code: String!, wabaID: WhatsappBusinessAccountID, waPhoneID: WhatsAppBusinessPhoneID): PublicPlatformAccessRefreshResult!
+  publicPlatformAccessRefreshInstagramOAuthMakeUrl(linkID: ID!, state: String): String!
+  publicPlatformAccessRefreshInstagramOAuthFinish(linkID: ID!, code: String!): PublicPlatformAccessRefreshResult!
+  publicPlatformAccessRefreshTiktokOAuthMakeUrl(linkID: ID!, state: String): String!
+  publicPlatformAccessRefreshTiktokOAuthFinish(linkID: ID!, code: String!): PublicPlatformAccessRefreshResult!
+  specialistCreate(botID: BotID!, info: SpecialistInfoInput!): Bot!
+  specialistUpdate(botID: BotID!, specialistID: SpecialistID!, info: SpecialistInfoInput!): Specialist!
+  specialistDelete(botID: BotID!, specialistID: SpecialistID!): Bot!
+  specialistDisconnectGoogleCalendar(botID: BotID!, specialistID: SpecialistID!, googleCalendarID: GoogleCalendarID!): Specialist!
+  specialistCreateGoogleCalendarConnectionLink(botID: BotID!, specialistID: SpecialistID!): SpecialistGoogleCalendarLink!
+  specialistDeleteGoogleCalendarConnectionLink(botID: BotID!, specialistID: SpecialistID!): Bot!
+  googleCalendarOauthFinishBySpecialistLink(code: String!, linkID: SpecialistGoogleCalendarLinkID!): SpecialistGoogleCalendarLinkOauthFinishResult!
+  updateUserOpenedBotDate(botID: BotID!): CurrentUserAccount!
+  whatsAppEntitiesStartRefetch: Boolean!
+  waEmbeddedSignUpMakeUrl(state: String): String!
+  waEmbeddedSignUpFinish(code: String!): CurrentUserAccount!
+  waEmbeddedSignUpFinishAndConnectToBot(code: String!, botID: BotID!, wabaID: WhatsappBusinessAccountID, waPhoneID: WhatsAppBusinessPhoneID, replaceCurrentConnectedPhone: Boolean!): Bot!
+  whatsAppPhoneReregister(id: WhatsAppBusinessPhoneID!): WhatsAppBusinessPhoneNumber
+  whatsAppPhoneSyncBizAppData(id: WhatsAppBusinessPhoneID!): WhatsAppBusinessPhoneNumber!
+  whatsAppPhoneSetProfileImageFile(id: WhatsAppBusinessPhoneID!, fileID: FileID!): WhatsAppBusinessPhoneNumber!
+  workspaceCreate: Workspace!
+  workspaceRename(workspaceID: WorkspaceID!, newTitle: String!): Workspace!
+  workspaceTransferBot(botID: BotID!, targetWorkspaceID: WorkspaceID!): Workspace!
+  workspaceCreateBot(workspaceID: WorkspaceID!, initialTitle: String!, timezone: BotTimezone): Bot!
+  workspaceDelete(workspaceID: WorkspaceID!): Boolean!
+  botSetLivechatAutoClosingConfig(botID: BotID!, cfg: LivechatAutoClosingConfigUpdateInput!): Bot!
+  conversationCreate(contactID: ContactID!): Conversation!
+  conversationReadMessages(botID: BotID!, conversationID: ConversationID!, before: MessageID!): Conversation!
+  conversationStart(botID: BotID!, conversationID: ConversationID!): Conversation!
+  conversationFinishSendToFlow(botID: BotID!, conversationID: ConversationID!, flowID: FlowID!): Conversation!
+  facebookTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput!): FacebookOutTextMessage!
+  facebookAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookAttachmentMessageSendInput!): FacebookOutAttachment
+  previewResponsesFacebookTextSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput): FacebookInTextMessage
+  instagramTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramTextMessageSendInput!): InstagramOutTextMessage!
+  instagramAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramAttachmentMessageSendInput!): InstagramOutAttachment
+  previewResponsesInstagramTextSend(botID: BotID!, conversationID: ConversationID!, message: InstagramTextMessageSendInput): InstagramInTextMessage
+  tiktokTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: TikTokTextMessageSendInput!): TikTokOutTextMessage!
+  tiktokAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: TikTokAttachmentMessageSendInput!): TikTokOutAttachment
+  previewResponsesTikTokTextSend(botID: BotID!, conversationID: ConversationID!, message: TikTokTextMessageSendInput): TikTokInTextMessage
+  whatsAppTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: WhatsAppTextMessageSendInput): WhatsAppOutTextMessage
+  whatsAppTemplateSend(botID: BotID!, conversationID: ConversationID!, template: WhatsAppTemplateSendInput): WhatsAppOutTemplateMessage
+  whatsappAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: WhatsAppAttachmentMessageSendInput!): WhatsAppOutAttachment
+  previewResponsesWhatsappTextSend(botID: BotID!, conversationID: ConversationID!, message: WhatsAppTextMessageSendInput): WhatsAppInTextMessage
+  previewResponsesWhatsappContinueFlowBtnClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesBtnClickInput!): WhatsAppInContinueFlowButtonClickMessage!
+  previewResponsesWhatsappListRowClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesWAListRowClickInput!): WhatsAppInListRowClickMessage!
+  previewResponsesWhatsappTemplateQuickReplyBtnClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesBtnClickInput!): WhatsAppInTemplateQuickReplyButtonClickMessage!
+  widgetTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: WidgetTextMessageSendInput): WebWidgetTextMessage
+  widgetAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: WidgetAttachmentMessageSendInput): WebWidgetAttachmentMessage
+  previewResponsesWidgetTextSend(botID: BotID!, conversationID: ConversationID!, message: WidgetTextMessageSendInput!): WebWidgetTextMessage
+  previewResponsesWidgetContinueFlowBtnClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesBtnClickInput!): WebWidgetContinueFlowButtonClickMessage!
+  previewResponsesWidgetCallPhoneBtnClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesBtnClickInput!): WebWidgetCallPhoneButtonClickMessage!
+  previewResponsesWidgetOpenURLBtnClickSend(botID: BotID!, conversationID: ConversationID!, click: PreviewResponsesBtnClickInput!): WebWidgetOpenURLButtonClickMessage!
+  whatsappContactCreateV2(botID: BotID!, data: WhatsappContactCreateInput!): Contact!
+  contactUpdateName(id: ContactID!, name: String!): Contact!
+  contactAttributeUpdate(id: ContactID!, attrName: AttributeName!, attrValue: String!): Contact!
+  contactAttributeDelete(id: ContactID!, attrName: AttributeName!): Contact!
+  contactSetAssignee(id: ContactID!, assigneeID: UserAccountID!): Contact!
+  contactSetFuelyAIAssignee(id: ContactID!): Contact!
+  contactRemoveAssignee(id: ContactID!): Contact!
+  contactSetNote(id: ContactID!, note: String): Contact!
+  csvContactExportStartBySegment(botID: BotID!, platforms: [Platform!]!, segment: SegmentInput, attributes: [AttributeName!]!): Task!
+  csvContactExportStartByIDsList(botID: BotID!, contactIDs: [ContactID!]!, attributes: [AttributeName!]!): Task!
+  csvContactExportCancel(botID: BotID!, id: String!): Bot!
+  csvContactImportCreate(botID: BotID!, fileID: FileID!, platform: Platform!, locale: DashboardLocale!): CSVContactImport!
+  csvContactImportUpdateFile(botID: BotID!, id: CSVContactImportID!, fileID: FileID!): CSVContactImport!
+  csvContactImportUpdateColumns(botID: BotID!, id: CSVContactImportID!, request: CSVContactImportColumnsUpdate!): CSVContactImport!
+  csvContactImportStart(botID: BotID!, id: CSVContactImportID!): CSVContactImport!
+  contactSetSalesStage(id: ContactID!, salesStageV2: SalesStageV2!): Contact!
+  segmentNew: Segment!
+  fuelyAutomationCreate(botID: BotID!, scope: FuelyAutomationScope!, name: String!): FuelyAutomation!
+  fuelyAutomationDelete(botID: BotID!, id: FuelyAutomationID!): Bot!
+  fuelyAutomationSetName(botID: BotID!, id: FuelyAutomationID!, name: String!): FuelyAutomation!
+  fuelyAutomationSetEnabled(botID: BotID!, id: FuelyAutomationID!, enabled: Boolean!): FuelyAutomation!
+  fuelyAutomationUpdateSetting(botID: BotID!, id: FuelyAutomationID!, update: FuelySettingUpdateInput!): FuelyAutomation!
+  fuelyAutomationApplyTemplate(botID: BotID!, template: FuelyAutomationTemplateInput!): Bot!
+  fuelyBroadcastWhatsAppOneTimeNotificationCreate(botID: BotID!, filledTemplateID: FilledWhatsAppTemplateID!): FuelyBroadcast!
+  fuelyBroadcastWhatsAppScheduledMessageCreate(botID: BotID!, filledTemplateID: FilledWhatsAppTemplateID!, sendTime: Time!): FuelyBroadcast!
+  fuelyInitialSetupStart: FuelyInitialSetup!
+  fuelyInitialSetupSetCurrentStep(id: FuelyInitialSetupID!, step: FuelyInitialSetupStep!): FuelyInitialSetup!
+  fuelyInitialSetupSetIndustry(id: FuelyInitialSetupID!, industry: FuelyInitialSetupIndustryInput!): FuelyInitialSetup!
+  fuelyInitialSetupSetCompanyWebsite(id: FuelyInitialSetupID!, website: String!): FuelyInitialSetup!
+  fuelyInitialSetupSetDocuments(id: FuelyInitialSetupID!, documents: [FileID!]!): FuelyInitialSetup!
+  fuelyInitialSetupSetAgentAdditionalInstructions(id: FuelyInitialSetupID!, instructions: String!): FuelyInitialSetup!
+  fuelyInitialSetupSetCustomerDetails(id: FuelyInitialSetupID!, details: String!): FuelyInitialSetup!
+  fuelyInitialSetupSetPreviewChat(id: FuelyInitialSetupID!, chat: FuelyInitialSetupPreviewChatInput!): FuelyInitialSetup!
+  fuelyInitialSetupSetBotID(id: FuelyInitialSetupID!, botID: BotID!): FuelyInitialSetup!
+  metaAdsSyncStart: MetaAdsSyncState!
+  webWidgetSetName(id: WebWidgetID!, name: String!): WebWidget!
+  webWidgetSetAvatar(id: WebWidgetID!, fileID: FileID!): WebWidget!
+  webWidgetSetDomains(id: WebWidgetID!, domains: [String!]!): WebWidget!
+  webWidgetSetColor(id: WebWidgetID!, color: String!): WebWidget!
+  webWidgetSetIsEnabled(id: WebWidgetID!, isEnabled: Boolean!): WebWidget!
+  filledWhatsAppTemplateCreateTemporary(botID: BotID!, templateID: WhatsAppTemplateID!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetHeaderTextParamValue(templateID: FilledWhatsAppTemplateID!, name: WhatsAppTemplateTextParamName!, value: String!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetBodyTextParamValue(templateID: FilledWhatsAppTemplateID!, name: WhatsAppTemplateTextParamName!, value: String!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetFooterTextParamValue(templateID: FilledWhatsAppTemplateID!, name: WhatsAppTemplateTextParamName!, value: String!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetHeaderImageFile(templateID: FilledWhatsAppTemplateID!, fileID: FileID!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetHeaderVideoFile(templateID: FilledWhatsAppTemplateID!, fileID: FileID!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetHeaderDocumentFile(templateID: FilledWhatsAppTemplateID!, fileID: FileID!, fileName: String!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetURLButtonParamValue(templateID: FilledWhatsAppTemplateID!, buttonID: ComponentHandleID!, name: WhatsAppTemplateTextParamName!, value: String!): FilledWhatsAppTemplate!
+  filledWhatsAppTemplateSetCopyCodeButtonCodeValue(templateID: FilledWhatsAppTemplateID!, buttonID: ComponentHandleID!, codeValue: String!): FilledWhatsAppTemplate!
+  triggerSetConditionType(id: TriggerID!, conditionType: TriggerConditionType!): Trigger!
+  triggerSetAttributeFilter(id: TriggerID!, attrCondition: AttrFilterInput!): Trigger!
+  triggerDeleteAttributeFilter(id: TriggerID!): Trigger!
+  triggerSetDelay(id: TriggerID!, delay: TriggerDelayInput!): Trigger!
+  bookingCreateV2(botID: BotID!, req: BookingInput!): BookingBase!
+  bookingUpdateV2(botID: BotID!, id: BookingID!, req: BookingUpdateInput!): BookingBase!
+  bookingStatusResolveV2(botID: BotID!, bookingID: BookingID!, status: BookingStatus!): BookingBase!
+  bookingDeleteV2(botID: BotID!, id: BookingID!): BookingBase!
+  bookingInlineContactSetNote(id: InlineContactID!, note: String): BookingInlineContact!
+  specialistStartGoogleCalendarSync(botID: BotID!, specialistID: SpecialistID!): Task!
+  botInstagramRefetchLatestMedias(id: BotID!, count: Int!): Bot!
+  instagramAccountRefetchMetaInfo(id: InstagramAccountID!): InstagramAccount!
+  instagramAccountRefetchLatestMedias(id: InstagramAccountID!, count: Int!): InstagramAccount!
+  instagramOAuthMakeUrl(permGroup: InstagramPermissionGroupName!, state: String): String!
+  instagramOAuthFinish(code: String!): CurrentUserAccount!
+  instagramOAuthFinishForInstagramAccount(code: String!, id: InstagramAccountID!): CurrentUserAccount!
+  instagramAccountPublishImage(botID: BotID!, input: InstagramPublishImageInput!): InstagramPublishedMedia!
+  instagramAccountPublishReel(botID: BotID!, input: InstagramPublishReelInput!): InstagramPublishedMedia!
+  instagramAccountPublishStory(botID: BotID!, input: InstagramPublishStoryInput!): InstagramPublishedMedia!
+  instagramAccountPublishCarousel(botID: BotID!, input: InstagramPublishCarouselInput!): InstagramPublishedMedia!
+  tiktokOAuthMakeUrl(permGroup: TikTokPermissionGroupName!, state: String): String!
+  tiktokOAuthFinish(code: String!): CurrentUserAccount!
+  specialistGoogleCalendarOauthMakeUrl(state: String): String!
+  coworkerBotUserDefinedSkillInstall(botID: BotID!, userDefinedSkillID: CoworkerUserDefinedSkillID!): Boolean!
+  coworkerConversationCreate(botID: BotID!): CoworkerConversation!
+  coworkerIncognitoConversationCreate(botID: BotID!): CoworkerConversation!
+  coworkerConversationCreateInSkill(botID: BotID!, skillID: CoworkerSkillID!): CoworkerConversation!
+  coworkerConversationCreateInUserDefinedSkill(botID: BotID!, userDefinedSkillID: CoworkerUserDefinedSkillID!): CoworkerConversation!
+  coworkerConversationSendMessage(id: CoworkerConversationID!, clientID: String!, text: String!, clientActionType: CoworkerMessageClientActionType): CoworkerConversation!
+  coworkerConversationSendMessageWithAttachments(id: CoworkerConversationID!, clientID: String!, text: String, fileIDs: [FileID!]!): CoworkerConversation!
+  coworkerConversationSendAudioMessage(id: CoworkerConversationID!, clientID: String!, fileID: FileID!): CoworkerConversation!
+  coworkerConversationClickButton(id: CoworkerConversationID!, clientID: String!, msgID: CoworkerConversationMessageID!, buttonID: String!): CoworkerConversation!
+  coworkerConversationRespondToolApproval(clientID: String!, conversationID: CoworkerConversationID!, messageID: CoworkerConversationMessageID!, approved: Boolean!, denialMessage: String): Boolean!
+  coworkerConversationStopStreaming(id: CoworkerConversationID!): CoworkerConversation!
+  coworkerConversationMarkAllAssistantMessagesAsRead(id: CoworkerConversationID!): CoworkerConversation!
+  coworkerConversationSetFrontendStorageItem(id: CoworkerConversationID!, key: String!, value: String!): CoworkerConversation!
+  coworkerConversationUnsetFrontendStorageItem(id: CoworkerConversationID!, key: String!): CoworkerConversation!
+  coworkerConversationAbortRejectedUserMessage(id: CoworkerConversationID!): Boolean!
+  coworkerConversationFrontendStateSubmitReply(conversationID: CoworkerConversationID!, requestID: String!, data: Map!): Boolean!
+  coworkerConversationCreateIceBreakers(id: CoworkerConversationID!): [CoworkerConversationIceBreaker!]!
+  coworkerConversationClickIceBreaker(id: CoworkerConversationID!, clientID: String!, iceBreakerID: CoworkerConversationIceBreakerID!): CoworkerConversation!
+  userAccountCreateWAVerificationCodeForCoworker: String!
+  fbPagesSyncForBusiness(businessID: FacebookBusinessID!): Boolean!
+  fbPageSyncLatestPosts(pageID: FbPageID!, count: Int!): Boolean!
+}
+
+scalar AuthToken
+
+union AuthResult = AuthResultRegular | AuthResultRedirectToOldDashboard
+
+type AuthResultRegular {
+  authToken: AuthToken!
+  firstAuth: Boolean!
+  userAccount: CurrentUserAccount!
+  hasAccountInOldChatfuel: Boolean!
+}
+
+type AuthResultRedirectToOldDashboard {
+  authToken: String!
+}
+
+type Role {
+  roleTypeV2: BotRoleTypeV2!
+  botPermissions: [Permission!]!
+}
+
+enum BotRoleTypeV2 {
+  Admin
+  Editor
+  Agent
+  Custom
+}
+
+type Permission {
+  object: PermissionObject!
+  action: PermissionAllowedAction!
+}
+
+enum PermissionObject {
+  Ai
+  Configure
+  Roles
+  Pro
+  Inbox
+  Broadcasting
+  People
+  Analyze
+  Home
+  Bot
+  Workspaces
+  Flows
+  ContactsAssignedToOthers
+  ContactsUnassigned
+}
+
+enum PermissionAllowedAction {
+  None
+  View
+  Edit
+}
+
+type Subscription {
+  currentUserAccountRoleInBotUpdated: CurrentUserAccountRoleInBotUpdate!
+  facebookBusinessVerificationSubmissionUpdated(fbBusinessID: FacebookBusinessID!): FacebookBusinessVerificationSubmission!
+  whatsAppBusinessPhoneNumberUpdated(phoneID: WhatsAppBusinessPhoneID!): WhatsAppBusinessPhoneNumber!
+  unseenOpenDialogsCountChanged(botID: BotID!): Int
+  messageAdded(botID: BotID!, conversationID: ConversationID!): Message
+  messageUpdated(botID: BotID!, conversationID: ConversationID!): Message
+  contactsChatUpdates(botID: BotID!, assigneeFilter: ContactAssigneeFilter!, unreadOnly: Boolean!, salesStageV2Filter: [SalesStageV2!]!, textInputFilter: String): ContactsChatUpdate
+  contactsDealUpdates(botID: BotID!, assigneeFilter: ContactAssigneeFilter!): ContactsDealUpdate
+  contactUpdated(botID: BotID!, contactID: ContactID!): Contact
+  contactsDealsPageIndicatorUpdates(botID: BotID!): DealsPageIndicatorUpdate
+  csvContactImportUpdated(botID: BotID!, id: CSVContactImportID!): CSVContactImport!
+  fuelyAutomationUpdated(botID: BotID!): FuelyAutomation!
+  metaAdsSyncStateUpdated: MetaAdsSyncState!
+  taskUpdated(id: TaskID!): Task!
+  bookingAdded(botID: BotID!): Booking!
+  bookingUpdated(botID: BotID!): Booking!
+  bookingDeleted(botID: BotID!): BookingID!
+  botInstagramMediaAdded(id: BotID!): InstagramMedia!
+  coworkerConversationCreated(botID: BotID!): CoworkerConversation!
+  coworkerAnyConversationUpdated(botID: BotID!): CoworkerConversationUpdate!
+  fbPagesSyncStatusUpdated: FbPagesSyncStatus!
+  fbPagePostsSyncStatusUpdated(pageID: FbPageID!): FbPagePostsSyncStatus!
+}
+
+type CurrentUserAccountRoleInBotUpdate {
+  botID: BotID!
+  role: Role
+}
+
+scalar BotID
+
+type Bot {
+  id: BotID!
+  invites: [Invite!]!
+  members: [TeamMember!]!
+  member(id: BotTeamMemberID!): TeamMember!
+  defaultReplyFlows: [DefaultReplyFlow!]!
+  flowGroups: [FlowGroup!]!
+  flowsWithoutGroup: [RegularFlow!]!
+  keywordRules(first: Int, after: KeywordRuleCursor): KeywordRulesConnection!
+  flow(flowID: FlowID!): Flow!
+  fuelyConfig: FuelyConfig
+  title: String!
+  createdAt: Time!
+  industry: BotIndustry
+  workspace: Workspace
+  apiToken: BotAPIToken!
+  isReady: Boolean!
+  contactScopes: [ContactScope!]!
+  whatsAppPhoneAutoConnectionProcess: WhatsAppPhoneAutoConnectionProcess
+  botWhatsAppLink: BotWhatsAppLink
+  rolesConfig: RolesConfig!
+  countryCode: CountryCode
+  timezone: BotTimezone
+  goodsCatalog: [GoodsItem!]!
+  goodsService(id: GoodsItemID!): CommonGoodsService!
+  goodsProduct(id: GoodsItemID!): GoodsProduct!
+  activePlatformConnectionLinks: ActivePlatformConnectionLinks!
+  activePlatformAccessRefreshLinks: ActivePlatformAccessRefreshLinks!
+  specialists: [Specialist!]!
+  specialist(id: SpecialistID!): CommonSpecialist!
+  conversation(conversationID: ConversationID!): Conversation!
+  unseenOpenDialogsCount: Int!
+  conversationCount: [ConversationCountEntry!]!
+  livechatAutoClosingConfig: LivechatAutoClosingConfig!
+  botAttributes(locale: DashboardLocale!, platforms: [Platform!]!, attributeTypes: [AttributeType!]!, inputSubstring: String, first: Int, after: BotAttributeCursor, filters: [BotAttributeFilter!]!, orderBy: BotAttributeOrderByInput!): BotAttributeConnection!
+  contact(id: ContactID!): Contact!
+  lastActiveCSVContactsExportTask: Task
+  dealsPageIndicatorActive: Boolean!
+  contactsConnection(platforms: [Platform!]!, first: Int!, before: ContactSearchCursor, after: ContactSearchCursor, segment: SegmentInput, orderBy: ContactSearchOrderByInput): ContactConnection!
+  contactsCount(platforms: [Platform!]!, segment: SegmentInput): Int!
+  contactsTotalCount(platforms: [Platform!]!, segment: SegmentInput): Int!
+  contactDealsConnection(first: Int!, before: ContactSearchCursor, after: ContactSearchCursor, assigneeFilter: ContactAssigneeFilter!, salesStageV2Filter: SalesStageV2!): ContactConnection!
+  contactDealsByStages(filter: DealsByStagesFilter!): TotalsByStages!
+  contactChatsConnection(first: Int!, before: ContactSearchCursor, after: ContactSearchCursor, assigneeFilter: ContactAssigneeFilter!, unreadOnly: Boolean!, salesStageV2Filter: [SalesStageV2!]!, textInputFilter: String): ContactConnection!
+  contactChatsCountV2(filter: ContactChatsCountFilter!): Int!
+  latestCSVContactsImport(platform: Platform!): CSVContactImport
+  fuelyInitialSetup: FuelyInitialSetup
+  fuelyBroadcasts(first: Int!, after: FuelyBroadcastCursor): FuelyBroadcastPage!
+  fuelyAutomation(id: FuelyAutomationID!): FuelyAutomation!
+  fuelyAutomations(scope: FuelyAutomationScope): [FuelyAutomation!]!
+  isMigratedToNewFuelySettings: Boolean!
+  availableMetaConversionEventNames: FuelyAvailableMetaConversionEventNames!
+  whatsAppTemplates(first: Int, after: WhatsAppTemplateCursor, before: WhatsAppTemplateCursor): WhatsappTemplates
+  filledWhatsAppTemplate(id: FilledWhatsAppTemplateID!): FilledWhatsAppTemplate!
+  bookingsV2(startTime: Time!, endTime: Time!): [BookingBase!]!
+  bookingV2(id: BookingID!): BookingBase!
+  inlineContact(phoneNumber: String!): BookingInlineContact
+  instagramMediasConnection(first: Int!, after: InstagramMediasCursor): InstagramMediasConnection!
+  availableGoogleCalendars: [GoogleCalendar!]!
+}
+
+scalar BotTeamMemberID
+
+type TeamMember {
+  id: BotTeamMemberID!
+  role: Role!
+  user: PublicUserAccount!
+  removalWarnings: [TeamMemberRemovalWarning!]!
+}
+
+scalar BotInviteID
+
+type Invite {
+  id: BotInviteID!
+  role: Role!
+  author: TeamMember
+  wlLogin: String
+  type: InviteType!
+  used: Boolean!
+  alreadyMember: Boolean!
+  inviteTitle: String!
+}
+
+enum InviteType {
+  Bot
+  Workspace
+}
+
+scalar BotInviteToken
+
+input BotRoleInputV2 {
+  roleType: BotRoleTypeV2!
+  botPermissions: [PermissionInput!]!
+}
+
+input PermissionInput {
+  object: PermissionObject!
+  action: PermissionAllowedAction!
+}
+
+type BotInviteCreateResult {
+  botInviteToken: BotInviteToken!
+  bot: Bot!
+}
+
+enum TeamMemberRemovalWarning {
+  FuelySwitchToHumanAssignee
+}
+
+enum DefinedErrorCode {
+  CannotRemoveLastAdminMember
+  AccountMergeFacebookConflict
+  AccountMergeGoogleConflict
+  FacebookUserProfileMismatch
+  GoogleUserProfileMismatch
+  PublicAPITokenAlreadyExists
+  Unauthorized
+  NotEnoughPermissions
+  InternalServerError
+  TooManyBotsInWorkspace
+  CommentReplyRuleDoesNotExist
+  CommentReplyRuleMaxCountPerPlatformReached
+  CommentReplyRuleMaxKeywordsPerRuleReached
+  CommentReplyRuleMaxKeywordLengthReached
+  CommentReplyRuleNeedAtLeastOneKeyword
+  CommentReplyRuleBothRepliesAreDisabled
+  CommentReplyRulePublicReplyPromptIsEmpty
+  CommentReplyRulePrivateReplyPromptIsEmpty
+  CommentReplyRulePublicReplyPromptIsTooLong
+  CommentReplyRulePrivateReplyPromptIsTooLong
+  CommentReplyRuleKeywordIsDuplicated
+  CommentReplyRuleReplyToAllAlreadyExists
+  FuelyAdditionalInstructionsCharLimitExceeded
+  SummarizeChatEntryCountExceededLimit
+  SummarizeChatEntryDescriptionTooLong
+  SummarizeChatEntryDoesNotExist
+  TriggerIsInInvalidState
+  WAListTooManyRows
+  WAListCannotDeleteLastRow
+  WAListRowNotFound
+  WAListInvalidRowsOrdering
+  WhatsAppOneTimeBroadcastAlreadyStarted
+  RuleKeywordDuplicate
+  FlowStartingPointBlockDoesNotExist
+  TestRequestConnectionRefused
+  ScopeNotConnectedToBot
+  ComponentHasValidationErrors
+  FlowGroupCanNotBeDeleted
+  FuelyNoCatalogItems
+  FuelyNoFAQs
+  FuelyKnowledgeBaseLimitExceeded
+  FuelySummarizeChatHasValidationErrors
+  FuelySummarizeChatAtLeastOneEntryRequired
+  FuelySummarizeChatEntryDoesNotExist
+  FuelyCommentRepliesPromptLengthIsTooLong
+  FuelyBusinessHoursScheduleInvalidTimeFormat
+  FuelyBusinessHoursScheduleInvalidTimeRange
+  FuelyBusinessHoursScheduleDuplicateDays
+  FuelyInvalidRespondToCustomers
+  FuelySwitchToHumanRulesEmpty
+  FuelySwitchToHumanRulePromptTooLong
+  FuelySwitchToHumanRulePromptEmpty
+  FuelyAgentNameLengthIsTooLong
+  FuelyAgentAdditionalInstructionsLengthIsTooLong
+  FuelyChatLanguageLengthIsTooLong
+  FuelyGreetingMessageLengthIsTooLong
+  FuelyMissingInfoFallbackMessageLengthIsTooLong
+  BookingNotificationChannelNotAllowed
+  BotMigratedToNewFuelySettings
+  PreviewResponsesFuelyAutomationDoesNotExist
+  PreviewResponsesFuelyAutomationScopeNotPreviewable
+  BotCreationRateLimit
+  NoPhoneConnectedToBot
+  BotAlreadyHasWhatsAppLink
+  WhatsAppLinkAlreadyExists
+  WhatsAppLinkInvalidLength
+  WhatsAppLinkIsNotValid
+  WhatsAppLinkPhoneIsNotValid
+  ContactScopeAlreadyConnected
+  TranslationDoesNotExist
+  BotInvalidTimezone
+  CannotDisconnectWidgetScope
+  FacebookBusinessDoesNotExist
+  FacebookBusinessAlreadyVerified
+  FacebookBusinessDoesNotVerified
+  FacebookBusinessVerificationSubmissionAlreadyExists
+  FacebookBusinessVerificationSubmissionDoesNotExist
+  FacebookBusinessVerificationSubmissionAttemptsAreOver
+  FacebookBusinessVerificationSubmissionLockedForClarification
+  FacebookBusinessVerificationSubmissionTooManyFiles
+  FacebookBusinessVerificationSubmissionFileSizeTooBig
+  FacebookBusinessVerificationSubmissionFileDoesNotExist
+  FacebookBusinessVerificationSubmissionAtLeastOneFileRequired
+  FacebookUserDoesNotExist
+  FBEntitiesRefetchInProgress
+  PhoneAutoConnectionInProgress
+  FileContentTypeNotSupported
+  FileTooBig
+  FuelyKnowledgeBaseLimitReached
+  GoodsItemNotFound
+  GoodsItemsTooMuchForBot
+  GoodsItemTitleRequired
+  GoodsItemTitleTooShort
+  GoodsItemTitleTooLong
+  GoodsItemTitleNotUnique
+  GoodsItemDescriptionTooLong
+  GoodsItemPriceAmountWrongFormat
+  GoodsItemPriceCurrencyRequired
+  GoodsProductImagesTooMuch
+  GoodsServiceImagesTooMuch
+  GoodsServiceDurationRequired
+  PlatformOperationLinkNotFound
+  PlatformOperationLinkInvalidRedirectURL
+  PlatformNotSupportedForOperationLink
+  NoConnectedContactScopeForPlatform
+  PreVerifiedBusinessPhoneNumberNotAvailable
+  PreVerifiedBusinessPhoneNumberQuotaExceeded
+  SpecialistDoesNotExist
+  SpecialistNameNotUnique
+  SpecialistFirstNameRequired
+  SpecialistFirstNameTooLong
+  SpecialistLastNameTooLong
+  SpecialistAboutInfoTooLong
+  SpecialistMaxCountReached
+  SpecialistScheduleIsEmpty
+  SpecialistScheduleInvalidTimeFormat
+  SpecialistScheduleInvalidTimeRange
+  SpecialistGoogleCalendarLinkDoesNotExist
+  SpecialistNotEnoughGooglePermissions
+  BusinessPhoneIsNotOnBizApp
+  BusinessPhoneNotConnectedToCloudAPI
+  BusinessPhoneBizAppDataSyncAlreadyStarted
+  BusinessDoesNotMeetWAPolicy
+  NumberAlreadyRegisteredInWABA
+  DisplayNameCouldNotBeProcessed
+  PhoneNotVerified
+  TooManyNumberRegOrDeregAttempts
+  WAPhoneProfilePictureContentTypeNotSupported
+  WAPhoneProfilePictureSizeTooBig
+  WorkspaceDoesNotExist
+  TooManyWorkspaces
+  WorkspaceTransferInProgress
+  WorkspaceTitleRequired
+  WorkspaceTitleTooLong
+  WorkspaceNotEmpty
+  FileDoesNotExist
+  ContactDoesNotExist
+  ContactNameTooLong
+  ContactNameRequired
+  SystemAttributeUpdateNotAllowed
+  AttributeNameIsEmpty
+  AttributeNameTooLong
+  AttributeNameInvalidChars
+  AttributeValueTooLong
+  AttributeNameIsReserved
+  AttributeIsNotAllowedForPlatform
+  AttributeValueIncorrectDataType
+  ContactSearchSizeInvalid
+  SegmentIsInvalid
+  WhatsappPhoneInvalid
+  WhatsappPhoneOutsideCharactersLimit
+  WhatsappPhoneContainsInvalidCharacters
+  AssigneeHasNoAccess
+  ContactHasNoAssignee
+  ContactNoteTooLong
+  CSVContactExportDoesNotExist
+  CSVContactExportAlreadyInProgress
+  CSVContactExportInvalidContactIDsCount
+  ContactImportPlatformNotAllowed
+  CSVContactImportFileDoesNotExist
+  CSVContactImportDoesNotExist
+  CSVContactImportNotFinishedYet
+  CSVContactImportErrorsExpired
+  CSVContactImportErrorsEmpty
+  CSVContactImportAlreadyStarted
+  CSVContactImportAlreadyFinished
+  CSVContactImportAtLeastOneColumnRequired
+  CSVContactImportInvalidColumnIndex
+  ContactScopeNotConnected
+  CSVRowHasInvalidFormat
+  CommentReplyRuleReplyPromptIsEmpty
+  CommentReplyRuleReplyPromptIsTooLong
+  CommentReplyRuleCatchAllAlreadyExists
+  CommentReplyRuleReplyToAllForbidsCriteria
+  CommentReplyRuleReplyInputInvalid
+  CommentReplyRuleMatchingRuleNotFound
+  FuelyAutomationNameInvalid
+  FuelyAutomationNotRenamable
+  FuelyAutomationScopeInvalid
+  FuelyAutomationScopeLimitReached
+  FuelyAutomationBeingEdited
+  FuelyInheritFromInvalid
+  FuelySettingNotAllowedInScope
+  FuelyTemplateSettingNotSupported
+  FuelyTemplateSwitchToHumanAssigneesNotSupported
+  FuelyTemplateDuplicateSetting
+  FuelyTemplateDuplicateAutomation
+  FuelyAutomationNotFound
+  FuelyAutomationNotDeletable
+  FuelyCollectContactInfoDescriptionTooLong
+  FuelyCollectContactInfoTooManyEntries
+  FuelySwitchToHumanSwitchingConditionsEmpty
+  FuelySwitchToHumanSwitchingConditionsTooLong
+  FuelySwitchToHumanMessagePromptEmpty
+  FuelySwitchToHumanMessagePromptTooLong
+  FuelySwitchToHumanTooManyRules
+  FuelySwitchToHumanTooManyAssignees
+  FuelyFollowUpsMessagePromptEmpty
+  FuelyFollowUpsMessagePromptTooLong
+  FuelyIncomingMessagesMessagePromptEmpty
+  FuelyIncomingMessagesMessagePromptTooLong
+  FuelyCatalogImagesCountOutOfRange
+  FuelyReplyExactTextEmpty
+  FuelyReplyExactTextTooLong
+  FuelyReplyMessagePromptEmpty
+  FuelyReplyMessagePromptTooLong
+  FuelyRefLinksTooMany
+  FuelyRefLinkTooLong
+  FuelyListOfPostsTooManyEntries
+  FuelyPostIDTooLong
+  FuelyListOfAdsTooManyEntries
+  FuelyAdIDTooLong
+  FuelyListOfStoriesTooManyEntries
+  FuelyStoryIDTooLong
+  FuelyPostMediaNotFound
+  FuelyPostMediaWrongType
+  FuelyListOfPostsNoConnectedAccount
+  FuelyListOfPostsScopeNotImplemented
+  FuelyStoryMediaNotFound
+  FuelyStoryMediaWrongType
+  FuelyListOfStoriesNoConnectedAccount
+  FuelyKeywordsTooMany
+  FuelyKeywordTooLong
+  FuelySendEventsToMetaTooManyEvents
+  FuelySendEventsToMetaEventNameInvalid
+  FuelySendEventsToMetaCustomEventNameTooLong
+  FuelySendEventsToMetaCustomEventNameIsStandard
+  FuelySendEventsToMetaDuplicateEvent
+  FuelySendEventsToMetaConditionPromptEmpty
+  FuelySendEventsToMetaConditionPromptTooLong
+  FuelySendEventsToMetaKeywordsEmpty
+  FuelySendEventsToMetaSalesStagesEmpty
+  FuelySendEventsToMetaAttributeConditionsEmpty
+  FuelySendEventsToMetaTooManyAttributeConditions
+  FuelySendEventsToMetaTriggerFieldNotAllowed
+  FuelySendEventsToMetaSwitchToHumanFromEmpty
+  FuelySendEventsToMetaKeywordsRuleEmpty
+  FuelySendEventsToMetaEventNotFound
+  FuelySendEventsToMetaDuplicateEventID
+  FuelyLikeContactCommentNotAllowed
+  FuelyBroadcastSendTimeCanNotBeInPast
+  FuelyInitialSetupDocumentsTooMuch
+  FuelyInitialSetupWrongStep
+  FacebookAccountRequired
+  FacebookAdsReadPermissionRequired
+  WhatsappAdAccountNotFound
+  MetaAdsSyncInProgress
+  MetaAdsSyncCooldownPeriodIsActive
+  MetaAdAccountNotFound
+  BotDoesNotExist
+  WebWidgetNameEmpty
+  WebWidgetNameTooLong
+  WebWidgetAvatarFileIDEmpty
+  WebWidgetDomainsEmpty
+  WebWidgetDomainValidationFailed
+  WebWidgetAvatarColorEmpty
+  FileNameTooLong
+  FileNameFormatNotSupported
+  CopyCodeButtonCodeValueTooLong
+  TaskDoesNotExist
+  EnabledTriggerIsImmutable
+  BookingDoesNotExist
+  BookingStartTimeRequired
+  BookingEndTimeRequired
+  BookingContactPlatformNotAllowed
+  BookingEndTimeBeforeStartTime
+  BookingInvalidDuration
+  BookingInlineContactNoteTooLong
+  BookingInlineContactDoesNotExist
+  GoogleCalendarSyncAlreadyInProgress
+  GoogleCalendarNotConnected
+  GoogleCalendarSyncRateLimited
+  NoAccessToInstagramAccount
+  OAuthInstagramAccountMismatch
+  InvalidIGToken
+  InstagramPublishContainerProcessingFailed
+  InstagramPublishContainerNotReady
+  InstagramCarouselSizeInvalid
+  InstagramPublishCaptionTooLong
+  InstagramDoesNotConnected
+  InstagramMissingPermissionsOrExpiredToken
+  NoAccessToTikTokAccount
+  TikTokAccountDoesNotExist
+  GoogleCalendarDoesNotExists
+  CoworkerConversationDoesNotExist
+  UserAlreadyHasWAProxyContactMapping
+  SkillDoesNotExist
+  UserDefinedSkillDoesNotExist
+  AttachmentInvalid
+  FrontendStateRequestNotFound
+  UserAccountDoesNotExist
+}
+
+scalar Time
+
+enum FlowTourStep {
+  Start
+  IntroductionToAutomation
+  IntroductionToPreviewChat
+  TestingToPreviewChat
+  OpenEditorToAutomation
+  ReviewAndEditAutomation
+  Finished
+  IntroductionToTasks
+  IntroductionToFaq
+  ReviewAndUpdateFaq
+  IntroductionToNextStep
+  IntroductionToOrdersAndBooking
+  ReviewAndUpdateOrdersAndBooking
+  IntroductionToAbout
+  ReviewAndUpdateAbout
+  IntroductionToCatalog
+  ReviewAndUpdateCatalog
+}
+
+enum FlowTourReviewOption {
+  SharedIncorrect
+  StruggledOrdersBookings
+  MixedProductServiceInformation
+  HadTroubleCustomerQuestions
+  Other
+}
+
+type FlowTour {
+  botID: BotID!
+  completedSteps: [FlowTourCompletedStep!]!
+  review: FlowTourReview
+}
+
+type FlowTourCompletedStep {
+  step: FlowTourStep!
+  time: Time!
+}
+
+type FlowTourReview {
+  positive: Boolean!
+  feedback: String
+  option: FlowTourReviewOption
+}
+
+scalar InstagramAccountID
+
+type InstagramAccount {
+  id: InstagramAccountID!
+  username: String!
+  name: String
+  profilePicture: File
+  biography: String
+  website: String
+  permissions: [InstagramPermission!]!
+  mediasConnection(first: Int!, after: InstagramMediasCursor): InstagramMediasConnection!
+  media(id: InstagramMediaID!): InstagramMedia
+}
+
+scalar Map
+
+type PublicUserAccount {
+  id: UserAccountID!
+  name: String!
+  profilePicture: File
+  isWhiteLabel: Boolean!
+  isUnknown: Boolean!
+}
+
+scalar UserAccountID
+
+type CurrentUserAccount {
+  id: UserAccountID!
+  name: String!
+  email: String
+  termsAccepted: Boolean!
+  dashboardLocale: DashboardLocale!
+  countryCode: CountryCode!
+  profilePicture: File
+  facebookAccountInfo: FacebookAccountInfo
+  googleAccountInfo: GoogleAccountInfo
+  appleAccountInfo: AppleAccountInfo
+  instagramAccountInfo: InstagramAccount
+  isWhiteLabel: Boolean!
+  isInvited: Boolean!
+  utmMarks: [UtmMark!]!
+  userStorageItem(id: ID!): UserStorageItem!
+  botRole(botID: BotID!): Role!
+  introQuestionsState: IntroQuestionsState
+  flowTourForBot(botID: BotID!): FlowTour
+  hasPublicAPIToken: Boolean!
+  botsV2(first: Int, after: BotsCursor, filter: BotsFilter, orderBy: BotsOrderByInput): BotsConnectionV2!
+  workspace(id: WorkspaceID!): Workspace!
+  workspaces: [Workspace!]!
+  fbBusinesses: [FacebookBusiness!]!
+  whatsAppBusinessAccounts: [WhatsAppBusinessAccount!]!
+  whatsAppEntitiesLastUpdatedAt: Time
+  preVerifiedBusinessPhoneNumber: PreVerifiedBusinessPhoneNumber
+  latestFuelyInitialSetup: FuelyInitialSetup
+  metaAdsSyncState: MetaAdsSyncState
+  metaAdAccounts: [MetaAdAccount!]!
+  metaAdAccount(id: MetaAdAccountSynthID!): MetaAdAccount!
+  instagramAccounts: [InstagramAccount!]!
+  instagramAccount(id: InstagramAccountID!): InstagramAccount
+  tiktokAccounts: [TikTokAccount!]!
+  tiktokAccount(id: TikTokAccountID!): TikTokAccount
+  availableGoogleCalendars: [GoogleCalendar!]!
+  coworkerConversationsConnection(first: Int!, after: CoworkerConversationsCursor, botID: BotID): CoworkerConversationsConnection!
+  coworkerGetConversation(id: CoworkerConversationID!): CoworkerConversation
+  hasContactInCoworkerWAProxyBot: Boolean!
+}
+
+scalar CountryCode
+
+scalar FileID
+
+type File {
+  id: FileID!
+  url: String!
+  type: FileType!
+  status: FileStatus!
+  size: Int
+}
+
+type UserStorageItem {
+  id: ID!
+  value: String
+}
+
+type UtmMark {
+  key: String!
+  value: String!
+}
+
+type UserGrantedFacebookPermission {
+  name: String!
+  objects: [String!]!
+}
+
+type FacebookAccountInfo {
+  name: String!
+  email: String
+  profilePicture: File
+  facebookPermissions: [UserGrantedFacebookPermission!]!
+}
+
+type GoogleAccountInfo {
+  email: String!
+  name: String
+  profilePicture: File
+}
+
+type AppleAccountInfo {
+  firstName: String
+  lastName: String
+  email: String
+  emailIsPrivate: Boolean
+  emailIsVerified: Boolean
+}
+
+type IntroQuestionsState {
+  id: String!
+  version: Int!
+  replies: Map!
+}
+
+scalar WorkspaceID
+
+type Workspace {
+  id: WorkspaceID!
+  invites: [Invite!]!
+  title: String!
+  bots: [Bot!]!
+  botsLimit: Int!
+}
+
+enum DashboardLocale {
+  En
+  Ms
+  Es
+  Pt
+  Id
+}
+
+scalar BlockID
+
+interface Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  blockElements: [BlockElement!]!
+}
+
+input BlockPositionBulkUpdate {
+  blockID: BlockID!
+  positionX: Int!
+  positionY: Int!
+}
+
+scalar BlockElementID
+
+interface BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+}
+
+interface BlockElementError {
+  code: String!
+  message: String
+}
+
+type TemplateStr {
+  parts: [TemplateStrPart!]!
+}
+
+union TemplateStrPart = TemplateStrText | TemplateStrAttribute
+
+type TemplateStrText {
+  text: String!
+  errCode: String
+}
+
+type TemplateStrAttribute {
+  attribute: BotAttribute!
+  errCode: String
+}
+
+enum Platform {
+  widget
+  facebook
+  instagram
+  whatsapp
+  tiktok
+}
+
+type BotAttribute {
+  defaultValue(botID: BotID!): String
+  usedInFlows(botID: BotID!): [Flow!]!
+  name: AttributeName!
+  type: AttributeType!
+  dataType: AttributeDataType!
+  aliases: [AttributeLocalizedAlias!]!
+}
+
+enum BroadcastStatus {
+  Draft
+  Live
+  Paused
+  Finished
+}
+
+enum BroadcastRepeatType {
+  Never
+  Weekdays
+  EveryNDays
+  OnCertainDates
+}
+
+scalar CommentReplyRulesCursor
+
+type CommentReplyRule {
+  id: ID!
+  enabled: Boolean!
+  platform: Platform!
+  replyToAllComments: Boolean!
+  keywords: [String!]!
+  publicReplyEnabled: Boolean!
+  publicReplyPrompt: String!
+  privateReplyEnabled: Boolean!
+  privateReplyPrompt: String!
+}
+
+type FuelyConfig {
+  commentReplyRulesConnection(platform: Platform!, first: Int!, after: CommentReplyRulesCursor): CommentReplyRulesConnection!
+  botID: BotID!
+  enabled: Boolean!
+  knowledgeBase: FuelyKnowledgeBase!
+  usage: FuelyConfigUsage!
+  booking: FuelyBookingConfig!
+}
+
+type CommentReplyRulesConnection {
+  edges: [CommentReplyRuleEdge!]!
+  pageInfo: CommentReplyRulesPageInfo!
+}
+
+type CommentReplyRuleEdge {
+  node: CommentReplyRule!
+  cursor: CommentReplyRulesCursor!
+}
+
+type CommentReplyRulesPageInfo {
+  hasNextPage: Boolean!
+  endCursor: CommentReplyRulesCursor
+}
+
+enum Weekday {
+  Sun
+  Mon
+  Tue
+  Wed
+  Thu
+  Fri
+  Sat
+}
+
+enum AiAgentTemplateID {
+  aiAgentHelpCustomers
+  aiAgentBookAppointments
+  aiAgentManageNewMessages
+  aiAgentSellProducts
+  aiAgentSortThroughLeads
+  aiAgentCustom
+}
+
+type AiAgentTemplate {
+  id: AiAgentTemplateID!
+  title: String!
+  description: String!
+}
+
+scalar AiAgentKnowledgeItemID
+
+type AiAgentKnowledgeItem {
+  id: AiAgentKnowledgeItemID!
+  title: String!
+  description: String!
+  prompt: String!
+}
+
+type AiAgentRule {
+  id: ComponentHandleID!
+  title: String!
+  prompt: String!
+}
+
+enum DefaultReplyFrequency {
+  always
+  onceIn24Hours
+}
+
+enum SendJsonHTTPMethod {
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
+}
+
+scalar SendJsonHeaderID
+
+type SendJsonHeader {
+  id: SendJsonHeaderID!
+  title: TemplateStr!
+  value: TemplateStr!
+}
+
+scalar SendJsonURLParamID
+
+type SendJsonURLParam {
+  id: SendJsonURLParamID!
+  title: TemplateStr!
+  value: TemplateStr!
+}
+
+enum SendJsonPayloadType {
+  ALL_PROPERTIES
+  CUSTOM_REQUEST
+  ENCODED_URL
+}
+
+scalar SendJsonResponseParsingRuleID
+
+type SendJsonResponseParsingRule {
+  id: SendJsonResponseParsingRuleID!
+  jsonPath: String
+  attribute: BotAttribute
+}
+
+type SendJsonTestResponse {
+  statusCode: Int!
+  statusName: String!
+  requestURL: String!
+  requestMethod: String!
+  requestBody: String!
+  requestHeaders: [SendJsonTestHeaderValue!]!
+  responseBody: String!
+  responseHeaders: [SendJsonTestHeaderValue!]!
+}
+
+type SendJsonTestHeaderValue {
+  header: String!
+  value: String!
+}
+
+type SummarizeChatEntry {
+  id: String!
+  description: String!
+  attribute: BotAttribute
+}
+
+scalar Long
+
+scalar TriggerID
+
+type Trigger {
+  id: TriggerID!
+  enabled: Boolean!
+  conditionType: TriggerConditionType!
+  delayValue: Long!
+  delayUnit: TriggerDelayUnit!
+  attributeCondition: AttrFilter
+  attributeConditionErrors: [AttrFilterErrCode!]!
+  validationErrors: [TriggerValidationErrorCode!]!
+}
+
+type WhatsAppListRow {
+  id: ComponentHandleID!
+  title: TemplateStr!
+  description: TemplateStr!
+}
+
+scalar WhatsAppTemplateID
+
+scalar WhatsAppTemplateTextParamName
+
+type WhatsAppTemplateConfig {
+  templateID: WhatsAppTemplateID!
+  name: String!
+  status: WhatsAppTemplateStatus!
+  header: WhatsAppTemplateComponentHeader
+  body: WhatsAppTemplateComponentBody!
+  footer: WhatsAppTemplateComponentFooter
+  buttons: [WhatsAppTemplateButton!]!
+}
+
+union WhatsAppTemplateComponentHeader = WhatsAppTemplateComponentText | WhatsAppTemplateComponentImage | WhatsAppTemplateComponentVideo | WhatsAppTemplateComponentDocument
+
+union WhatsAppTemplateComponentBody = WhatsAppTemplateComponentText
+
+union WhatsAppTemplateComponentFooter = WhatsAppTemplateComponentText
+
+union WhatsAppTemplateButton = WhatsAppTemplateURLButton | WhatsAppTemplateQuickReplyButton | WhatsAppTemplateCallPhoneButton | WhatsAppTemplateWhatsAppCallButton | WhatsAppTemplateCopyCodeButton
+
+type WhatsAppTemplateComponentText {
+  text: [WhatsAppTemplateComponentTextPart!]
+}
+
+type WhatsAppTemplateURLButton {
+  id: ComponentHandleID!
+  text: String!
+  url: [WhatsAppTemplateComponentTextPart!]
+}
+
+type WhatsAppTemplateQuickReplyButton {
+  id: ComponentHandleID!
+  text: String!
+}
+
+type WhatsAppTemplateCallPhoneButton {
+  text: String!
+  phoneNumber: String!
+}
+
+type WhatsAppTemplateWhatsAppCallButton {
+  text: String!
+}
+
+type WhatsAppTemplateCopyCodeButton {
+  id: ComponentHandleID!
+  text: String!
+  code: TemplateStr!
+}
+
+type WhatsAppTemplateComponentImage {
+  image: File
+}
+
+type WhatsAppTemplateComponentVideo {
+  video: File
+}
+
+type WhatsAppTemplateComponentDocument {
+  document: File
+  fileName: String
+}
+
+union WhatsAppTemplateComponentTextPart = WhatsAppTemplateComponentTextPartText | WhatsAppTemplateComponentTextPartParam
+
+type WhatsAppTemplateComponentTextPartText {
+  text: String
+}
+
+type WhatsAppTemplateComponentTextPartParam {
+  name: WhatsAppTemplateTextParamName!
+  value: TemplateStr!
+}
+
+enum WhatsAppTemplateStatus {
+  Approved
+  InAppeal
+  Pending
+  Rejected
+  PendingDeletion
+  Deleted
+  Disabled
+  Paused
+  LimitExceeded
+  Archived
+}
+
+type WhatsAppContinueFlowButton {
+  id: ComponentHandleID!
+  title: TemplateStr!
+}
+
+union WhatsAppButton = WhatsAppOpenURLButton | WhatsAppContinueFlowButton
+
+type WhatsAppOpenURLButton {
+  id: ComponentHandleID!
+  title: TemplateStr!
+  url: TemplateStr!
+}
+
+union WidgetButton = WidgetContinueFlowButton | WidgetOpenURLButton | WidgetCallPhoneButton
+
+type WidgetContinueFlowButton {
+  id: ComponentHandleID!
+  title: TemplateStr!
+}
+
+type WidgetOpenURLButton {
+  id: ComponentHandleID!
+  title: TemplateStr!
+  url: TemplateStr!
+}
+
+type WidgetCallPhoneButton {
+  id: ComponentHandleID!
+  title: TemplateStr!
+  phone: String!
+}
+
+scalar ConnectionID
+
+scalar ComponentHandleID
+
+type BlockToBlockConnection {
+  id: ConnectionID!
+  sourceBlockID: BlockID!
+  targetBlockID: BlockID!
+}
+
+type ComponentToBlockConnection {
+  id: ConnectionID!
+  sourceBlockID: BlockID!
+  sourceBlockElementID: BlockElementID!
+  sourceHandleID: ComponentHandleID!
+  targetBlockID: BlockID!
+}
+
+union Connection = BlockToBlockConnection | ComponentToBlockConnection
+
+input BlockToBlockConnectionCreateRequest {
+  sourceBlockID: BlockID!
+  targetBlockID: BlockID!
+}
+
+input ComponentToBlockConnectionCreateRequest {
+  sourceBlockID: BlockID!
+  sourceBlockElementID: BlockElementID!
+  sourceHandleID: ComponentHandleID!
+  targetBlockID: BlockID!
+}
+
+input UndefinedTargetBlockConnectionCreateRequest {
+  sourceBlockID: BlockID!
+  sourceBlockElementID: BlockElementID
+  sourceHandleID: ComponentHandleID
+}
+
+scalar FlowID
+
+interface Flow {
+  id: FlowID!
+  name: String!
+  platform: Platform!
+  createdAt: Time!
+  inboundLinks: [FlowInboundLink!]!
+  blocks: [Block!]!
+  connections: [Connection!]!
+  startingPointBlock: Block
+  entryPoints: [EntryPointBlock!]!
+  previewResponsesSession: PreviewResponsesFlowSession
+}
+
+interface FlowInboundLink {
+  id: String!
+  redirects: Int!
+}
+
+scalar FlowGroupID
+
+type FlowGroup {
+  id: FlowGroupID!
+  name: String!
+  createdAt: Time!
+  flows: [RegularFlow!]!
+}
+
+type FuelyConfigUsage {
+  total: Int!
+  catalog: Int!
+}
+
+type FuelyBusinessHoursSchedule {
+  workingHours: [FuelyBusinessHoursDaySchedule!]
+}
+
+type FuelyBusinessHoursDaySchedule {
+  day: Weekday!
+  enabled: Boolean!
+  start: String!
+  end: String!
+}
+
+enum FuelyBookingNotificationChannel {
+  Chatfuel
+  ConnectedWhatsapp
+}
+
+enum FuelyBookingAIAutonomyLevel {
+  IntentCollection
+  BookingWithHumanApproval
+  BookingWithHumanReview
+  Full
+}
+
+type FuelyBookingConfig {
+  notificationChannel: FuelyBookingNotificationChannel!
+  bookingConfirmation: Boolean!
+  bookingConfirmationAdditionalInfo: String!
+  twoHoursAppointment: Boolean!
+  twoHoursAppointmentAdditionalInfo: String!
+  twentyFourHoursAppointment: Boolean!
+  twentyFourHoursAppointmentAdditionalInfo: String!
+  locale: DashboardLocale!
+  aiAutonomyLevel: FuelyBookingAIAutonomyLevel!
+  calendarLandingURL: String
+}
+
+input FuelyConfigBookingAppointmentsUpdateInput {
+  twoHoursAppointment: Boolean!
+  twoHoursAppointmentAdditionalInfo: String
+  twentyFourHoursAppointment: Boolean!
+  twentyFourHoursAppointmentAdditionalInfo: String
+}
+
+type FuelyKnowledgeBase {
+  companyName: String!
+  email: String!
+  phone: String!
+  businessHoursSchedule: FuelyBusinessHoursSchedule!
+  address: String!
+  website: String!
+  faqs: [FuelyKnowledgeBaseFAQ!]!
+  catalog: [FuelyKnowledgeBaseCatalogItem!]!
+  howToPay: String!
+  additionalInstructions: String!
+}
+
+type FuelyKnowledgeBaseFAQ {
+  question: String!
+  answer: String!
+}
+
+type FuelyKnowledgeBaseCatalogItem {
+  title: String!
+  description: String!
+  price: FuelyKnowledgeBaseCatalogItemPrice
+}
+
+type FuelyKnowledgeBaseCatalogItemPrice {
+  amount: String!
+  currency: String!
+}
+
+input FuelyKnowledgeBaseFAQInput {
+  question: String!
+  answer: String!
+}
+
+input FuelyBusinessHoursScheduleUpdateInput {
+  workingHours: [FuelyBusinessHoursDayScheduleInput!]
+}
+
+input FuelyBusinessHoursDayScheduleInput {
+  day: Weekday!
+  enabled: Boolean!
+  start: String!
+  end: String!
+}
+
+scalar KeywordRuleID
+
+scalar KeywordRuleCursor
+
+type KeywordRule {
+  id: KeywordRuleID!
+  botID: BotID!
+  keywords: [String!]!
+  matchType: KeywordRuleMatchType!
+  whatsappActions: WhatsappKeywordActions!
+  webwidgetActions: WebwidgetKeywordActions!
+  errors: [KeywordRuleError!]!
+}
+
+enum KeywordRuleMatchType {
+  similarTo
+  contains
+  matches
+}
+
+enum KeywordRuleActionType {
+  switchToFlow
+  sendMessage
+  doNothing
+}
+
+type WhatsappKeywordActions {
+  actionType: KeywordRuleActionType!
+  action: WhatsappKeywordActionsUnion
+}
+
+union WhatsappKeywordActionsUnion = WhatsAppTextBlockElement | RedirectToFlowBlockElement
+
+type WebwidgetKeywordActions {
+  actionType: KeywordRuleActionType!
+  action: WebwidgetKeywordActionsUnion
+}
+
+union WebwidgetKeywordActionsUnion = WidgetTextAndButtonBlockElement | RedirectToFlowBlockElement
+
+type KeywordRuleError {
+  code: String!
+  message: String
+  args: [String!]!
+}
+
+type KeywordRulesConnection {
+  edges: [KeywordRulesEdge!]!
+  pageInfo: KeywordRulesPageInfo!
+}
+
+type KeywordRulesEdge {
+  node: KeywordRule!
+  cursor: KeywordRuleCursor!
+}
+
+type KeywordRulesPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: KeywordRuleCursor
+  endCursor: KeywordRuleCursor
+}
+
+scalar PreviewResponsesSessionID
+
+scalar ConversationID
+
+scalar FuelyAutomationID
+
+interface PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+}
+
+enum FilterErrCode {
+  filter_body_required
+  at_least_one_filter_required
+  too_many_filters_in_segment
+  invalid_operator
+  attr_filter_attr_name_required
+  attr_filter_comparable_values_required
+  attr_filter_comparable_date_required
+  attr_filter_comparable_values_not_allowed
+  too_many_nested_in_flight_segments
+}
+
+type FilterValidationError {
+  filterID: FilterID
+  code: FilterErrCode!
+}
+
+enum AttrFilterErrCode {
+  filter_body_required
+  invalid_operator
+  attr_filter_attr_name_required
+  attr_filter_attr_name_too_long
+  attr_filter_attr_name_invalid_chars
+  attr_filter_comparable_values_required
+  attr_filter_comparable_date_required
+  attr_filter_comparable_values_not_allowed
+  attr_filter_too_many_strategies
+}
+
+input FilterInput {
+  id: FilterID!
+  byAttribute: AttrFilterInput
+  byTag: TagFilterInput
+  bySegment: SegmentFilterInput
+  byStoredSegment: StoredSegmentFilterInput
+  byInFlightSegment: SegmentInput
+}
+
+input AttrFilterInput {
+  name: String!
+  defaultStrategy: AttrFilterDefaultStrategyInput
+  dateStrategy: AttrFilterDateStrategyInput
+}
+
+input AttrFilterDefaultStrategyInput {
+  operator: AttrFilterDefaultOperator!
+  comparableValues: [String!]!
+}
+
+input AttrFilterDateStrategyInput {
+  operator: AttrFilterDateOperator!
+  comparableDate: Time!
+}
+
+input TagFilterInput {
+  operator: TagFilterOperator!
+  tagNames: [String!]!
+}
+
+input SegmentFilterInput {
+  operator: SegmentFilterOperator!
+  segmentIDs: [SegmentID!]!
+}
+
+input StoredSegmentFilterInput {
+  operator: StoredSegmentFilterOperator!
+  segmentIDs: [SegmentID!]!
+}
+
+input SegmentInput {
+  id: SegmentID!
+  name: String
+  resultOperator: BoolOperator!
+  filters: [FilterInput!]!
+}
+
+scalar FilterID
+
+scalar SegmentID
+
+scalar AttributeName
+
+enum SegmentFilterOperator {
+  IS
+  IS_NOT
+}
+
+enum StoredSegmentFilterOperator {
+  IS
+  IS_NOT
+}
+
+enum TagFilterOperator {
+  IS
+  IS_NOT
+}
+
+enum AttrFilterDefaultOperator {
+  IS
+  IS_NOT
+  STARTS_WITH
+  CONTAINS
+  LT
+  GT
+  IS_EMPTY
+  IS_NOT_EMPTY
+}
+
+enum AttrFilterDateOperator {
+  IS
+  IS_NOT
+  LT
+  GT
+  IS_EMPTY
+  IS_NOT_EMPTY
+}
+
+enum BoolOperator {
+  AND
+  OR
+}
+
+type Filter {
+  id: FilterID!
+  byAttribute: AttrFilter
+  byTag: TagFilter
+  bySegment: SegmentFilter
+  byStoredSegment: StoredSegmentFilter
+  byInFlightSegment: Segment
+}
+
+type AttrFilter {
+  attribute: BotAttribute!
+  defaultStrategy: AttrFilterDefaultStrategy
+  dateStrategy: AttrFilterDateStrategy
+}
+
+type AttrFilterDefaultStrategy {
+  operator: AttrFilterDefaultOperator!
+  comparableValues: [String!]!
+}
+
+type AttrFilterDateStrategy {
+  operator: AttrFilterDateOperator!
+  comparableDate: Time
+}
+
+type TagFilter {
+  operator: TagFilterOperator!
+  tagNames: [String!]!
+}
+
+type SegmentFilter {
+  operator: SegmentFilterOperator!
+  segmentIDs: [SegmentID!]!
+}
+
+type StoredSegmentFilter {
+  operator: StoredSegmentFilterOperator!
+  segmentIDs: [SegmentID!]!
+}
+
+type Segment {
+  id: SegmentID!
+  name: String
+  resultOperator: BoolOperator!
+  filters: [Filter!]!
+}
+
+enum FileType {
+  Image
+  Video
+  Audio
+  Document
+}
+
+enum FileStatus {
+  Expired
+  NotDownloaded
+  DownloadInProgress
+  Downloaded
+  Failed
+}
+
+scalar BotAPIToken
+
+scalar FuelyInitialSetupID
+
+scalar BotTimezone
+
+type RolesConfig {
+  editorRoleSettings: RoleSettings!
+  agentRoleSettings: RoleSettings!
+}
+
+type RoleSettings {
+  allowOnlyAssignedToMeContacts: Boolean!
+  allowContactsWithEmptyAssignee: Boolean!
+}
+
+input RolesConfigInput {
+  editorRoleSettings: RoleSettingsInput!
+  agentRoleSettings: RoleSettingsInput!
+}
+
+input RoleSettingsInput {
+  allowOnlyAssignedToMeContacts: Boolean!
+  allowContactsWithEmptyAssignee: Boolean!
+}
+
+type BotIndustry {
+  category: String!
+  subCategory: String
+}
+
+input BotIndustryInput {
+  category: String!
+  subCategory: String
+}
+
+type BotWhatsAppLink {
+  phoneNumber: String!
+  title: String!
+  message: String
+}
+
+scalar ContactScopeID
+
+interface ContactScope {
+  id: ContactScopeID!
+}
+
+type FbPage {
+  id: FbPageID!
+  name: String!
+  picture: File
+  posts(first: Int!, after: FbPagePostCursor): FbPagePostConnection!
+}
+
+interface PublicContactScope {
+  id: ContactScopeID!
+}
+
+type PublicFbPage {
+  id: FbPageID!
+  name: String!
+  picture: File
+}
+
+scalar FacebookBusinessVerificationSubmissionID
+
+enum FacebookBusinessVerificationSubmissionStatus {
+  Received
+  ReviewingByMeta
+  UnderClarification
+  FailedCompletely
+  Verified
+}
+
+type FacebookBusinessVerificationSubmission {
+  id: FacebookBusinessVerificationSubmissionID!
+  files: [File!]!
+  status: FacebookBusinessVerificationSubmissionStatus!
+  attemptsLeft: Int!
+  successNotificationRead: Boolean!
+  updatedAt: Time!
+}
+
+scalar FacebookBusinessID
+
+type FacebookBusiness {
+  id: FacebookBusinessID!
+  name: String!
+  link: String
+  verificationStatus: FacebookBusinessVerificationStatus
+  messagingStatus: FacebookBusinessMessagingStatus!
+  ownedWhatsAppBusinessAccounts: [WhatsAppBusinessAccount!]!
+  currentUserHasFBAccess: Boolean!
+  verificationSubmission: FacebookBusinessVerificationSubmission
+  facebookPages(first: Int!, after: FbPageCursor): FbPageConnection!
+}
+
+union FacebookBusinessMessagingStatus = FacebookBusinessMessagingStatusAvailable | FacebookBusinessMessagingStatusLimited | FacebookBusinessMessagingStatusBlocked
+
+type FacebookBusinessMessagingStatusAvailable {
+  fakeField: Boolean
+}
+
+type FacebookBusinessMessagingStatusLimited {
+  reasons: [FacebookBusinessMessagingStatusReason!]!
+}
+
+type FacebookBusinessMessagingStatusBlocked {
+  reasons: [FacebookBusinessMessagingStatusReason!]!
+}
+
+enum FacebookBusinessVerificationStatus {
+  Undefined
+  NotVerified
+  Verified
+  PendingSubmission
+  PendingNeedMoreInfo
+  Rejected
+  Pending
+  Revoked
+}
+
+enum FacebookBusinessMessagingStatusReason {
+  Undefined
+  BusinessVerificationNeeded
+}
+
+scalar FbPageID
+
+enum FbOAuthType {
+  SDK
+  redirects
+}
+
+scalar GoodsItemID
+
+interface GoodsItem {
+  id: GoodsItemID!
+  title: String!
+  description: String!
+  price: GoodsItemPrice
+  isAvailable: Boolean!
+}
+
+union CommonGoodsService = GoodsService | DeletedGoodsService
+
+type GoodsItemPrice {
+  amount: String!
+  currency: GoodsItemPriceCurrency!
+}
+
+input GoodsProductInput {
+  title: String!
+  description: String!
+  price: GoodsItemPriceInput
+  images: [FileID!]!
+  isAvailable: Boolean!
+}
+
+input GoodsServiceInput {
+  title: String!
+  description: String!
+  price: GoodsItemPriceInput
+  images: [FileID!]!
+  durationSeconds: Int!
+  isAvailable: Boolean!
+}
+
+input GoodsItemPriceInput {
+  amount: String!
+  currency: GoodsItemPriceCurrency!
+}
+
+enum GoodsItemPriceCurrency {
+  USD
+  EUR
+  ARS
+  BOB
+  BRL
+  CLP
+  COP
+  CRC
+  DOP
+  GTQ
+  GYD
+  HNL
+  HTG
+  MXN
+  NIO
+  PAB
+  PEN
+  PYG
+  SRD
+  UYU
+  AED
+  AFN
+  ALL
+  AMD
+  ANG
+  AOA
+  AUD
+  AWG
+  AZN
+  BAM
+  BBD
+  BDT
+  BGN
+  BIF
+  BMD
+  BND
+  BSD
+  BWP
+  BZD
+  CAD
+  CDF
+  CHF
+  CNY
+  CVE
+  CZK
+  DJF
+  DKK
+  DZD
+  EGP
+  ETB
+  FJD
+  FKP
+  GBP
+  GEL
+  GIP
+  GMD
+  GNF
+  HKD
+  HUF
+  IDR
+  ILS
+  INR
+  ISK
+  JMD
+  JPY
+  KES
+  KGS
+  KHR
+  KMF
+  KRW
+  KYD
+  KZT
+  LAK
+  LBP
+  LKR
+  LRD
+  LSL
+  MAD
+  MDL
+  MGA
+  MKD
+  MMK
+  MNT
+  MOP
+  MUR
+  MVR
+  MWK
+  MYR
+  MZN
+  NAD
+  NGN
+  NOK
+  NPR
+  NZD
+  PGK
+  PHP
+  PKR
+  PLN
+  QAR
+  RON
+  RSD
+  RWF
+  SAR
+  SBD
+  SCR
+  SEK
+  SGD
+  SHP
+  SLE
+  SOS
+  STD
+  SZL
+  THB
+  TJS
+  TOP
+  TRY
+  TTD
+  TWD
+  TZS
+  UAH
+  UGX
+  UZS
+  VND
+  VUV
+  WST
+  XAF
+  XCD
+  XCG
+  XOF
+  XPF
+  YER
+  ZAR
+  ZMW
+}
+
+scalar GoogleCalendarID
+
+type GoogleCalendar {
+  id: GoogleCalendarID!
+  summary: String!
+}
+
+type PublicInstagramAccount {
+  id: InstagramAccountID!
+  username: String!
+  name: String
+  profilePicture: File
+}
+
+scalar PlatformOperationLinkID
+
+enum PlatformOperationLinkPlatform {
+  instagram
+  whatsapp
+  tiktok
+}
+
+type PlatformConnectionLink {
+  linkID: PlatformOperationLinkID!
+  url: String!
+  platform: PlatformOperationLinkPlatform!
+  createdAt: Time!
+  expiresAt: Time!
+  bot: Bot!
+  onSuccessRedirectURL: String
+  onFailureRedirectURL: String
+  creator: PublicUserAccount!
+}
+
+type PlatformAccessRefreshLink {
+  linkID: PlatformOperationLinkID!
+  url: String!
+  platform: PlatformOperationLinkPlatform!
+  createdAt: Time!
+  expiresAt: Time!
+  bot: Bot!
+  onSuccessRedirectURL: String
+  onFailureRedirectURL: String
+  creator: PublicUserAccount!
+  connectedContactScope: PublicContactScope!
+}
+
+type ActivePlatformConnectionLinks {
+  whatsapp: PlatformConnectionLink
+  instagram: PlatformConnectionLink
+  tiktok: PlatformConnectionLink
+}
+
+type ActivePlatformAccessRefreshLinks {
+  whatsapp: PlatformAccessRefreshLink
+  instagram: PlatformAccessRefreshLink
+  tiktok: PlatformAccessRefreshLink
+}
+
+scalar PreVerifiedBusinessPhoneNumberID
+
+type PreVerifiedBusinessPhoneNumber {
+  id: PreVerifiedBusinessPhoneNumberID!
+  phoneNumber: String!
+}
+
+type PublicPlatformConnectionResult {
+  success: Boolean!
+}
+
+type PublicPlatformAccessRefreshResult {
+  success: Boolean!
+}
+
+type PublicPlatformConnectionLink {
+  platform: PlatformOperationLinkPlatform!
+  botTitle: String!
+  creator: PublicUserAccount!
+  onSuccessRedirectURL: String
+  onFailureRedirectURL: String
+  isScopeConnected: Boolean!
+}
+
+type PublicPlatformAccessRefreshLink {
+  platform: PlatformOperationLinkPlatform!
+  botTitle: String!
+  creator: PublicUserAccount!
+  onSuccessRedirectURL: String
+  onFailureRedirectURL: String
+  connectedContactScope: PublicContactScope!
+  isScopeConnected: Boolean!
+}
+
+scalar SchemaVersion
+
+scalar SpecialistID
+
+scalar SpecialistScheduleTime
+
+interface CommonSpecialist {
+  id: SpecialistID!
+  profile: SpecialistProfile!
+}
+
+type SpecialistProfile {
+  firstName: String!
+  lastName: String
+  aboutInfo: String
+  logo: File
+}
+
+type SpecialistSchedule {
+  enabled: Boolean!
+  sun: SpecialistDaySchedule
+  mon: SpecialistDaySchedule
+  tue: SpecialistDaySchedule
+  wed: SpecialistDaySchedule
+  thu: SpecialistDaySchedule
+  fri: SpecialistDaySchedule
+  sat: SpecialistDaySchedule
+}
+
+type SpecialistDaySchedule {
+  enabled: Boolean!
+  start: SpecialistScheduleTime!
+  end: SpecialistScheduleTime!
+  break: SpecialistDayScheduleBreak
+}
+
+type SpecialistDayScheduleBreak {
+  start: SpecialistScheduleTime!
+  end: SpecialistScheduleTime!
+}
+
+input SpecialistInfoInput {
+  profile: SpecialistProfileInput!
+  schedule: SpecialistScheduleInput!
+  goodsServices: [GoodsItemID!]!
+}
+
+input SpecialistProfileInput {
+  firstName: String!
+  lastName: String
+  aboutInfo: String
+  logo: FileID
+}
+
+input SpecialistScheduleInput {
+  enabled: Boolean!
+  sun: SpecialistDayScheduleInput
+  mon: SpecialistDayScheduleInput
+  tue: SpecialistDayScheduleInput
+  wed: SpecialistDayScheduleInput
+  thu: SpecialistDayScheduleInput
+  fri: SpecialistDayScheduleInput
+  sat: SpecialistDayScheduleInput
+}
+
+input SpecialistDayScheduleInput {
+  enabled: Boolean!
+  start: SpecialistScheduleTime!
+  end: SpecialistScheduleTime!
+  break: SpecialistDayScheduleBreakInput
+}
+
+input SpecialistDayScheduleBreakInput {
+  start: SpecialistScheduleTime!
+  end: SpecialistScheduleTime!
+}
+
+scalar SpecialistGoogleCalendarLinkID
+
+type SpecialistGoogleCalendarLink {
+  id: SpecialistGoogleCalendarLinkID!
+  createdBy: PublicUserAccount!
+}
+
+type SpecialistGoogleCalendarLinkInfo {
+  id: SpecialistGoogleCalendarLinkID!
+  specialistName: String!
+  createdBy: PublicUserAccount!
+  botTitle: String!
+}
+
+type SpecialistGoogleCalendarLinkOauthFinishResult {
+  calendarConnected: Boolean!
+}
+
+scalar TikTokAccountID
+
+type TikTokAccount {
+  id: TikTokAccountID!
+  name: String
+  username: String
+  profilePicture: File
+  profileDeepLink: String
+  isBusinessAccount: Boolean!
+}
+
+type PublicTikTokAccount {
+  id: TikTokAccountID!
+  name: String
+  username: String
+  profilePicture: File
+}
+
+scalar BotsCursor
+
+input BotsFilter {
+  value: BotFilterValue!
+  field: BotFilterField!
+}
+
+enum BotFilterField {
+  Title
+  WorkspaceID
+}
+
+input BotFilterValue {
+  val: String
+  type: BotFilterValueType!
+}
+
+enum BotFilterValueType {
+  None
+  Any
+  Eq
+}
+
+input BotsOrderByInput {
+  orderBy: BotsOrderBy!
+  direction: Sort!
+}
+
+enum BotsOrderBy {
+  LastOpenedAt
+  CreatedAt
+  Title
+  Usage
+}
+
+enum Sort {
+  Asc
+  Desc
+}
+
+type BotsConnectionV2 {
+  edges: [BotEdgeV2!]!
+  pageInfo: PageInfo!
+}
+
+type BotEdgeV2 {
+  node: Bot!
+  cursor: BotsCursor!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: BotsCursor
+  endCursor: BotsCursor
+}
+
+scalar WhatsappBusinessAccountID
+
+type WhatsAppBusinessAccount {
+  id: WhatsappBusinessAccountID!
+  name: String
+  accountReviewStatus: WhatsappBusinessAccountReviewStatus
+  messagingStatus: WhatsAppBusinessAccountMessagingStatus!
+  phones: [WhatsAppBusinessPhoneNumber!]!
+  facebookBusiness: FacebookBusiness!
+  accessLost: Boolean!
+  hasMetaConversionsAPIPermission: Boolean!
+}
+
+union WhatsAppBusinessAccountMessagingStatus = WhatsAppBusinessAccountMessagingStatusAvailable | WhatsAppBusinessAccountMessagingStatusLimited | WhatsAppBusinessAccountMessagingStatusBlocked
+
+type WhatsAppBusinessAccountMessagingStatusAvailable {
+  fakeField: Boolean
+}
+
+type WhatsAppBusinessAccountMessagingStatusLimited {
+  reasons: [WhatsAppBusinessAccountMessagingStatusReason!]!
+}
+
+type WhatsAppBusinessAccountMessagingStatusBlocked {
+  reasons: [WhatsAppBusinessAccountMessagingStatusReason!]!
+}
+
+enum WhatsAppBusinessAccountMessagingStatusReason {
+  Undefined
+  Banned
+  PaymentMethodMissing
+}
+
+enum WhatsappBusinessAccountReviewStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+scalar WhatsAppBusinessPhoneID
+
+type WhatsAppBusinessPhoneNumber {
+  id: WhatsAppBusinessPhoneID!
+  msisdn: String!
+  displayPhoneNumber: String!
+  profilePicture: File
+  codeVerificationStatus: WhatsAppPhoneCodeVerificationStatus
+  messagingStatus: WhatsAppPhoneMessagingStatus!
+  verifiedName: String
+  status: WhatsAppPhoneStatus
+  whatsAppBusinessAccount: WhatsAppBusinessAccount!
+  accessLost: Boolean!
+  isConnectedToBot: Boolean!
+  connectedBot: Bot
+  isOnBizApp: Boolean!
+  bizAppIsOnConnect: Boolean!
+  bizAppSyncInfo: WhatsAppBusinessPhoneBizAppSyncInfo
+  needsMigrationToL4B: Boolean!
+  updatedAt: Time!
+}
+
+type PublicWhatsAppBusinessPhoneNumber {
+  id: WhatsAppBusinessPhoneID!
+  msisdn: String!
+  displayPhoneNumber: String!
+  verifiedName: String
+  profilePicture: File
+}
+
+union WhatsAppPhoneMessagingStatus = WhatsAppPhoneMessagingStatusAvailable | WhatsAppPhoneMessagingStatusLimited | WhatsAppPhoneMessagingStatusBlocked
+
+type WhatsAppPhoneMessagingStatusAvailable {
+  fakeField: Boolean
+}
+
+type WhatsAppPhoneMessagingStatusLimited {
+  reasons: [WhatsAppPhoneMessagingStatusReason!]!
+}
+
+type WhatsAppPhoneMessagingStatusBlocked {
+  reasons: [WhatsAppPhoneMessagingStatusReason!]!
+}
+
+enum WhatsAppPhoneMessagingStatusReason {
+  Undefined
+  DisplayNameNotApproved
+  CustomersBlockingYourPhoneNumber
+}
+
+type WhatsAppBusinessPhoneBizAppSyncInfo {
+  contactsSyncStartedAt: Time
+  contactsSyncUpdatedAt: Time
+  syncedContacts: Long!
+  messagingAccess: WhatsAppPhoneBizAppMessagingHistoryAccess!
+  messagingSyncStartedAt: Time
+  messagingSyncUpdatedAt: Time
+  messagingSyncZeroPhaseProgress: Int!
+  messagingSyncFirstPhaseProgress: Int!
+  messagingSyncSecondPhaseProgress: Int!
+}
+
+enum WhatsAppPhoneBizAppMessagingHistoryAccess {
+  accepted
+  declined
+  unknown
+}
+
+enum WhatsAppPhoneCodeVerificationStatus {
+  NotVerified
+  Verified
+  Expired
+}
+
+enum WhatsAppPhoneStatus {
+  Pending
+  Deleted
+  Migrated
+  Banned
+  Restricted
+  RateLimited
+  Flagged
+  Connected
+  Disconnected
+  Unknown
+  Unverified
+}
+
+type WhatsAppPhoneAutoConnectionProcess {
+  startedBy: PublicUserAccount!
+  startedForWhatsappBusinessAccountID: WhatsappBusinessAccountID
+  result: WhatsAppPhoneAutoConnectionResult
+}
+
+union WhatsAppPhoneAutoConnectionResult = WhatsAppPhoneAutoConnectionResultPhoneConnected | WhatsAppPhoneAutoConnectionResultFailed | WhatsAppPhoneAutoConnectionResultMultiplePhonesFound | WhatsAppPhoneAutoConnectionResultNoNewPhonesFound
+
+type WhatsAppPhoneAutoConnectionResultPhoneConnected {
+  fakeField: Boolean!
+}
+
+type WhatsAppPhoneAutoConnectionResultFailed {
+  errorCode: DefinedErrorCode
+  phoneID: WhatsAppBusinessPhoneID
+}
+
+type WhatsAppPhoneAutoConnectionResultMultiplePhonesFound {
+  fakeField: Boolean!
+}
+
+type WhatsAppPhoneAutoConnectionResultNoNewPhonesFound {
+  fakeField: Boolean!
+}
+
+scalar BookingID
+
+type LivechatAutoClosingConfig {
+  enabled: Boolean!
+  delay: LivechatAutoClosingConfigDelay!
+}
+
+input LivechatAutoClosingConfigUpdateInput {
+  enabled: Boolean!
+  delay: LivechatAutoClosingConfigDelay!
+}
+
+type ConversationCountEntry {
+  status: ConversationStatus!
+  totalNumber: Int!
+}
+
+enum LivechatAutoClosingConfigDelay {
+  Minutes10
+  Minutes30
+  Hours1
+  Hours5
+  Hours24
+  Days3
+  Days7
+}
+
+scalar ContactID
+
+interface Contact {
+  id: ContactID!
+  conversation: Conversation
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  note: String
+}
+
+type Conversation {
+  id: ConversationID!
+  platform: Platform!
+  messages(first: Int, after: MessagesCursor, before: MessagesCursor): MessagePage!
+  lastMessage: Message
+  status: ConversationStatus!
+  contact: Contact!
+  read: Boolean
+  updatedAt: Time!
+}
+
+enum ConversationStatus {
+  open
+  closed
+  automated
+}
+
+enum FacebookMessageReferralSourceType {
+  Unknown
+  Ad
+}
+
+enum FacebookMessageReferralMediaType {
+  Unknown
+  Image
+  Video
+}
+
+type FacebookMessageReferral {
+  sourceType: FacebookMessageReferralSourceType!
+  adTitle: String
+  mediaType: FacebookMessageReferralMediaType!
+  imageFile: File
+  thumbnailFile: File
+}
+
+input FacebookTextMessageSendInput {
+  text: String!
+  clientId: ClientMID
+}
+
+enum FacebookSendMessageAttachmentType {
+  image
+  audio
+  video
+}
+
+input FacebookAttachmentMessageSendInput {
+  attachment: FileID!
+  attachmentType: FacebookSendMessageAttachmentType!
+  clientId: ClientMID
+}
+
+enum FacebookMessageStatus {
+  Sending
+  Sent
+  Read
+  Failed
+}
+
+enum InstagramMessageReferralSourceType {
+  Unknown
+  Ad
+}
+
+enum InstagramMessageReferralMediaType {
+  Unknown
+  Image
+  Video
+}
+
+type InstagramMessageReferral {
+  sourceType: InstagramMessageReferralSourceType!
+  adTitle: String
+  mediaType: InstagramMessageReferralMediaType!
+  imageFile: File
+  thumbnailFile: File
+}
+
+input InstagramTextMessageSendInput {
+  text: String!
+  clientId: ClientMID
+}
+
+enum InstagramSendMessageAttachmentType {
+  image
+  audio
+  video
+}
+
+input InstagramAttachmentMessageSendInput {
+  attachment: FileID!
+  attachmentType: InstagramSendMessageAttachmentType!
+  clientId: ClientMID
+}
+
+scalar InstagramMediaID
+
+type InstagramMediaContainer {
+  id: InstagramMediaID!
+  media: InstagramMedia!
+}
+
+type InstagramPost {
+  id: InstagramMediaID!
+  isUnknown: Boolean!
+  caption: String
+  ownerUsername: String!
+  file: File
+  thumbnailPreview: File
+  url: String!
+  buildCommentURL(commentID: String!): String!
+  childMedias: [InstagramMedia!]!
+}
+
+type InstagramReel {
+  id: InstagramMediaID!
+  isUnknown: Boolean!
+  caption: String
+  ownerUsername: String!
+  file: File
+  thumbnailPreview: File
+  url: String!
+  buildCommentURL(commentID: String!): String!
+  childMedias: [InstagramMedia!]!
+}
+
+type InstagramAd {
+  id: InstagramMediaID!
+  isUnknown: Boolean!
+  caption: String
+  ownerUsername: String!
+  file: File
+  thumbnailPreview: File
+  url: String!
+  buildCommentURL(commentID: String!): String!
+  childMedias: [InstagramMedia!]!
+}
+
+type InstagramStory {
+  id: InstagramMediaID!
+  isUnknown: Boolean!
+  caption: String
+  ownerUsername: String!
+  file: File
+  thumbnailPreview: File
+  url: String!
+}
+
+enum InstagramMessageStatus {
+  Sending
+  Sent
+  Read
+  Failed
+}
+
+enum MessageErrorCode {
+  InstagramOutMessageOutsideAllowedWindow
+  MessageUnknownError
+  TikTokOutMessageOutsideAllowedWindow
+  TikTokOutProhibitedMediaStrategy
+  TikTokOutMessageViolatesCommunityGuidelines
+  WhatsAppOutRateLimitHit
+  WhatsAppOutSpamRateLimitHit
+  WhatsAppOutPairRateLimitHit
+  WhatsAppOutTemporaryBlockedForPoliciesViolations
+  WhatsAppOutRestrictedFromMessagingUsersInThisCountry
+  WhatsAppOutAccountHasBeenLocked
+  WhatsAppOutAPIUnknown
+  WhatsAppOutAPIService
+  WhatsAppOutParameterValueIsNotValid
+  WhatsAppOutUsersNumberIsNotPartOfAnExperiment
+  WhatsAppOutSomethingWentWrong
+  WhatsAppOutServiceUnavailable
+  WhatsAppOutRecipientCannotBeSender
+  WhatsAppOutMessageUndeliverable
+  WhatsAppOutBusinessEligibilityPayment
+  WhatsAppOutMetaChooseNotToDeliver
+  WhatsAppOutAccountInMaintenanceMode
+  WhatsAppOutNumberNeedsDisplayNameApproval
+  WhatsAppOutGenericUserError
+  WhatsAppOutMoreThan24hPassed
+  WhatsAppOutRequiredParameterIsMissing
+  WhatsAppOutTemplateIsPaused
+  WhatsAppOutTemplateDoesNotExist
+  WhatsAppOutTemplateDisabled
+  WhatsAppOutTemplateFormatCharacterPoliceViolated
+  WhatsAppOutMediaUploadError
+  WhatsAppOutTemplateVoiceCallButtonNotEnabledForCalling
+}
+
+scalar MessageID
+
+scalar ClientMID
+
+scalar MessagesCursor
+
+type MessageError {
+  code: MessageErrorCode!
+  date: Time!
+  originalErrCode: String
+  originalErrMessage: String
+}
+
+interface Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+}
+
+type MessagePage {
+  edges: [MessageEdge!]!
+  pageInfo: MessagePageInfo!
+}
+
+type MessageEdge {
+  node: Message!
+  cursor: MessagesCursor!
+}
+
+type MessagePageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: MessagesCursor
+  endCursor: MessagesCursor
+}
+
+enum AudioTranscriptionStatus {
+  none
+  failed
+  skipped
+  finished
+}
+
+scalar SenderID
+
+interface MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+input PreviewResponsesBtnClickInput {
+  clientId: String
+  messageId: MessageID!
+  buttonTitle: String!
+}
+
+type SystemMetaConversionEvent {
+  eventId: String
+  eventName: String!
+  eventTime: Time!
+  ctwaClid: String
+  phoneNumber: String
+  actionSource: String!
+  messagingChannel: String!
+}
+
+input TikTokTextMessageSendInput {
+  text: String!
+  clientId: ClientMID
+}
+
+enum TikTokSendMessageAttachmentType {
+  image
+}
+
+input TikTokAttachmentMessageSendInput {
+  attachment: FileID!
+  attachmentType: TikTokSendMessageAttachmentType!
+  clientId: ClientMID
+}
+
+scalar TikTokPostID
+
+type TikTokPost {
+  id: TikTokPostID!
+  isUnknown: Boolean!
+  url: String!
+}
+
+enum TikTokMessageStatus {
+  Sending
+  Sent
+  Read
+  Failed
+}
+
+enum WhatsAppMessageReferralSourceType {
+  Unknown
+  Ad
+  Post
+}
+
+enum WhatsAppMessageReferralMediaType {
+  Unknown
+  Image
+  Video
+}
+
+type WhatsAppMessageReferral {
+  sourceType: WhatsAppMessageReferralSourceType!
+  sourceUrl: String!
+  headline: String
+  body: String
+  mediaType: WhatsAppMessageReferralMediaType!
+  imageFile: File
+  thumbnailFile: File
+}
+
+scalar FilledWhatsAppTemplateID
+
+enum WhatsAppMessageStatus {
+  Sending
+  Sent
+  Delivered
+  Read
+  Failed
+}
+
+input WhatsAppTextMessageSendInput {
+  text: String!
+  clientId: ClientMID
+}
+
+input WhatsAppTemplateSendInput {
+  filledTemplateID: FilledWhatsAppTemplateID!
+  clientId: ClientMID
+}
+
+input WhatsAppAttachmentMessageSendInput {
+  attachment: FileID!
+  attachmentType: WhatsAppSendMessageAttachmentType!
+  attachmentName: String
+  clientId: ClientMID
+}
+
+enum WhatsAppSendMessageAttachmentType {
+  image
+  document
+  audio
+}
+
+interface WhatsAppMessageButton {
+  title: String!
+}
+
+type WhatsAppMessageListRow {
+  title: String!
+  description: String
+}
+
+type WhatsAppOutTemplateMessageComponentText {
+  text: String!
+}
+
+type WhatsAppOutTemplateMessageComponentImage {
+  file: File
+}
+
+type WhatsAppOutTemplateMessageComponentVideo {
+  file: File
+}
+
+type WhatsAppOutTemplateMessageComponentDocument {
+  file: File
+  fileName: String
+}
+
+type WhatsAppOutTemplateMessageURLButton {
+  text: String!
+  url: String!
+}
+
+type WhatsAppOutTemplateMessageQuickReplyButton {
+  text: String!
+}
+
+type WhatsAppOutTemplateMessageCallPhoneButton {
+  text: String!
+  phoneNumber: String!
+}
+
+type WhatsAppOutTemplateMessageWhatsAppCallButton {
+  text: String!
+}
+
+type WhatsAppOutTemplateMessageCopyCodeButton {
+  text: String!
+  code: String!
+}
+
+union WhatsAppOutTemplateMessageHeader = WhatsAppOutTemplateMessageComponentText | WhatsAppOutTemplateMessageComponentImage | WhatsAppOutTemplateMessageComponentVideo | WhatsAppOutTemplateMessageComponentDocument
+
+union WhatsAppOutTemplateMessageBody = WhatsAppOutTemplateMessageComponentText
+
+union WhatsAppOutTemplateMessageFooter = WhatsAppOutTemplateMessageComponentText
+
+union WhatsAppOutTemplateMessageButton = WhatsAppOutTemplateMessageURLButton | WhatsAppOutTemplateMessageQuickReplyButton | WhatsAppOutTemplateMessageCallPhoneButton | WhatsAppOutTemplateMessageWhatsAppCallButton | WhatsAppOutTemplateMessageCopyCodeButton
+
+input PreviewResponsesWAListRowClickInput {
+  clientId: String
+  messageId: MessageID!
+  rowTitle: String!
+}
+
+enum WebWidgetAttachmentType {
+  image
+}
+
+type WebWidgetAttachment {
+  file: File!
+  type: WebWidgetAttachmentType!
+}
+
+interface WebWidgetButton {
+  title: String!
+}
+
+enum WebWidgetMessageStatus {
+  Seen
+  Unseen
+  Sending
+}
+
+input WidgetTextMessageSendInput {
+  text: String!
+  clientId: String
+}
+
+input WidgetAttachmentMessageSendInput {
+  attachment: FileID!
+  attachmentType: WebWidgetAttachmentType!
+  clientId: ClientMID
+}
+
+union ContactAssignee = PublicUserAccount | FuelyAIAssignee
+
+type FuelyAIAssignee {
+  fakeField: Boolean
+}
+
+input ContactChatsCountFilter {
+  assigneeFilter: ContactAssigneeFilter!
+  unreadOnly: Boolean!
+  salesStageV2Filter: [SalesStageV2!]!
+  textInputFilter: String
+  lastMessageTimeAfter: Time
+  lastMessageTimeBefore: Time
+}
+
+input DealsByStagesFilter {
+  assigneeFilter: ContactAssigneeFilter!
+  salesStageUpdatedAfter: Time
+  salesStageUpdatedBefore: Time
+}
+
+input ContactAssigneeFilter {
+  type: ContactAssigneeFilterType!
+  assigneeID: UserAccountID
+}
+
+enum ContactAssigneeFilterType {
+  Any
+  Unassigned
+  FuelyAI
+  AssigneeID
+}
+
+type ContactListUpdateStopped {
+  willResumeAt: Time!
+}
+
+union ContactsChatUpdate = ContactsChatUpdatesBatch | ContactListUpdateStopped
+
+type ContactsChatUpdatesBatch {
+  updates: [ContactsUpdateEntry!]!
+}
+
+type ContactsUpdateEntry {
+  action: ContactListUpdateAction!
+  edge: ContactEdge!
+}
+
+enum ContactListUpdateAction {
+  Remove
+  Add
+  Update
+}
+
+union ContactsDealUpdate = ContactsDealUpdatesBatch | ContactListUpdateStopped
+
+type ContactsDealUpdatesBatch {
+  updates: [ContactsUpdateEntry!]!
+}
+
+type TotalsByStages {
+  New: Int!
+  Sorting: Int!
+  Ready: Int!
+  WorkingOn: Int!
+  Won: Int!
+  Lost: Int!
+}
+
+type DealsPageIndicatorUpdate {
+  active: Boolean!
+}
+
+scalar BotAttributeCursor
+
+scalar BotAttributeValueID
+
+interface BotAttributeValue {
+  id: BotAttributeValueID!
+}
+
+type AttributeLocalizedAlias {
+  locale: DashboardLocale!
+  alias: String!
+}
+
+enum AttributeDataType {
+  string
+  datetime
+  boolean
+  long
+  double
+}
+
+enum AttributeType {
+  system
+  custom
+}
+
+input BotAttributeFilter {
+  value: BotAttributeFilterValue!
+  field: BotAttributeFilterField!
+}
+
+enum BotAttributeFilterField {
+  UsedInFlowIDs
+}
+
+input BotAttributeFilterValue {
+  val: [String!]!
+  type: BotAttributeFilterValueType!
+}
+
+enum BotAttributeFilterValueType {
+  Any
+  Eq
+  Contains
+}
+
+input BotAttributeOrderByInput {
+  orderBy: BotAttributeOrderBy!
+  direction: Sort!
+}
+
+enum BotAttributeOrderBy {
+  AttributeName
+  DefaultValue
+  UsedInFlowsCount
+  ContactsCount
+}
+
+type BotAttributeConnection {
+  edges: [BotAttributeEdge!]!
+  pageInfo: BotAttributePageInfo!
+}
+
+type BotAttributeEdge {
+  node: BotAttributeNode!
+  cursor: BotAttributeCursor!
+}
+
+type BotAttributeNode {
+  botAttribute: BotAttribute!
+  usersCount: Int
+  defaultValue: String
+  flowsCount: Int!
+}
+
+type BotAttributePageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: BotAttributeCursor
+  endCursor: BotAttributeCursor
+}
+
+scalar ContactAttributeID
+
+type ContactAttribute {
+  id: ContactAttributeID!
+  attr: BotAttribute!
+  value: BotAttributeValue!
+}
+
+enum ContactDashboardSource {
+  CalendarBooking
+}
+
+input ContactSearchOrderByInput {
+  orderBy: AttributeName!
+  direction: Sort!
+}
+
+scalar ContactSearchCursor
+
+type ContactConnection {
+  edges: [ContactEdge!]!
+  pageInfo: ContactPageInfo!
+}
+
+type ContactEdge {
+  node: Contact!
+  cursor: ContactSearchCursor!
+}
+
+type ContactPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: ContactSearchCursor
+  endCursor: ContactSearchCursor
+}
+
+input WhatsappContactCreateInput {
+  phoneNumber: String!
+  countryCode: CountryCode
+  name: String
+  source: ContactDashboardSource!
+  note: String
+}
+
+scalar TaskID
+
+type Task {
+  id: TaskID!
+  statuses: [TaskStatus!]!
+  completedPoints: Int!
+  totalPoints: Int!
+  data: TaskData!
+  deadline: Time!
+}
+
+scalar CSVContactImportID
+
+type CSVContactImport {
+  id: CSVContactImportID!
+  file: File!
+  platform: Platform!
+  columns: [CSVContactImportColumn!]!
+  validationErrors: [CSVContactImportValidationError!]!
+  partialContactsErrors: [CSVContactImportContactsError!]!
+  declinedContactsErrors: [CSVContactImportContactsError!]!
+  errorsFile(botID: BotID!): File
+  createdContacts: Int!
+  createdContactsWithFiledAttributes: Int!
+  updatedContacts: Int!
+  updatedContactsWithFiledAttributes: Int!
+  declinedContacts: Int!
+  createdAt: Time!
+  startedAt: Time
+  finishedAt: Time
+  updatedAt: Time!
+}
+
+union CSVContactImportValidationError = CSVContactImportCommonError | CSVContactImportColumnError
+
+enum CSVContactImportCommonErrorCode {
+  FileIsEmpty
+  FileSizeTooBig
+  FileInvalidFormat
+  WaPhoneRequired
+}
+
+type CSVContactImportCommonError {
+  commonErrCode: CSVContactImportCommonErrorCode!
+}
+
+enum CSVContactImportColumnErrorCode {
+  ColumnDuplicated
+  SystemAttrNotAllowed
+  AttrIsInvalid
+}
+
+type CSVContactImportColumnError {
+  columnErrCode: CSVContactImportColumnErrorCode!
+  columnIndex: Int!
+}
+
+type CSVContactImportContactsError {
+  id: String!
+  count: Int!
+  description: String!
+}
+
+type CSVContactImportColumn {
+  columnIndex: Int!
+  columnPreview: String!
+  attribute: BotAttribute
+}
+
+input CSVContactImportColumnsUpdate {
+  columns: [CSVContactImportColumnUpdate!]!
+}
+
+input CSVContactImportColumnUpdate {
+  columnIndex: Int!
+  attributeName: AttributeName!
+}
+
+enum SalesStageV2 {
+  New
+  Sorting
+  Ready
+  WorkingOn
+  Won
+  Lost
+}
+
+scalar PostID
+
+enum FuelyAutomationScope {
+  All
+  InstagramDirectMessages
+  InstagramPostComments
+  InstagramAdComments
+  InstagramStoryReplies
+  InstagramIgMeLinks
+  InstagramClickFromAds
+  WhatsAppDirectMessages
+  WhatsAppClickFromAds
+  WhatsAppClickFromPosts
+  FacebookDirectMessages
+  FacebookMMeLinks
+  FacebookPostComments
+  FacebookClickFromAds
+  TikTokDirectMessages
+  TikTokPostComments
+  TikTokClickFromAds
+  WebWidgetDirectMessage
+}
+
+type FuelyAutomation {
+  id: FuelyAutomationID!
+  isBase: Boolean!
+  name: String
+  enabled: Boolean!
+  scope: FuelyAutomationScope!
+  updatedAt: Time!
+  settings: [FuelySetting!]!
+}
+
+interface FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+}
+
+input FuelyAutomationTemplateInput {
+  baseAutomations: [FuelyTemplateBaseAutomationInput!]
+  customAutomations: [FuelyTemplateCustomAutomationInput!]
+}
+
+input FuelyTemplateBaseAutomationInput {
+  scope: FuelyAutomationScope!
+  settings: [FuelySettingUpdateInput!]!
+}
+
+input FuelyTemplateCustomAutomationInput {
+  scope: FuelyAutomationScope!
+  name: String!
+  settings: [FuelySettingUpdateInput!]!
+}
+
+input FuelySettingUpdateInput {
+  messageDelays: FuelySettingMessageDelaysInput
+  whenAIReplies: FuelySettingWhenAIRepliesInput
+  catalogImages: FuelySettingCatalogImagesInput
+  incomingMessages: FuelySettingIncomingMessagesInput
+  bookingRules: FuelySettingBookingRulesInput
+  switchToHuman: FuelySettingSwitchToHumanInput
+  followUps: FuelySettingFollowUpsInput
+  collectContactInfo: FuelySettingCollectContactInfoInput
+  privateReply: FuelySettingPrivateReplyInput
+  publicReply: FuelySettingPublicReplyInput
+  keywords: FuelySettingKeywordsInput
+  listOfPosts: FuelySettingListOfPostsInput
+  refLinks: FuelySettingRefLinksInput
+  listOfAds: FuelySettingListOfAdsInput
+  listOfStories: FuelySettingListOfStoriesInput
+  sendEventsToMeta: FuelySettingSendEventsToMetaInput
+}
+
+scalar FuelyBroadcastCursor
+
+scalar FuelyBroadcastID
+
+union FuelyBroadcastSettingsBlock = WhatsAppOneTimeNotificationBlock | WhatsAppScheduledMessageBlock
+
+union FuelyBroadcastPayloadBlock = WhatsAppTemplateBlock
+
+type FuelyBroadcast {
+  id: FuelyBroadcastID!
+  flow: RegularFlow!
+  settingsBlock: FuelyBroadcastSettingsBlock!
+  payloadBlock: FuelyBroadcastPayloadBlock!
+}
+
+type FuelyBroadcastPage {
+  edges: [FuelyBroadcastEdge!]!
+  pageInfo: FuelyBroadcastPageInfo!
+}
+
+type FuelyBroadcastPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: FuelyBroadcastCursor
+  endCursor: FuelyBroadcastCursor
+}
+
+type FuelyBroadcastEdge {
+  node: FuelyBroadcast!
+  cursor: FuelyBroadcastCursor!
+}
+
+enum FuelySettingBookingRulesAutonomyLevel {
+  CollectIntents
+  BookWithTeammatesApproval
+  BookWithTeammatesReview
+  BookWithFullAutonomy
+  DontBook
+}
+
+input FuelySettingBookingRulesInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingBookingRulesUpdateInput
+}
+
+input FuelySettingBookingRulesUpdateInput {
+  autonomyLevel: FuelySettingBookingRulesAutonomyLevel!
+}
+
+enum FuelySettingCatalogImagesWhenToShow {
+  Never
+  OnceMentioned
+  WhenAsked
+}
+
+input FuelySettingCatalogImagesInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingCatalogImagesUpdateInput
+}
+
+input FuelySettingCatalogImagesUpdateInput {
+  whenToShow: FuelySettingCatalogImagesWhenToShow!
+  imagesPerCatalogItem: Int!
+}
+
+enum FuelySettingCollectContactInfoHowToCollect {
+  CollectInfo
+  DoNotCollectInfo
+}
+
+enum FuelyCollectContactInfoEntryValidationErrorCode {
+  AttributeRequired
+  DescriptionRequired
+  AttributeIsDuplicated
+  InvalidAttribute
+  SystemAttributeIsNotAllowed
+}
+
+type FuelySettingCollectContactInfoEntry {
+  description: String!
+  attribute: BotAttribute
+  validationErrors: [FuelyCollectContactInfoEntryValidationErrorCode!]!
+}
+
+input FuelySettingCollectContactInfoEntryInput {
+  description: String!
+  name: AttributeName!
+}
+
+input FuelySettingCollectContactInfoInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingCollectContactInfoUpdateInput
+}
+
+input FuelySettingCollectContactInfoUpdateInput {
+  howToCollect: FuelySettingCollectContactInfoHowToCollect!
+  captures: [FuelySettingCollectContactInfoEntryInput!]!
+}
+
+enum FuelySettingFollowUpsHowToSend {
+  Send
+  DontSend
+}
+
+input FuelySettingFollowUpsInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingFollowUpsUpdateInput
+}
+
+input FuelySettingFollowUpsUpdateInput {
+  howToSend: FuelySettingFollowUpsHowToSend!
+  messagePrompt: String!
+}
+
+enum FuelySettingIncomingMessagesHowToReply {
+  UsingAI
+  DontReply
+}
+
+input FuelySettingIncomingMessagesInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingIncomingMessagesUpdateInput
+}
+
+input FuelySettingIncomingMessagesUpdateInput {
+  howToReply: FuelySettingIncomingMessagesHowToReply!
+  messagePrompt: String!
+}
+
+enum FuelySettingKeywordsReactTo {
+  AnyComment
+  CommentThatContains
+  CommentThatExactlyMatches
+  CommentThatDoesNotContain
+}
+
+input FuelySettingKeywordsInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingKeywordsUpdateInput
+}
+
+input FuelySettingKeywordsUpdateInput {
+  reactTo: FuelySettingKeywordsReactTo!
+  keywords: [String!]!
+}
+
+scalar AdID
+
+input FuelySettingListOfAdsInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingListOfAdsUpdateInput
+}
+
+input FuelySettingListOfAdsUpdateInput {
+  adIDs: [AdID!]!
+}
+
+type FuelySettingListOfPostsEntry {
+  postID: PostID!
+  contactScopeID: ContactScopeID!
+}
+
+input FuelySettingListOfPostsInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingListOfPostsUpdateInput
+}
+
+input FuelySettingListOfPostsUpdateInput {
+  postIDs: [PostID!]!
+}
+
+scalar StoryID
+
+type FuelySettingListOfStoriesEntry {
+  storyID: StoryID!
+  contactScopeID: ContactScopeID!
+}
+
+input FuelySettingListOfStoriesInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingListOfStoriesUpdateInput
+}
+
+input FuelySettingListOfStoriesUpdateInput {
+  storyIDs: [StoryID!]!
+}
+
+input FuelySettingMessageDelaysInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingMessageDelaysUpdateInput
+}
+
+input FuelySettingMessageDelaysUpdateInput {
+  enabled: Boolean!
+}
+
+enum FuelySettingPrivateReplyHowToReply {
+  UsingAI
+  ExactText
+  DontReply
+}
+
+input FuelySettingPrivateReplyInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingPrivateReplyUpdateInput
+}
+
+input FuelySettingPrivateReplyUpdateInput {
+  privateReplyHowToReply: FuelySettingPrivateReplyHowToReply!
+  exactTextReply: String!
+  messagePrompt: String!
+}
+
+enum FuelySettingPublicReplyHowToReply {
+  UsingAI
+  ExactText
+  DontReply
+}
+
+input FuelySettingPublicReplyInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingPublicReplyUpdateInput
+}
+
+input FuelySettingPublicReplyUpdateInput {
+  publicReplyHowToReply: FuelySettingPublicReplyHowToReply!
+  exactTextReply: String!
+  messagePrompt: String!
+  likeContactComment: Boolean!
+}
+
+input FuelySettingRefLinksInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingRefLinksUpdateInput
+}
+
+input FuelySettingRefLinksUpdateInput {
+  refs: [String!]!
+}
+
+scalar FuelySettingSendEventsToMetaEventID
+
+enum FuelySettingSendEventsToMetaStandardEventName {
+  Purchase
+  LeadSubmitted
+  InitiateCheckout
+  AddToCart
+  ViewContent
+  OrderCreated
+  OrderShipped
+  OrderDelivered
+  OrderCanceled
+  OrderReturned
+  CartAbandoned
+  QualifiedLead
+  RatingProvided
+  ReviewProvided
+}
+
+enum FuelySettingSendEventsToMetaSalesStage {
+  Sorting
+  Ready
+  WorkingOn
+  Won
+  Lost
+}
+
+enum FuelySettingSendEventsToMetaSwitchToHumanFrom {
+  FuelyAI
+  UserAccount
+}
+
+enum FuelySettingSendEventsToMetaKeywordsRule {
+  Contains
+  ExactMatch
+}
+
+type FuelySettingSendEventsToMetaAttributeCondition {
+  attributeCondition: AttrFilter!
+  attributeConditionErrors: [AttrFilterErrCode!]!
+}
+
+type FuelySettingSendEventsToMetaStandardName {
+  standardName: FuelySettingSendEventsToMetaStandardEventName!
+}
+
+type FuelySettingSendEventsToMetaCustomName {
+  customName: String!
+}
+
+union FuelySettingSendEventsToMetaEventName = FuelySettingSendEventsToMetaStandardName | FuelySettingSendEventsToMetaCustomName
+
+type FuelySettingSendEventsToMetaOnSwitchToHumanEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+  switchToHumanFrom: [FuelySettingSendEventsToMetaSwitchToHumanFrom!]!
+}
+
+type FuelySettingSendEventsToMetaOnSalesStageEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+  salesStages: [FuelySettingSendEventsToMetaSalesStage!]!
+}
+
+type FuelySettingSendEventsToMetaOnContactFirstMessageEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+}
+
+type FuelySettingSendEventsToMetaOnBookingEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+}
+
+type FuelySettingSendEventsToMetaOnCustomPromptEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+  conditionPrompt: String!
+}
+
+type FuelySettingSendEventsToMetaOnContactMessageKeywordEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+  keywordsRule: FuelySettingSendEventsToMetaKeywordsRule!
+  keywords: [String!]!
+}
+
+type FuelySettingSendEventsToMetaOnContactAttributeEvent {
+  id: FuelySettingSendEventsToMetaEventID!
+  eventName: FuelySettingSendEventsToMetaEventName!
+  attributeConditions: [FuelySettingSendEventsToMetaAttributeCondition!]!
+}
+
+union FuelySettingSendEventsToMetaEvent = FuelySettingSendEventsToMetaOnSwitchToHumanEvent | FuelySettingSendEventsToMetaOnSalesStageEvent | FuelySettingSendEventsToMetaOnContactFirstMessageEvent | FuelySettingSendEventsToMetaOnBookingEvent | FuelySettingSendEventsToMetaOnCustomPromptEvent | FuelySettingSendEventsToMetaOnContactMessageKeywordEvent | FuelySettingSendEventsToMetaOnContactAttributeEvent
+
+input FuelySettingSendEventsToMetaEventNameInput {
+  standardName: FuelySettingSendEventsToMetaStandardEventName
+  customName: String
+}
+
+input FuelySettingSendEventsToMetaOnSwitchToHumanEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+  switchToHumanFrom: [FuelySettingSendEventsToMetaSwitchToHumanFrom!]!
+}
+
+input FuelySettingSendEventsToMetaOnSalesStageEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+  salesStages: [FuelySettingSendEventsToMetaSalesStage!]!
+}
+
+input FuelySettingSendEventsToMetaOnContactFirstMessageEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+}
+
+input FuelySettingSendEventsToMetaOnBookingEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+}
+
+input FuelySettingSendEventsToMetaOnCustomPromptEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+  conditionPrompt: String!
+}
+
+input FuelySettingSendEventsToMetaOnContactMessageKeywordEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+  keywordsRule: FuelySettingSendEventsToMetaKeywordsRule!
+  keywords: [String!]!
+}
+
+input FuelySettingSendEventsToMetaOnContactAttributeEventInput {
+  id: FuelySettingSendEventsToMetaEventID
+  eventName: FuelySettingSendEventsToMetaEventNameInput!
+  attributeCondition: AttrFilterInput!
+}
+
+input FuelySettingSendEventsToMetaEventInput {
+  onSwitchToHuman: FuelySettingSendEventsToMetaOnSwitchToHumanEventInput
+  onSalesStage: FuelySettingSendEventsToMetaOnSalesStageEventInput
+  onContactFirstMessage: FuelySettingSendEventsToMetaOnContactFirstMessageEventInput
+  onBooking: FuelySettingSendEventsToMetaOnBookingEventInput
+  onCustomPrompt: FuelySettingSendEventsToMetaOnCustomPromptEventInput
+  onContactMessageKeyword: FuelySettingSendEventsToMetaOnContactMessageKeywordEventInput
+  onContactAttribute: FuelySettingSendEventsToMetaOnContactAttributeEventInput
+}
+
+input FuelySettingSendEventsToMetaInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingSendEventsToMetaUpdateInput
+}
+
+input FuelySettingSendEventsToMetaUpdateInput {
+  events: [FuelySettingSendEventsToMetaEventInput!]!
+}
+
+type FuelyAvailableMetaConversionEventNames {
+  standardEvents: [FuelySettingSendEventsToMetaStandardEventName!]!
+  customEvents: [String!]!
+}
+
+enum FuelySettingSwitchToHumanHowToSwitch {
+  SwitchToTeammates
+  DontSwitch
+}
+
+type FuelySettingSwitchToHumanRuleAssignee {
+  user: PublicUserAccount!
+}
+
+type FuelySettingSwitchToHumanRule {
+  switchingConditions: String!
+  messagePrompt: String!
+  assignees: [FuelySettingSwitchToHumanRuleAssignee!]
+}
+
+input FuelySettingSwitchToHumanRuleAssigneeInput {
+  userID: UserAccountID!
+}
+
+input FuelySettingSwitchToHumanRuleInput {
+  switchingConditions: String!
+  messagePrompt: String!
+  assignees: [FuelySettingSwitchToHumanRuleAssigneeInput!]
+}
+
+input FuelySettingSwitchToHumanInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingSwitchToHumanUpdateInput
+}
+
+input FuelySettingSwitchToHumanUpdateInput {
+  howToSwitch: FuelySettingSwitchToHumanHowToSwitch!
+  rules: [FuelySettingSwitchToHumanRuleInput!]!
+}
+
+enum FuelySettingWhenAIRepliesOptions {
+  Always
+  OutsideOfWorkingHours
+}
+
+input FuelySettingWhenAIRepliesInput {
+  setInheritFrom: FuelyAutomationID
+  setInheritFromScope: FuelyAutomationScope
+  update: FuelySettingWhenAIRepliesUpdateInput
+}
+
+input FuelySettingWhenAIRepliesUpdateInput {
+  option: FuelySettingWhenAIRepliesOptions!
+}
+
+type FuelyInitialSetup {
+  id: FuelyInitialSetupID!
+  bot: Bot
+  industry: FuelyInitialSetupIndustry
+  companyWebsite: String!
+  documents: [File!]!
+  agentAdditionalInstructions: String!
+  customerDetails: String!
+  currentStep: FuelyInitialSetupStep
+  updatedAt: Time!
+}
+
+type FuelyInitialSetupIndustry {
+  category: FuelyInitialSetupIndustryCategory!
+  healthcareSubCategory: FuelyInitialSetupIndustryHealthcareSubCategory
+  wellnessSubCategory: FuelyInitialSetupIndustryWellnessSubCategory
+}
+
+input FuelyInitialSetupIndustryInput {
+  category: FuelyInitialSetupIndustryCategory!
+  healthcareSubCategory: FuelyInitialSetupIndustryHealthcareSubCategory
+  wellnessSubCategory: FuelyInitialSetupIndustryWellnessSubCategory
+}
+
+input FuelyInitialSetupPreviewChatMessageInput {
+  direction: FuelyInitialSetupPreviewChatMsgDirection!
+  text: String!
+  reaction: FuelyInitialSetupPreviewChatMsgReaction
+}
+
+input FuelyInitialSetupPreviewChatInput {
+  messages: [FuelyInitialSetupPreviewChatMessageInput!]!
+}
+
+enum FuelyInitialSetupStep {
+  CompanyInfoStep
+  FuelyCustomizingStep
+  TestingStep
+  Completed
+}
+
+enum FuelyInitialSetupPreviewChatMsgDirection {
+  In
+  Out
+}
+
+enum FuelyInitialSetupPreviewChatMsgReaction {
+  Like
+  Dislike
+}
+
+enum FuelyInitialSetupIndustryCategory {
+  Healthcare
+  Wellness
+  Beauty
+  Fitness
+  Auto
+  Education
+  Events
+  Food
+  Home
+  Pets
+  RealEstate
+  Retail
+  Other
+}
+
+enum FuelyInitialSetupIndustryHealthcareSubCategory {
+  Aesthetic
+  Cardiology
+  Dentistry
+  Dermatology
+  Endocrinology
+  Otolaryngology
+  Multidisciplinary
+  Gynecology
+  Neurology
+  Oncology
+  Ophthalmology
+  Orthopedics
+  Pediatrics
+  Mental
+  Surgery
+  Other
+}
+
+enum FuelyInitialSetupIndustryWellnessSubCategory {
+  Nutritionist
+  Massage
+  HolisticHealthCoach
+  Chiropractor
+  Osteopath
+  Naturopath
+  Aesthetic
+  Mindfulness
+  HealthCoach
+  IntegrativeMedicine
+  Herbalist
+  Breathwork
+  Other
+}
+
+enum FacebookMarketingCurrencyCode {
+  AED
+  ARS
+  AUD
+  BDT
+  BGN
+  BHD
+  BOB
+  BRL
+  CAD
+  CHF
+  CLP
+  CNY
+  COP
+  CRC
+  CZK
+  DKK
+  DZD
+  EGP
+  EUR
+  GBP
+  GTQ
+  HKD
+  HNL
+  HRK
+  HUF
+  IDR
+  ILS
+  INR
+  ISK
+  JOD
+  JPY
+  KES
+  KRW
+  LTL
+  LVL
+  MAD
+  MOP
+  MXN
+  MYR
+  NGN
+  NIO
+  NOK
+  NZD
+  PEN
+  PHP
+  PKR
+  PLN
+  PYG
+  QAR
+  RON
+  RSD
+  RUB
+  SAR
+  SEK
+  SGD
+  SKK
+  THB
+  TRY
+  TWD
+  UAH
+  USD
+  UYU
+  VEF
+  VES
+  VND
+  ZAR
+  FBZ
+}
+
+scalar MetaAdCursor
+
+scalar MetaAdID
+
+scalar MetaAdAccountID
+
+scalar MetaAdAccountSynthID
+
+scalar MetaAdSynthID
+
+type MetaAdsSyncState {
+  id: String!
+  requestedAt: Time!
+  deadlineAt: Time!
+  finishedAt: Time
+  updatedAt: Time!
+}
+
+type MetaAdAccount {
+  id: MetaAdAccountSynthID!
+  metaAdAccountID: MetaAdAccountID!
+  name: String!
+  currency: FacebookMarketingCurrencyCode!
+  hasWhatsappAds: Boolean!
+  hasInstagramAds: Boolean!
+  business: FacebookBusiness
+  ads(botID: BotID!, platforms: [Platform!]!, first: Int!, after: MetaAdCursor): MetaAds!
+}
+
+type MetaAds {
+  edges: [MetaAdEdge!]!
+  pageInfo: MetaAdsPageInfo!
+}
+
+type MetaAdEdge {
+  node: MetaAd!
+  cursor: MetaAdCursor!
+}
+
+type MetaAdsPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: MetaAdCursor
+  endCursor: MetaAdCursor
+}
+
+enum MetaAdEffectiveStatus {
+  Active
+  Paused
+  Deleted
+  PendingReview
+  Disapproved
+  PreApproved
+  PendingBillingInfo
+  CampaignPaused
+  Archived
+  AdSetPaused
+  InProgress
+  WithIssues
+}
+
+enum AdSetDestinationType {
+  Unknown
+  WhatsApp
+  InstagramDirect
+}
+
+type MetaAd {
+  id: MetaAdSynthID!
+  name: String!
+  metaAdId: MetaAdID!
+  metaAdSetId: String!
+  metaAdCampaignId: String!
+  thumbnailURL: String
+  effectiveStatus: MetaAdEffectiveStatus!
+  adScheduleStartTime: Time
+  adScheduleEndTime: Time
+  adSetDestinationType: AdSetDestinationType
+  adSetStartTime: Time
+  adSetEndTime: Time
+  lifetimeBudget: String
+  dailyBudget: String
+  metaInsights: MetaAdMetaInsights!
+  chatfuelInsights: MetaAdChatfuelInsights
+}
+
+type MetaAdMetaInsights {
+  impressions: String
+  clicks: String
+  totalMessagingConnection: String
+  spend: String
+  CTR: String
+}
+
+type MetaAdChatfuelInsights {
+  clicks: String
+}
+
+scalar WebWidgetID
+
+type WebWidget {
+  id: WebWidgetID!
+  name: String!
+  avatar: File
+  domains: [String!]!
+  color: String!
+  isEnabled: Boolean!
+}
+
+type FilledWhatsAppTemplate {
+  id: FilledWhatsAppTemplateID!
+  template: WhatsAppTemplate!
+  header: WhatsAppTemplateHeader
+  body: WhatsAppTemplateBody!
+  footer: WhatsAppTemplateFooter
+  buttons: [WhatsAppTemplateButton!]!
+  errors: [FilledWhatsAppTemplateError!]!
+}
+
+interface FilledWhatsAppTemplateError {
+  code: FilledWhatsAppTemplateErrorCode!
+  componentType: WhatsAppTemplateComponentType
+}
+
+enum FilledWhatsAppTemplateErrorCode {
+  StatusNotValidForProcessing
+  TextParamRequired
+  FileRequired
+  URLButtonParamRequired
+  CopyCodeButtonCodeValueRequired
+  CopyCodeButtonCodeValueTooLong
+}
+
+type WhatsAppTemplate {
+  id: WhatsAppTemplateID!
+  name: String!
+  status: WhatsAppTemplateStatus!
+  language: WhatsAppTemplateLanguage!
+  category: WhatsAppTemplateCategory!
+  header: WhatsAppTemplateHeader
+  body: WhatsAppTemplateBody!
+  footer: WhatsAppTemplateFooter
+  buttons: [WhatsAppTemplateButton!]!
+  IsSupportedInLivechat: Boolean!
+  IsSupportedInFlowbuilder: Boolean!
+  isSupportedInFuelyAIBroadcast: Boolean!
+}
+
+union WhatsAppTemplateHeader = WhatsAppTemplateComponentText | WhatsAppTemplateComponentImage | WhatsAppTemplateComponentVideo | WhatsAppTemplateComponentDocument
+
+union WhatsAppTemplateBody = WhatsAppTemplateComponentText
+
+union WhatsAppTemplateFooter = WhatsAppTemplateComponentText
+
+enum WhatsAppTemplateCategory {
+  AccountUpdate
+  PaymentUpdate
+  PersonalFinanceUpdate
+  ShippingUpdate
+  ReservationUpdate
+  IssueResolution
+  AppointmentUpdate
+  TransportationUpdate
+  TicketUpdate
+  AlertUpdate
+  AutoReply
+  Transactional
+  OTP
+  Utility
+  Marketing
+  Authentication
+}
+
+enum WhatsAppTemplateLanguage {
+  Afrikaans
+  Albanian
+  Arabic
+  Azerbaijani
+  Bengali
+  Bulgarian
+  Catalan
+  Chinese
+  Croatian
+  Czech
+  Danish
+  Dutch
+  English
+  Estonian
+  Filipino
+  Finnish
+  French
+  Georgian
+  German
+  Greek
+  Gujarati
+  Hausa
+  Hebrew
+  Hindi
+  Hungarian
+  Indonesian
+  Irish
+  Italian
+  Japanese
+  Kannada
+  Kazakh
+  Kinyarwanda
+  Korean
+  Kyrgyz
+  Lao
+  Latvian
+  Lithuanian
+  Macedonian
+  Malay
+  Malayalam
+  Marathi
+  Norwegian
+  Persian
+  Polish
+  Portuguese
+  Punjabi
+  Romanian
+  Russian
+  Serbian
+  Slovak
+  Slovenian
+  Spanish
+  Swahili
+  Swedish
+  Tamil
+  Telugu
+  Thai
+  Turkish
+  Ukrainian
+  Urdu
+  Uzbek
+  Vietnamese
+  Zulu
+  Unknown
+}
+
+enum WhatsAppTemplateComponentType {
+  Header
+  Body
+  Footer
+  Buttons
+}
+
+scalar WhatsAppTemplateCursor
+
+type WhatsappTemplates {
+  edges: [WhatsAppTemplateEdge!]!
+  pageInfo: WhatsappTemplatesPageInfo!
+}
+
+type WhatsAppTemplateEdge {
+  node: WhatsAppTemplate!
+  cursor: WhatsAppTemplateCursor
+}
+
+type WhatsappTemplatesPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: WhatsAppTemplateCursor
+  endCursor: WhatsAppTemplateCursor
+}
+
+type TaskStatus {
+  startedAt: Time!
+  type: TaskStatusType!
+}
+
+enum TaskStatusType {
+  Created
+  InProgress
+  Paused
+  Cancelled
+  Failed
+  Finished
+}
+
+interface TaskData {
+  id: String!
+}
+
+enum TriggerConditionType {
+  LastMessageFromContact
+  ContactAttributeChanged
+}
+
+enum TriggerDelayUnit {
+  Immediately
+  Seconds
+  Minutes
+  Hours
+  Days
+}
+
+enum TriggerValidationErrorCode {
+  DelayTooShort
+  DelayTooLong
+  AttrConditionRequired
+  AttrConditionInvalid
+}
+
+input TriggerDelayInput {
+  value: Long!
+  unit: TriggerDelayUnit!
+}
+
+scalar BookingTimeString
+
+type BookingAvailableStartTimePeriod {
+  start: BookingTimeString!
+  end: BookingTimeString!
+}
+
+type BookingAvailableStartTimeBySpecialist {
+  specialistID: SpecialistID!
+  date: String!
+  hasSchedule: Boolean!
+  isWorkingDay: Boolean!
+  availableStartTime: [BookingAvailableStartTimePeriod!]!
+}
+
+enum BookingStatus {
+  Pending
+  Reschedule
+  Confirmed
+  Canceled
+  Attended
+  NoShow
+}
+
+interface BookingBase {
+  id: BookingID!
+  startTime: Time!
+  endTime: Time!
+  status: BookingStatus!
+  service: CommonGoodsService
+  specialist: CommonSpecialist
+}
+
+type GoogleCalendarRefData {
+  calendar: GoogleCalendar!
+  eventID: String!
+  summary: String!
+}
+
+input BookingInput {
+  contactID: ContactID
+  inlineContact: BookingInlineContactInput
+  serviceID: GoodsItemID
+  specialistID: SpecialistID
+  startTime: Time!
+  endTime: Time!
+}
+
+input BookingInlineContactInput {
+  name: String!
+  phoneNumber: String!
+  note: String
+  countryCode: CountryCode
+}
+
+input BookingUpdateInput {
+  contactID: ContactID
+  inlineContact: BookingInlineContactInput
+  serviceID: GoodsItemID
+  specialistID: SpecialistID
+  startTime: Time!
+  endTime: Time!
+}
+
+scalar InlineContactID
+
+type BookingInlineContact {
+  id: InlineContactID!
+  name: String!
+  phoneNumber: String!
+  note: String
+}
+
+enum InstagramPermission {
+  InstagramBusinessBasic
+  InstagramBusinessManageMessages
+  InstagramBusinessManageComments
+  InstagramBusinessContentPublish
+  InstagramBusinessManageInsights
+}
+
+scalar InstagramMediasCursor
+
+union InstagramMedia = InstagramPost | InstagramReel | InstagramAd | InstagramStory
+
+type InstagramMediasConnection {
+  edges: [InstagramMediasEdge!]!
+  pageInfo: InstagramMediasPageInfo!
+}
+
+type InstagramMediasEdge {
+  node: InstagramMedia!
+  cursor: InstagramMediasCursor!
+}
+
+type InstagramMediasPageInfo {
+  hasNextPage: Boolean!
+  startCursor: InstagramMediasCursor
+  endCursor: InstagramMediasCursor
+}
+
+type InstagramPermissionGroup {
+  name: InstagramPermissionGroupName!
+  instagramPermissions: [InstagramPermission!]!
+}
+
+enum InstagramPermissionGroupName {
+  Minimal
+  Full
+}
+
+type InstagramPublishedMedia {
+  id: InstagramMediaID!
+  permalink: String!
+}
+
+input InstagramPublishImageInput {
+  imageURL: String!
+  caption: String
+}
+
+enum InstagramStoryMediaType {
+  Image
+  Video
+}
+
+input InstagramPublishStoryInput {
+  mediaType: InstagramStoryMediaType!
+  mediaURL: String!
+}
+
+input InstagramPublishReelInput {
+  videoURL: String!
+  caption: String
+  coverURL: String
+  shareToFeed: Boolean
+  thumbOffset: Int
+}
+
+enum InstagramCarouselItemMediaType {
+  Image
+  Video
+}
+
+input InstagramPublishCarouselItemInput {
+  mediaType: InstagramCarouselItemMediaType!
+  mediaURL: String!
+}
+
+input InstagramPublishCarouselInput {
+  items: [InstagramPublishCarouselItemInput!]!
+  caption: String
+}
+
+type TikTokPermissionGroup {
+  name: TikTokPermissionGroupName!
+  tiktokPermissions: [TikTokPermission!]!
+}
+
+scalar TikTokPermission
+
+enum TikTokPermissionGroupName {
+  Minimal
+  Full
+}
+
+scalar CoworkerUserDefinedSkillID
+
+scalar CoworkerConversationID
+
+scalar CoworkerConversationsCursor
+
+scalar CoworkerMessagesCursor
+
+scalar CoworkerSkillID
+
+type CoworkerConversationsConnection {
+  edges: [CoworkerConversationsEdge!]!
+  pageInfo: CoworkerConversationsPageInfo!
+}
+
+type CoworkerConversationsEdge {
+  node: CoworkerConversation!
+  cursor: CoworkerConversationsCursor!
+}
+
+type CoworkerConversationsPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: CoworkerConversationsCursor
+  endCursor: CoworkerConversationsCursor
+}
+
+type CoworkerConversation {
+  id: CoworkerConversationID!
+  bot: Bot
+  title: String
+  messagesConnection(first: Int!, after: CoworkerMessagesCursor): CoworkerMessagesConnection!
+  pendingAction: CoworkerConversationPendingAction
+  isAgentLoopActive: Boolean!
+  unreadMessagesCountFromAssistant: Int!
+  latestReadMessageIDFromAssistant: CoworkerConversationMessageID
+  frontendStateStorage: Map
+  updatedAt: Time!
+}
+
+union CoworkerConversationPendingAction = CoworkerToolApprovalRequest | CoworkerUserMessageRejected
+
+type CoworkerToolApprovalRequest {
+  requestedInMsgID: CoworkerConversationMessageID!
+  tools: [ToolCallRequest!]!
+}
+
+enum CoworkerUserMessageRejectionReason {
+  InvalidAttachments
+}
+
+type CoworkerUserMessageRejected {
+  rejectedMessage: CoworkerMessage!
+  reason: CoworkerUserMessageRejectionReason!
+}
+
+type ToolCallRequest {
+  toolID: String!
+  arguments: Map!
+  needsManualApprove: Boolean!
+}
+
+union CoworkerConversationUpdate = CoworkerMessageStreamingChunk | CoworkerMessageAdded | CoworkerConversationUpdated | CoworkerFrontendStateRequested
+
+type CoworkerMessageStreamingChunk {
+  conversationID: CoworkerConversationID!
+  messageID: CoworkerConversationMessageID!
+  chunk: String!
+}
+
+type CoworkerMessageAdded {
+  conversationID: CoworkerConversationID!
+  message: CoworkerMessage!
+}
+
+type CoworkerConversationUpdated {
+  conversation: CoworkerConversation!
+}
+
+enum CoworkerFrontendStateQuery {
+  screen_context
+}
+
+type CoworkerFrontendStateRequested {
+  conversationID: CoworkerConversationID!
+  requestID: String!
+  query: CoworkerFrontendStateQuery!
+}
+
+scalar CoworkerHomePageCardID
+
+type CoworkerLocalizedString {
+  en: String!
+  es: String!
+  pt: String!
+}
+
+type CoworkerImprovementCard {
+  id: CoworkerHomePageCardID!
+  showUntilCondition: String!
+  title: CoworkerLocalizedString
+  imageUrls: CoworkerLocalizedString!
+  description: CoworkerLocalizedString!
+  sendText: CoworkerLocalizedString!
+  isPriority: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type CoworkerAutomationCard {
+  id: CoworkerHomePageCardID!
+  statusCondition: String!
+  title: CoworkerLocalizedString
+  imageUrls: CoworkerLocalizedString!
+  description: CoworkerLocalizedString!
+  sendTextOnConditionOn: CoworkerLocalizedString!
+  sendTextOnConditionOff: CoworkerLocalizedString!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+union CoworkerHomePageCard = CoworkerImprovementCard | CoworkerAutomationCard
+
+scalar CoworkerConversationIceBreakerID
+
+type CoworkerConversationIceBreaker {
+  id: CoworkerConversationIceBreakerID!
+  text: String!
+}
+
+scalar CoworkerConversationMessageID
+
+type CoworkerMessage {
+  id: CoworkerConversationMessageID!
+  clientID: String
+  role: CoworkerMessageRole!
+  content: String
+  attachments: [File!]!
+  toolCalls: [CoworkerMessageToolCall!]!
+  clientActionType: CoworkerMessageClientActionType
+  time: Time!
+}
+
+enum CoworkerMessageRole {
+  coworker
+  user
+}
+
+union CoworkerMessageToolCall = CoworkerToolOther | CoworkerToolButtons | CoworkerFrontendAction
+
+type CoworkerToolOther {
+  toolID: String!
+}
+
+type CoworkerToolButtons {
+  buttons: [CoworkerToolButton!]!
+}
+
+type CoworkerToolButton {
+  id: String!
+  title: String!
+  toolCall: CoworkerMessageToolCall!
+}
+
+type CoworkerFrontendAction {
+  actionType: String!
+  parameters: Map!
+}
+
+type CoworkerMessagesConnection {
+  edges: [CoworkerMessagesEdge!]!
+  pageInfo: CoworkerMessagesPageInfo!
+}
+
+type CoworkerMessagesEdge {
+  node: CoworkerMessage!
+  cursor: CoworkerMessagesCursor!
+}
+
+type CoworkerMessagesPageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: CoworkerMessagesCursor
+  endCursor: CoworkerMessagesCursor
+}
+
+enum CoworkerMessageClientActionType {
+  QuickReply
+}
+
+scalar FbPageCursor
+
+type FbPageConnection {
+  edges: [FbPageEdge!]!
+  pageInfo: FbPagePageInfo!
+}
+
+type FbPageEdge {
+  node: FbPage!
+  cursor: FbPageCursor!
+}
+
+type FbPagePageInfo {
+  hasNextPage: Boolean!
+  startCursor: FbPageCursor
+  endCursor: FbPageCursor
+}
+
+enum FbPagesSyncStatus {
+  started
+  finished
+}
+
+scalar FbPostID
+
+scalar FbPagePostCursor
+
+type FbPagePostConnection {
+  edges: [FbPagePostEdge!]!
+  pageInfo: FbPagePostInfo!
+}
+
+type FbPagePostEdge {
+  node: FbPagePost!
+  cursor: FbPagePostCursor!
+}
+
+type FbPagePostInfo {
+  hasNextPage: Boolean!
+  startCursor: FbPagePostCursor
+  endCursor: FbPagePostCursor
+}
+
+type FbPagePost {
+  id: FbPostID!
+  pageID: FbPageID!
+  message: String!
+  permalinkURL: String!
+  image: File
+  isExpired: Boolean!
+  isHidden: Boolean!
+  isInlineCreated: Boolean!
+  isPublished: Boolean!
+  scheduledPublishTime: Time
+  createdTime: Time!
+  updatedTime: Time!
+}
+
+enum FbPagePostsSyncStatus {
+  started
+  finished
+}
+
+interface EntryPointBlock implements Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  blockElements: [BlockElement!]!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+}
+
+interface ActionBlock implements Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+interface ContentBlock implements Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type RegularContentBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type RegularActionBlock implements ActionBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type ComponentValidationError implements BlockElementError {
+  code: String!
+  message: String
+}
+
+type ComponentProcessingError implements BlockElementError {
+  code: String!
+  message: String
+}
+
+type MainTextValidationError implements BlockElementError {
+  code: String!
+  message: String
+}
+
+type ButtonValidationError implements BlockElementError {
+  code: String!
+  message: String
+  buttonID: String!
+}
+
+type InstagramSwitchToChatWithHumanAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+}
+
+type AiAgentBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type AiAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  templateID: AiAgentTemplateID!
+  maxTokens: Int!
+  availableTokens: Int!
+  knowledgeItems: [AiAgentKnowledgeItem!]!
+  rules: [AiAgentRule!]!
+}
+
+type FuelyAIAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  templateID: AiAgentTemplateID!
+  additionalInstructions: String!
+  charsCount: Int!
+  rules: [AiAgentRule!]!
+}
+
+type AiAgentCustomBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  maxTokens: Int!
+  availableTokens: Int!
+  prompt: String!
+  rules: [AiAgentRule!]!
+}
+
+type AiAgentRuleError implements BlockElementError {
+  code: String!
+  message: String
+  ruleID: ComponentHandleID!
+}
+
+type ClearContactPropertyBlock implements ActionBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type ClearContactPropertyBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  attribute: BotAttribute
+}
+
+type DefaultReplyFlow implements Flow {
+  id: FlowID!
+  name: String!
+  platform: Platform!
+  createdAt: Time!
+  inboundLinks: [FlowInboundLink!]!
+  blocks: [Block!]!
+  connections: [Connection!]!
+  startingPointBlock: Block
+  entryPoints: [EntryPointBlock!]!
+  previewResponsesSession: PreviewResponsesFlowSession
+}
+
+type DefaultReplyBlock implements Block & EntryPointBlock {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type DefaultReplyBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  nextBlockHandleID: ComponentHandleID!
+  replyFrequency: DefaultReplyFrequency!
+}
+
+type RedirectToFlowBlock implements Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type RedirectToFlowBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  flow: Flow
+}
+
+type SendJsonHeaderError implements BlockElementError {
+  code: String!
+  message: String
+  headerID: SendJsonHeaderID!
+}
+
+type SendJsonURLParamError implements BlockElementError {
+  code: String!
+  message: String
+  urlParamID: SendJsonURLParamID!
+}
+
+type SendJsonResponseParsingRuleError implements BlockElementError {
+  code: String!
+  message: String
+  responseParsingRuleID: SendJsonResponseParsingRuleID!
+}
+
+type SendJsonBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  httpMethod: SendJsonHTTPMethod!
+  url: TemplateStr!
+  headers: [SendJsonHeader!]!
+  payloadType: SendJsonPayloadType!
+  customRequestPayload: TemplateStr!
+  encodedURLPayload: [SendJsonURLParam!]!
+  responseParsingRulesEnabled: Boolean!
+  responseParsingRules: [SendJsonResponseParsingRule!]!
+}
+
+type SetConditionBlock implements ActionBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type SetConditionBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  handleID: ComponentHandleID!
+  segment: Segment!
+  segmentErrors: [FilterValidationError!]!
+}
+
+type SetContactPropertyBlock implements ActionBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type SetContactPropertyBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  attribute: BotAttribute
+  value: String!
+}
+
+type SummarizeChatBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  entries: [SummarizeChatEntry!]!
+}
+
+type SummarizeChatEntryValidationError implements BlockElementError {
+  code: String!
+  message: String
+  entryID: String!
+}
+
+type TriggeredMessageBlock implements Block & EntryPointBlock {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type TriggeredMessageBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  handleID: ComponentHandleID!
+  segment: Segment!
+  segmentErrors: [FilterValidationError!]!
+  trigger: Trigger!
+}
+
+type TikTokSwitchToChatWithHumanAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+}
+
+type WhatsAppAudioBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  audio: File
+  fileName: String!
+}
+
+type WhatsAppDocumentBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  document: File
+  caption: TemplateStr!
+  fileName: String!
+}
+
+type WhatsAppImageBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  image: File
+  caption: TemplateStr!
+}
+
+type WhatsAppListBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppListBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  bodyText: TemplateStr!
+  buttonTitle: TemplateStr!
+  rows: [WhatsAppListRow!]!
+}
+
+type WhatsAppOneTimeNotificationBlock implements Block & EntryPointBlock {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppOneTimeNotificationBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  status: BroadcastStatus!
+  handleID: ComponentHandleID!
+  segment: Segment!
+  segmentErrors: [FilterValidationError!]!
+  sentToContactsCount: Int
+}
+
+type WhatsAppScheduledMessageBlock implements Block & EntryPointBlock {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppScheduledMessageBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  handleID: ComponentHandleID!
+  segment: Segment!
+  segmentErrors: [FilterValidationError!]!
+  status: BroadcastStatus!
+  firstSendTime: Time!
+  repeatType: BroadcastRepeatType!
+  repeatOnWeekdays: [Weekday!]!
+  repeatEveryNDays: Int
+  repeatOnCertainDates: [Time!]!
+}
+
+type WhatsAppSwitchToChatWithHumanAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+}
+
+type WhatsAppTemplateBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppTemplateBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  whatsAppTemplate: WhatsAppTemplateConfig
+}
+
+type WhatsAppTemplateParamValueRequiredError implements BlockElementError {
+  code: String!
+  message: String
+  paramName: String!
+}
+
+type WhatsAppTemplateURLButtonParamValueRequiredError implements BlockElementError {
+  code: String!
+  message: String
+  buttonID: String!
+  paramName: String!
+}
+
+type WhatsAppTextBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  text: TemplateStr!
+}
+
+type WhatsAppTextAndButtonsBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppTextAndButtonsBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  headerText: TemplateStr!
+  bodyText: TemplateStr!
+  footerText: TemplateStr!
+  buttons: [WhatsAppButton!]!
+}
+
+type WhatsAppTextAndURLBlock implements ContentBlock & Block {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  isStartingPoint: Boolean!
+  blockElements: [BlockElement!]!
+}
+
+type WhatsAppTextAndURLBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  headerText: TemplateStr!
+  bodyText: TemplateStr!
+  footerText: TemplateStr!
+  buttons: [WhatsAppButton!]!
+}
+
+type WhatsAppVideoBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  video: File
+  caption: TemplateStr!
+  fileName: String!
+}
+
+type WidgetEntryPointBlock implements Block & EntryPointBlock {
+  id: BlockID!
+  name: String!
+  positionX: Int!
+  positionY: Int!
+  createdAt: Time!
+  platform: Platform!
+  blockElements: [BlockElement!]!
+  showToggle: Boolean!
+  isEntryPointEnabled: Boolean!
+}
+
+type WidgetEntryPointBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  nextBlockHandleID: ComponentHandleID!
+}
+
+type WidgetImageBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  image: File
+}
+
+type WidgetSwitchToChatWithHumanAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+}
+
+type WidgetTextAndButtonBlockElement implements BlockElement & ContentBlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+  text: TemplateStr!
+  buttons: [WidgetButton!]!
+}
+
+interface ContentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
+  waitForReplies: Boolean!
+  saveContactReply: Boolean!
+  savingToAttribute: BotAttribute
+}
+
+type FlowToFlowInboundLink implements FlowInboundLink {
+  id: String!
+  redirects: Int!
+  flow: Flow!
+  block: Block!
+}
+
+type KeywordGroupToFlowInboundLink implements FlowInboundLink {
+  id: String!
+  redirects: Int!
+}
+
+type RegularFlow implements Flow {
+  id: FlowID!
+  name: String!
+  platform: Platform!
+  createdAt: Time!
+  inboundLinks: [FlowInboundLink!]!
+  blocks: [Block!]!
+  connections: [Connection!]!
+  startingPointBlock: Block
+  entryPoints: [EntryPointBlock!]!
+  previewResponsesSession: PreviewResponsesFlowSession
+}
+
+type PreviewResponsesFlowSession implements PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+  startingBlock: Block
+}
+
+type PreviewResponsesKeywordSession implements PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+  platform: Platform!
+}
+
+type PreviewResponsesBotSession implements PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+  platform: Platform!
+}
+
+type PreviewResponsesFuelySession implements PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+}
+
+type PreviewResponsesFuelyAutomationSession implements PreviewResponsesSession {
+  id: PreviewResponsesSessionID!
+  conversationID: ConversationID!
+  startedAt: Time!
+  platform: Platform!
+  fuelyAutomationID: FuelyAutomationID!
+}
+
+type WebWidgetContactScope implements ContactScope {
+  id: ContactScopeID!
+  webWidget: WebWidget!
+}
+
+type WhatsAppPhoneContactScope implements ContactScope {
+  id: ContactScopeID!
+  phone: WhatsAppBusinessPhoneNumber!
+}
+
+type InstagramAccountContactScope implements ContactScope {
+  id: ContactScopeID!
+  instagramAccount: InstagramAccount!
+}
+
+type TikTokAccountContactScope implements ContactScope {
+  id: ContactScopeID!
+  tiktokAccount: TikTokAccount!
+}
+
+type FacebookContactScope implements ContactScope {
+  id: ContactScopeID!
+  facebookPage: FbPage!
+}
+
+type PublicWebWidgetContactScope implements PublicContactScope {
+  id: ContactScopeID!
+}
+
+type PublicWhatsAppPhoneContactScope implements PublicContactScope {
+  id: ContactScopeID!
+  phone: PublicWhatsAppBusinessPhoneNumber!
+}
+
+type PublicInstagramAccountContactScope implements PublicContactScope {
+  id: ContactScopeID!
+  instagramAccount: PublicInstagramAccount!
+}
+
+type PublicTikTokAccountContactScope implements PublicContactScope {
+  id: ContactScopeID!
+  tiktokAccount: PublicTikTokAccount!
+}
+
+type PublicFacebookContactScope implements PublicContactScope {
+  id: ContactScopeID!
+  facebookPage: PublicFbPage!
+}
+
+type GoodsProduct implements GoodsItem {
+  id: GoodsItemID!
+  title: String!
+  description: String!
+  price: GoodsItemPrice
+  isAvailable: Boolean!
+  images: [File!]!
+}
+
+type GoodsService implements GoodsItem {
+  id: GoodsItemID!
+  title: String!
+  description: String!
+  price: GoodsItemPrice
+  isAvailable: Boolean!
+  images: [File!]!
+  durationSeconds: Int!
+  bookingAvailableStartTime(botID: BotID!, date: String!): [BookingAvailableStartTimeBySpecialist!]!
+}
+
+type DeletedGoodsService implements GoodsItem {
+  id: GoodsItemID!
+  title: String!
+  description: String!
+  price: GoodsItemPrice
+  isAvailable: Boolean!
+  durationSeconds: Int!
+}
+
+type Specialist implements CommonSpecialist {
+  id: SpecialistID!
+  profile: SpecialistProfile!
+  schedule: SpecialistSchedule
+  services: [GoodsService!]!
+  connectedGoogleCalendar: GoogleCalendar
+  googleCalendarConnectionLink: SpecialistGoogleCalendarLink
+  latestGoogleCalendarSyncTask(botID: BotID!): Task
+}
+
+type DeletedSpecialist implements CommonSpecialist {
+  id: SpecialistID!
+  profile: SpecialistProfile!
+}
+
+type Booking implements BookingBase {
+  id: BookingID!
+  contact: Contact
+  inlineContact: BookingInlineContact
+  startTime: Time!
+  endTime: Time!
+  status: BookingStatus!
+  service: CommonGoodsService
+  specialist: CommonSpecialist
+}
+
+type FacebookAppSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type FacebookInUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type FacebookInTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  fbReferral: FacebookMessageReferral
+}
+
+type FacebookInImageMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  fbReferral: FacebookMessageReferral
+}
+
+type FacebookInAudioMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  transcriptionStatus: AudioTranscriptionStatus!
+  transcribedText: String!
+  fbReferral: FacebookMessageReferral
+}
+
+type FacebookInVideoMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  fbReferral: FacebookMessageReferral
+}
+
+type FacebookInFileMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  fbReferral: FacebookMessageReferral
+}
+
+type FacebookInPostCommentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  commentID: String!
+  publicReplyMessages: [Message!]!
+  privateReplyMessages: [Message!]!
+}
+
+type FacebookOutTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  text: String!
+}
+
+type FacebookOutUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+interface FacebookOutAttachment implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  file: File!
+}
+
+type FacebookOutImageMessage implements FacebookOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  file: File!
+}
+
+type FacebookOutAudioMessage implements FacebookOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  file: File!
+}
+
+type FacebookOutVideoMessage implements FacebookOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  file: File!
+}
+
+type FacebookOutPublicCommentReplyMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  facebookStatus: FacebookMessageStatus!
+  text: String!
+}
+
+type InstagramAppSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type InstagramInUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type InstagramInTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  igReferral: InstagramMessageReferral
+}
+
+type InstagramInImageMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  igReferral: InstagramMessageReferral
+}
+
+type InstagramInAudioMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  transcriptionStatus: AudioTranscriptionStatus!
+  transcribedText: String!
+  igReferral: InstagramMessageReferral
+}
+
+type InstagramInVideoMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  igReferral: InstagramMessageReferral
+}
+
+type InstagramInFeedCommentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  commentID: String!
+  mediaContainer: InstagramMediaContainer!
+  publicReplyMessages: [Message!]!
+  privateReplyMessages: [Message!]!
+}
+
+type InstagramInReelCommentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  commentID: String!
+  mediaContainer: InstagramMediaContainer!
+  publicReplyMessages: [Message!]!
+  privateReplyMessages: [Message!]!
+}
+
+type InstagramInAdCommentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  commentID: String!
+  mediaContainer: InstagramMediaContainer!
+  publicReplyMessages: [Message!]!
+  privateReplyMessages: [Message!]!
+}
+
+type InstagramInStoryReplyMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  mediaContainer: InstagramMediaContainer!
+}
+
+type InstagramOutTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  text: String!
+}
+
+type InstagramOutUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+interface InstagramOutAttachment implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  file: File!
+}
+
+type InstagramOutImageMessage implements InstagramOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  file: File!
+}
+
+type InstagramOutAudioMessage implements InstagramOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  file: File!
+}
+
+type InstagramOutVideoMessage implements InstagramOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  file: File!
+}
+
+type InstagramOutPublicCommentReplyMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  instagramStatus: InstagramMessageStatus!
+  text: String!
+}
+
+type ContactMessageSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type AdminMessageSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type AutomationMessageSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type SystemLivechatOpenedByBooking implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  booking: Booking!
+}
+
+type SystemLivechatOpenedByComponentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  originallyDecidedByAI: Boolean!
+}
+
+type SystemLivechatOpenedManuallyMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  byUser: PublicUserAccount!
+}
+
+type SystemLivechatOpenedByCoexMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type SystemLivechatOpenedByInstagramAppMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type SystemLivechatOpenedByFacebookAppMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type SystemLivechatOpenedByTikTokAppMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type SystemLivechatClosedByAutoClosingMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  delay: String!
+}
+
+type SystemTypingMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  until: Time!
+}
+
+type SystemConversationSummaryMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  summary: String!
+}
+
+type SystemMetaConversionEventSentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  conversionEvents: [SystemMetaConversionEvent!]!
+  wabaId: String
+  datasetId: String
+  success: Boolean!
+  errorDescription: String
+}
+
+type TikTokAppSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type TikTokInUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type TikTokInTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+}
+
+type TikTokInImageMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+}
+
+type TikTokInTextPostCommentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  commentID: String!
+  post: TikTokPost!
+  publicReplyMessages: [Message!]!
+}
+
+type TikTokOutTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  tiktokStatus: TikTokMessageStatus!
+  text: String!
+}
+
+type TikTokOutUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+interface TikTokOutAttachment implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  tiktokStatus: TikTokMessageStatus!
+  file: File!
+}
+
+type TikTokOutImageMessage implements TikTokOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  tiktokStatus: TikTokMessageStatus!
+  file: File!
+}
+
+type TikTokOutPublicCommentReplyMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  tiktokStatus: TikTokMessageStatus!
+  text: String!
+}
+
+type WhatsappBusinessAppSender implements MessageSender {
+  id: SenderID!
+  name: String!
+  profilePicture: File
+}
+
+type WhatsAppInUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type WhatsAppInTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  text: String!
+  waReferral: WhatsAppMessageReferral
+}
+
+type WhatsAppInImageMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  caption: String
+  file: File!
+  waReferral: WhatsAppMessageReferral
+}
+
+type WhatsAppInAudioMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+  transcriptionStatus: AudioTranscriptionStatus!
+  transcribedText: String!
+  waReferral: WhatsAppMessageReferral
+}
+
+type WhatsAppInVideoMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  caption: String
+  file: File!
+  waReferral: WhatsAppMessageReferral
+}
+
+type WhatsAppInDocumentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  caption: String
+  fileName: String
+  file: File!
+  waReferral: WhatsAppMessageReferral
+}
+
+type WhatsAppInContinueFlowButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  buttonTitle: String!
+}
+
+type WhatsAppInListRowClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  rowTitle: String!
+  rowDescription: String
+}
+
+type WhatsAppInMediaPlaceholderMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type WhatsAppInTemplateQuickReplyButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  buttonTitle: String!
+}
+
+type WhatsAppOutTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  text: String!
+  enableURLPreview: Boolean!
+}
+
+interface WhatsAppOutAttachment implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  file: File!
+}
+
+type WhatsAppOutImageMessage implements WhatsAppOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  caption: String
+  file: File!
+}
+
+type WhatsAppOutAudioMessage implements WhatsAppOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  file: File!
+}
+
+type WhatsAppOutVideoMessage implements WhatsAppOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  caption: String
+  file: File!
+}
+
+type WhatsAppOutDocumentMessage implements WhatsAppOutAttachment & Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  caption: String
+  file: File!
+  fileName: String
+}
+
+type WhatsAppOutTextAndURLMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  headerText: String
+  bodyText: String!
+  footerText: String
+  whatsappButtons: [WhatsAppMessageButton!]!
+}
+
+type WhatsAppContinueFlowMessageButton implements WhatsAppMessageButton {
+  title: String!
+}
+
+type WhatsAppOpenURLMessageButton implements WhatsAppMessageButton {
+  title: String!
+  url: String!
+}
+
+type WhatsAppOutTextAndButtonsMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  headerText: String
+  bodyText: String!
+  footerText: String
+  whatsappButtons: [WhatsAppMessageButton!]!
+}
+
+type WhatsAppOutListMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  bodyText: String!
+  buttonTitle: String!
+  listRows: [WhatsAppMessageListRow!]!
+}
+
+type WhatsAppOutMediaPlaceholderMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type WhatsAppOutUnknownMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+}
+
+type WhatsAppOutTemplateMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  whatsappStatus: WhatsAppMessageStatus!
+  header: WhatsAppOutTemplateMessageHeader
+  body: WhatsAppOutTemplateMessageBody
+  footer: WhatsAppOutTemplateMessageFooter
+  waTemplateButtons: [WhatsAppOutTemplateMessageButton!]!
+}
+
+type WebWidgetTextMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  text: String!
+}
+
+type WebWidgetAttachmentMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  attachment: WebWidgetAttachment!
+}
+
+type WebWidgetTextAndButtonsMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  text: String!
+  buttons: [WebWidgetButton!]!
+}
+
+type WebWidgetContinueFlowButton implements WebWidgetButton {
+  title: String!
+}
+
+type WebWidgetOpenURLButton implements WebWidgetButton {
+  title: String!
+  url: String!
+}
+
+type WebWidgetCallPhoneButton implements WebWidgetButton {
+  title: String!
+  phone: String!
+}
+
+type WebWidgetContinueFlowButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  button: WebWidgetContinueFlowButton!
+}
+
+type WebWidgetCallPhoneButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  button: WebWidgetCallPhoneButton!
+}
+
+type WebWidgetOpenURLButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  updatedAt: Time!
+  errors: [MessageError!]!
+  status: WebWidgetMessageStatus!
+  button: WebWidgetOpenURLButton!
+}
+
+type BotAttributeValueString implements BotAttributeValue {
+  id: BotAttributeValueID!
+  stringValue: String!
+}
+
+type BotAttributeValueLong implements BotAttributeValue {
+  id: BotAttributeValueID!
+  longValue: Long!
+}
+
+type BotAttributeValueDouble implements BotAttributeValue {
+  id: BotAttributeValueID!
+  doubleValue: Float!
+}
+
+type BotAttributeValueBoolean implements BotAttributeValue {
+  id: BotAttributeValueID!
+  booleanValue: Boolean!
+}
+
+type BotAttributeValueDatetime implements BotAttributeValue {
+  id: BotAttributeValueID!
+  datetimeValue: Time!
+}
+
+type UnavailableContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  note: String
+  conversation: Conversation
+}
+
+type WidgetContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  note: String
+  conversation: Conversation
+}
+
+type FacebookContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  note: String
+  conversation: Conversation
+}
+
+type InstagramContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  username: String!
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  availableForDMs: Boolean!
+  note: String
+  conversation: Conversation
+}
+
+type WhatsappContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  phone: String!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unhandledSwitchToHuman: Boolean!
+  unreadMessagesCount: Int!
+  note: String
+  conversation: Conversation
+}
+
+type TikTokContact implements Contact {
+  id: ContactID!
+  name: String!
+  scope: ContactScope!
+  attributes(names: [AttributeName!]): [ContactAttribute!]!
+  assignee: ContactAssignee
+  username: String!
+  profilePictureUrl: String
+  updatedAt: Time!
+  salesStageV2: SalesStageV2
+  lastSalesStageUpdateTime: Time
+  lastConversationMessageTime: Time
+  unreadMessagesCount: Int!
+  unhandledSwitchToHuman: Boolean!
+  availableForDMs: Boolean!
+  note: String
+  conversation: Conversation
+}
+
+type CSVContactsExport implements TaskData {
+  id: String!
+  botID: BotID!
+  startedBy: PublicUserAccount!
+  bySegment: Segment
+  byContactIDs: Boolean!
+  attributes: [BotAttribute!]!
+  file: File
+}
+
+type FuelySettingBookingRules implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  autonomyLevel: FuelySettingBookingRulesAutonomyLevel!
+}
+
+type FuelySettingCatalogImages implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  whenToShow: FuelySettingCatalogImagesWhenToShow!
+  imagesPerCatalogItem: Int!
+}
+
+type FuelySettingCollectContactInfo implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  howToCollect: FuelySettingCollectContactInfoHowToCollect!
+  captures: [FuelySettingCollectContactInfoEntry!]!
+}
+
+type FuelySettingFollowUps implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  howToSend: FuelySettingFollowUpsHowToSend!
+  messagePrompt: String!
+}
+
+type FuelySettingIncomingMessages implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  howToReply: FuelySettingIncomingMessagesHowToReply!
+  messagePrompt: String!
+}
+
+type FuelySettingKeywords implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  reactTo: FuelySettingKeywordsReactTo!
+  keywords: [String!]!
+}
+
+type FuelySettingListOfAds implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  adIDs: [AdID!]!
+}
+
+type FuelySettingListOfPosts implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  posts: [FuelySettingListOfPostsEntry!]!
+}
+
+type FuelySettingListOfStories implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  stories: [FuelySettingListOfStoriesEntry!]!
+}
+
+type FuelySettingMessageDelays implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  enabled: Boolean!
+}
+
+type FuelySettingPrivateReply implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  privateReplyHowToReply: FuelySettingPrivateReplyHowToReply!
+  exactTextReply: String!
+  messagePrompt: String!
+}
+
+type FuelySettingPublicReply implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  publicReplyHowToReply: FuelySettingPublicReplyHowToReply!
+  exactTextReply: String!
+  messagePrompt: String!
+  likeContactComment: Boolean!
+}
+
+type FuelySettingRefLinks implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  refs: [String!]!
+}
+
+type FuelySettingSendEventsToMeta implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  events: [FuelySettingSendEventsToMetaEvent!]!
+}
+
+type FuelySettingSwitchToHuman implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  howToSwitch: FuelySettingSwitchToHumanHowToSwitch!
+  rules: [FuelySettingSwitchToHumanRule!]!
+}
+
+type FuelySettingWhenAIReplies implements FuelySetting {
+  inheritsFrom: FuelyAutomation
+  canInheritFrom: [FuelyAutomation!]!
+  option: FuelySettingWhenAIRepliesOptions!
+}
+
+type FilledWhatsAppTemplateGenericError implements FilledWhatsAppTemplateError {
+  code: FilledWhatsAppTemplateErrorCode!
+  componentType: WhatsAppTemplateComponentType
+}
+
+type FilledWhatsAppTemplateTextParamError implements FilledWhatsAppTemplateError {
+  code: FilledWhatsAppTemplateErrorCode!
+  componentType: WhatsAppTemplateComponentType
+  paramName: WhatsAppTemplateTextParamName!
+}
+
+type FilledWhatsAppTemplateButtonError implements FilledWhatsAppTemplateError {
+  code: FilledWhatsAppTemplateErrorCode!
+  componentType: WhatsAppTemplateComponentType
+  paramName: WhatsAppTemplateTextParamName!
+  buttonID: ComponentHandleID!
+}
+
+type UnavailableTaskData implements TaskData {
+  id: String!
+}
+
+type BookingGoogleCalendarSync implements TaskData {
+  id: String!
+  calendar: GoogleCalendar!
+  startedAt: Time!
+  finishedAt: Time
+  isFailed: Boolean!
+  syncedEventsCount: Long!
+}
+
+type BookingWithGoogleCalendarRef implements BookingBase {
+  id: BookingID!
+  contact: Contact
+  inlineContact: BookingInlineContact
+  startTime: Time!
+  endTime: Time!
+  status: BookingStatus!
+  service: CommonGoodsService
+  specialist: CommonSpecialist
+  googleCalendarRefData: GoogleCalendarRefData!
+}

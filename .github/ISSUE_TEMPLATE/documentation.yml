@@ -1,0 +1,26 @@
+name: Documentation
+description: Something in the docs is wrong, missing or misleading
+labels: ['documentation', 'needs triage']
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: The file or page, and the section.
+      placeholder: 'docs/configuration.md, the auth table'
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong with it?
+      description: >
+        Wrong, missing, or right but unfindable — all three are worth reporting, and
+        the third is the one nobody reports.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: What should it say?
+      description: Optional. A sentence is enough to work from.

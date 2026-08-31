@@ -1,0 +1,2990 @@
+# Flow builder: flows, groups, blocks, block elements ("plugins"), buttons,
+# connections, validation state, attribute autocomplete.
+# See references/guide.md for the mental model and traps (chatfuel-flow-builder skill).
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs).
+#
+# Conventions encoded here:
+# - FlowStructure is the single read for one flow; its fragments cover every
+#   concrete Block (17) and BlockElement (30) type — copy them wholesale so an
+#   unknown __typename can never crash your renderer.
+# - Every editing mutation returns the enclosing Flow/Block aggregate; select
+#   the same fragments and reconcile your local state from the result (there
+#   are NO flow-builder subscriptions).
+# - Rich text READS as TemplateStr parts, WRITES as a plain String with
+#   "{{attribute name}}" placeholders.
+
+# ============================================================
+# Shared fragments
+# ============================================================
+
+fragment AttrName on BotAttribute {
+  name
+  type
+  dataType
+}
+
+fragment TStr on TemplateStr {
+  parts {
+    __typename
+    ... on TemplateStrText {
+      text
+      errCode
+    }
+    ... on TemplateStrAttribute {
+      attribute {
+        ...AttrName
+      }
+      errCode
+    }
+  }
+}
+
+fragment FileRef on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+# Validation is business STATE on the element, not a GraphQL error.
+# Locator fields tell you which button/row/header/rule the error points at.
+fragment ElementErrors on BlockElement {
+  errors {
+    __typename
+    code
+    message
+    ... on ButtonValidationError {
+      buttonID
+    }
+    ... on AiAgentRuleError {
+      ruleID
+    }
+    ... on SendJsonHeaderError {
+      headerID
+    }
+    ... on SendJsonURLParamError {
+      urlParamID
+    }
+    ... on SendJsonResponseParsingRuleError {
+      responseParsingRuleID
+    }
+    ... on SummarizeChatEntryValidationError {
+      entryID
+    }
+    ... on WhatsAppTemplateParamValueRequiredError {
+      paramName
+    }
+    ... on WhatsAppTemplateURLButtonParamValueRequiredError {
+      buttonID
+      paramName
+    }
+  }
+}
+
+# Segments are read as Segment and written wholesale via SegmentInput
+# (client-generated UUIDs for segment/filter ids) — see ../chatfuel-contacts/references/guide.md.
+# Read WHOLE segments: segment setters take a full SegmentInput (wholesale
+# replace, client-generated UUID ids) — any filter part the UI does not read
+# back here would be silently destroyed on the next save. byInFlightSegment is
+# read one level deep, matching what this editor can produce.
+fragment SegmentFilterParts on Filter {
+  id
+  byAttribute {
+    attribute {
+      ...AttrName
+    }
+    defaultStrategy {
+      operator
+      comparableValues
+    }
+    dateStrategy {
+      operator
+      comparableDate
+    }
+  }
+  byTag {
+    operator
+    tagNames
+  }
+  byStoredSegment {
+    operator
+    segmentIDs
+  }
+}
+
+fragment SegmentParts on Segment {
+  id
+  name
+  resultOperator
+  filters {
+    ...SegmentFilterParts
+    byInFlightSegment {
+      id
+      name
+      resultOperator
+      filters {
+        ...SegmentFilterParts
+      }
+    }
+  }
+}
+
+# The trigger sub-object of a TriggeredMessageBlockElement. The trigger* ops
+# return Trigger! alone (no enclosing block) — reconcile with a refetch.
+# attributeCondition strategies are read in full: triggerSetAttributeFilter
+# writes a whole AttrFilterInput, same wholesale rule as segments.
+fragment TriggerParts on Trigger {
+  id
+  enabled
+  conditionType
+  delayValue
+  delayUnit
+  attributeCondition {
+    attribute {
+      ...AttrName
+    }
+    defaultStrategy {
+      operator
+      comparableValues
+    }
+    dateStrategy {
+      operator
+      comparableDate
+    }
+  }
+  attributeConditionErrors
+  validationErrors
+}
+
+fragment WidgetBtn on WidgetButton {
+  __typename
+  ... on WidgetContinueFlowButton {
+    id
+    title {
+      ...TStr
+    }
+  }
+  ... on WidgetOpenURLButton {
+    id
+    title {
+      ...TStr
+    }
+    url {
+      ...TStr
+    }
+  }
+  ... on WidgetCallPhoneButton {
+    id
+    title {
+      ...TStr
+    }
+    phone
+  }
+}
+
+fragment WABtn on WhatsAppButton {
+  __typename
+  ... on WhatsAppContinueFlowButton {
+    id
+    title {
+      ...TStr
+    }
+  }
+  ... on WhatsAppOpenURLButton {
+    id
+    title {
+      ...TStr
+    }
+    url {
+      ...TStr
+    }
+  }
+}
+
+fragment WATplText on WhatsAppTemplateComponentText {
+  text {
+    __typename
+    ... on WhatsAppTemplateComponentTextPartText {
+      text
+    }
+    ... on WhatsAppTemplateComponentTextPartParam {
+      name
+      value {
+        ...TStr
+      }
+    }
+  }
+}
+
+# ============================================================
+# The element ("plugin") umbrella — all 30 concrete types
+# ============================================================
+
+fragment ElementParts on BlockElement {
+  __typename
+  id
+  platform
+  ...ElementErrors
+  ... on ContentBlockElement {
+    waitForReplies
+    saveContactReply
+    savingToAttribute {
+      ...AttrName
+    }
+  }
+  # --- WhatsApp content ---
+  ... on WhatsAppTextBlockElement {
+    text {
+      ...TStr
+    }
+  }
+  ... on WhatsAppImageBlockElement {
+    image {
+      ...FileRef
+    }
+    caption {
+      ...TStr
+    }
+  }
+  ... on WhatsAppVideoBlockElement {
+    video {
+      ...FileRef
+    }
+    caption {
+      ...TStr
+    }
+    fileName
+  }
+  ... on WhatsAppAudioBlockElement {
+    audio {
+      ...FileRef
+    }
+    fileName
+  }
+  ... on WhatsAppDocumentBlockElement {
+    document {
+      ...FileRef
+    }
+    caption {
+      ...TStr
+    }
+    fileName
+  }
+  # --- WhatsApp interactive (one card per block) ---
+  ... on WhatsAppTextAndButtonsBlockElement {
+    headerText {
+      ...TStr
+    }
+    bodyText {
+      ...TStr
+    }
+    footerText {
+      ...TStr
+    }
+    buttons {
+      ...WABtn
+    }
+  }
+  ... on WhatsAppTextAndURLBlockElement {
+    headerText {
+      ...TStr
+    }
+    bodyText {
+      ...TStr
+    }
+    footerText {
+      ...TStr
+    }
+    buttons {
+      ...WABtn
+    }
+  }
+  ... on WhatsAppListBlockElement {
+    bodyText {
+      ...TStr
+    }
+    buttonTitle {
+      ...TStr
+    }
+    rows {
+      id
+      title {
+        ...TStr
+      }
+      description {
+        ...TStr
+      }
+    }
+  }
+  ... on WhatsAppTemplateBlockElement {
+    whatsAppTemplate {
+      templateID
+      name
+      status
+      header {
+        __typename
+        ... on WhatsAppTemplateComponentText {
+          ...WATplText
+        }
+        ... on WhatsAppTemplateComponentImage {
+          image {
+            ...FileRef
+          }
+        }
+        ... on WhatsAppTemplateComponentVideo {
+          video {
+            ...FileRef
+          }
+        }
+        ... on WhatsAppTemplateComponentDocument {
+          document {
+            ...FileRef
+          }
+          fileName
+        }
+      }
+      body {
+        ... on WhatsAppTemplateComponentText {
+          ...WATplText
+        }
+      }
+      footer {
+        ... on WhatsAppTemplateComponentText {
+          ...WATplText
+        }
+      }
+      buttons {
+        __typename
+        ... on WhatsAppTemplateURLButton {
+          id
+          text
+          url {
+            __typename
+            ... on WhatsAppTemplateComponentTextPartText {
+              text
+            }
+            ... on WhatsAppTemplateComponentTextPartParam {
+              name
+              value {
+                ...TStr
+              }
+            }
+          }
+        }
+        ... on WhatsAppTemplateQuickReplyButton {
+          id
+          text
+        }
+        ... on WhatsAppTemplateCallPhoneButton {
+          text
+          phoneNumber
+        }
+        ... on WhatsAppTemplateWhatsAppCallButton {
+          text
+        }
+        ... on WhatsAppTemplateCopyCodeButton {
+          id
+          text
+          code {
+            ...TStr
+          }
+        }
+      }
+    }
+  }
+  # --- Widget content ---
+  ... on WidgetTextAndButtonBlockElement {
+    text {
+      ...TStr
+    }
+    buttons {
+      ...WidgetBtn
+    }
+  }
+  ... on WidgetImageBlockElement {
+    image {
+      ...FileRef
+    }
+  }
+  # --- Entry points ---
+  ... on WidgetEntryPointBlockElement {
+    nextBlockHandleID
+  }
+  ... on DefaultReplyBlockElement {
+    nextBlockHandleID
+    replyFrequency
+  }
+  ... on TriggeredMessageBlockElement {
+    handleID
+    segment {
+      ...SegmentParts
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+    trigger {
+      ...TriggerParts
+    }
+  }
+  ... on WhatsAppOneTimeNotificationBlockElement {
+    status
+    handleID
+    segment {
+      ...SegmentParts
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+    sentToContactsCount
+  }
+  ... on WhatsAppScheduledMessageBlockElement {
+    handleID
+    segment {
+      ...SegmentParts
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+    status
+    firstSendTime
+    repeatType
+    repeatOnWeekdays
+    repeatEveryNDays
+    repeatOnCertainDates
+  }
+  # --- Actions ---
+  ... on SetConditionBlockElement {
+    handleID
+    segment {
+      ...SegmentParts
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+  }
+  ... on SetContactPropertyBlockElement {
+    attribute {
+      ...AttrName
+    }
+    value
+  }
+  ... on ClearContactPropertyBlockElement {
+    attribute {
+      ...AttrName
+    }
+  }
+  ... on RedirectToFlowBlockElement {
+    flow {
+      id
+      name
+    }
+  }
+  ... on SendJsonBlockElement {
+    httpMethod
+    url {
+      ...TStr
+    }
+    headers {
+      id
+      title {
+        ...TStr
+      }
+      value {
+        ...TStr
+      }
+    }
+    payloadType
+    customRequestPayload {
+      ...TStr
+    }
+    encodedURLPayload {
+      id
+      title {
+        ...TStr
+      }
+      value {
+        ...TStr
+      }
+    }
+    responseParsingRulesEnabled
+    responseParsingRules {
+      id
+      jsonPath
+      attribute {
+        ...AttrName
+      }
+    }
+  }
+  ... on SummarizeChatBlockElement {
+    entries {
+      id
+      description
+      attribute {
+        ...AttrName
+      }
+    }
+  }
+  # Widget/WhatsApp/Instagram/TikTok SwitchToChatWithHumanAgent elements have
+  # no extra fields beyond the BlockElement base.
+  # --- AI agent (see references/guide.md for scope notes) ---
+  ... on FuelyAIAgentBlockElement {
+    templateID
+    additionalInstructions
+    charsCount
+    rules {
+      id
+      title
+      prompt
+    }
+  }
+  ... on AiAgentBlockElement {
+    templateID
+    maxTokens
+    availableTokens
+    knowledgeItems {
+      id
+      title
+      description
+      prompt
+    }
+    rules {
+      id
+      title
+      prompt
+    }
+  }
+  ... on AiAgentCustomBlockElement {
+    maxTokens
+    availableTokens
+    prompt
+    rules {
+      id
+      title
+      prompt
+    }
+  }
+}
+
+# ============================================================
+# Block / connection / flow fragments
+# ============================================================
+
+# CONCRETE type casts on purpose — do NOT rewrite these as interface casts
+# (... on ContentBlock / ActionBlock / EntryPointBlock): combining Block
+# interface casts with the wide ElementParts selection is a shape the API
+# will not answer, and an expensive one to ask for. Concrete casts plan
+# instantly. Keep the selection to what the fragment names: adding a field
+# with a resolver of its own to a fragment this wide is what turns a plan the
+# API answers instantly into one it declines.
+fragment BlockParts on Block {
+  __typename
+  id
+  name
+  positionX
+  positionY
+  platform
+  ... on RegularContentBlock {
+    isStartingPoint
+  }
+  ... on AiAgentBlock {
+    isStartingPoint
+  }
+  ... on WhatsAppListBlock {
+    isStartingPoint
+  }
+  ... on WhatsAppTemplateBlock {
+    isStartingPoint
+  }
+  ... on WhatsAppTextAndButtonsBlock {
+    isStartingPoint
+  }
+  ... on WhatsAppTextAndURLBlock {
+    isStartingPoint
+  }
+  ... on RegularActionBlock {
+    isStartingPoint
+  }
+  ... on ClearContactPropertyBlock {
+    isStartingPoint
+  }
+  ... on SetConditionBlock {
+    isStartingPoint
+  }
+  ... on SetContactPropertyBlock {
+    isStartingPoint
+  }
+  ... on RedirectToFlowBlock {
+    isStartingPoint
+  }
+  ... on DefaultReplyBlock {
+    showToggle
+    isEntryPointEnabled
+  }
+  ... on TriggeredMessageBlock {
+    showToggle
+    isEntryPointEnabled
+  }
+  ... on WhatsAppOneTimeNotificationBlock {
+    showToggle
+    isEntryPointEnabled
+  }
+  ... on WhatsAppScheduledMessageBlock {
+    showToggle
+    isEntryPointEnabled
+  }
+  ... on WidgetEntryPointBlock {
+    showToggle
+    isEntryPointEnabled
+  }
+  blockElements {
+    ...ElementParts
+  }
+}
+
+# ConnectionID is synthesized per-request from its parts — never persist it.
+fragment ConnectionParts on Connection {
+  __typename
+  ... on BlockToBlockConnection {
+    id
+    sourceBlockID
+    targetBlockID
+  }
+  ... on ComponentToBlockConnection {
+    id
+    sourceBlockID
+    sourceBlockElementID
+    sourceHandleID
+    targetBlockID
+  }
+}
+
+fragment FlowParts on Flow {
+  __typename
+  id
+  name
+  platform
+  startingPointBlock {
+    id
+  }
+  entryPoints {
+    __typename
+    id
+    name
+    isEntryPointEnabled
+  }
+  blocks {
+    ...BlockParts
+  }
+  connections {
+    ...ConnectionParts
+  }
+}
+
+fragment FlowListItem on Flow {
+  __typename
+  id
+  name
+  platform
+  entryPoints {
+    id
+    name
+    isEntryPointEnabled
+  }
+}
+
+# ============================================================
+# Reads
+# ============================================================
+
+# Three flat buckets, no pagination.
+query FlowsList($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    flowGroups {
+      id
+      name
+      flows {
+        ...FlowListItem
+      }
+    }
+    flowsWithoutGroup {
+      ...FlowListItem
+    }
+    defaultReplyFlows {
+      ...FlowListItem
+    }
+  }
+}
+
+# One query loads the entire flow: blocks, elements, connections, entry points.
+query FlowStructure($botID: BotID!, $flowID: FlowID!) {
+  bot(id: $botID) {
+    id
+    flow(flowID: $flowID) {
+      ...FlowParts
+      inboundLinks {
+        __typename
+        ... on FlowToFlowInboundLink {
+          id
+          redirects
+          flow {
+            id
+            name
+          }
+          block {
+            id
+            name
+          }
+        }
+        ... on KeywordGroupToFlowInboundLink {
+          id
+          redirects
+        }
+      }
+    }
+  }
+}
+
+# Attribute autocomplete for text inputs / attribute pickers.
+# Fire twice like the dashboard: attributeTypes [custom] and [system].
+query BotAttributesAutocomplete(
+  $botID: BotID!
+  $locale: DashboardLocale!
+  $platforms: [Platform!]!
+  $attributeTypes: [AttributeType!]!
+  $inputSubstring: String
+  $first: Int
+  $after: BotAttributeCursor
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: $locale
+      platforms: $platforms
+      attributeTypes: $attributeTypes
+      inputSubstring: $inputSubstring
+      first: $first
+      after: $after
+      filters: []
+      orderBy: { orderBy: AttributeName, direction: Asc }
+    ) {
+      edges {
+        cursor
+        node {
+          botAttribute {
+            ...AttrName
+            aliases {
+              locale
+              alias
+            }
+          }
+          usersCount
+          defaultValue
+          flowsCount
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# AI-agent block templates catalog (drives the "add AI agent" menu).
+query AiAgentTemplatesCatalog($locale: DashboardLocale!) {
+  aiAgentTemplates(locale: $locale) {
+    id
+    title
+    description
+  }
+}
+
+# ============================================================
+# Flow & group CRUD
+# ============================================================
+
+# No name argument — the server names the flow; rename with RenameFlow.
+mutation CreateFlow($botID: BotID!, $platform: Platform!) {
+  createFlow(botID: $botID, platform: $platform) {
+    id
+    flowsWithoutGroup {
+      ...FlowListItem
+    }
+  }
+}
+
+mutation RenameFlow($flowID: FlowID!, $name: String!) {
+  updateFlowName(flowID: $flowID, name: $name) {
+    id
+    name
+  }
+}
+
+mutation DeleteFlow($flowID: FlowID!) {
+  deleteFlow(flowID: $flowID) {
+    id
+    flowGroups {
+      id
+      flows {
+        id
+      }
+    }
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+mutation CreateFlowGroup($botID: BotID!) {
+  createFlowGroup(botID: $botID) {
+    id
+    flowGroups {
+      id
+      name
+    }
+  }
+}
+
+mutation RenameFlowGroup($groupID: FlowGroupID!, $name: String!) {
+  updateFlowGroupName(id: $groupID, name: $name) {
+    id
+    name
+  }
+}
+
+# DefinedErrorCode: FlowGroupCanNotBeDeleted
+mutation DeleteFlowGroup($groupID: FlowGroupID!) {
+  deleteFlowGroup(flowGroupId: $groupID) {
+    id
+    flowGroups {
+      id
+    }
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+mutation MoveFlowToGroup($flowID: FlowID!, $groupID: FlowGroupID!) {
+  moveFlowToGroup(flowID: $flowID, groupID: $groupID) {
+    id
+    flowGroups {
+      id
+      flows {
+        id
+      }
+    }
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+mutation RemoveFlowFromGroup($flowID: FlowID!) {
+  removeFlowFromGroup(flowID: $flowID) {
+    id
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+mutation SortFlowGroups($botID: BotID!, $flowGroupIDs: [FlowGroupID!]!) {
+  sortFlowGroups(botID: $botID, flowGroupIds: $flowGroupIDs) {
+    id
+    flowGroups {
+      id
+    }
+  }
+}
+
+mutation SortFlowsInGroup($groupID: FlowGroupID!, $flowIDs: [FlowID!]!) {
+  sortFlowsInGroup(groupID: $groupID, flowIds: $flowIDs) {
+    id
+    flows {
+      id
+    }
+  }
+}
+
+mutation SortUngroupedFlows($botID: BotID!, $flowIDs: [FlowID!]!) {
+  sortUngroupedFlows(botID: $botID, flowIds: $flowIDs) {
+    id
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+# ============================================================
+# Block operations
+# ============================================================
+
+# Positions are Int — round before sending. Single-block move returns Block,
+# bulk move returns the whole Flow (different cache paths).
+mutation MoveBlock($flowID: FlowID!, $blockID: BlockID!, $x: Int!, $y: Int!) {
+  updateBlockPosition(flowID: $flowID, blockID: $blockID, positionX: $x, positionY: $y) {
+    id
+    positionX
+    positionY
+  }
+}
+
+mutation MoveBlocksBulk($flowID: FlowID!, $update: [BlockPositionBulkUpdate!]!) {
+  updateBlockPositionBulk(flowID: $flowID, update: $update) {
+    id
+    blocks {
+      id
+      positionX
+      positionY
+    }
+  }
+}
+
+mutation RenameBlock($flowID: FlowID!, $blockID: BlockID!, $name: String!) {
+  updateBlockName(flowID: $flowID, blockID: $blockID, name: $name) {
+    id
+    name
+  }
+}
+
+mutation DeleteBlock($flowID: FlowID!, $blockID: BlockID!) {
+  deleteBlock(flowID: $flowID, blockID: $blockID) {
+    ...FlowParts
+  }
+}
+
+mutation SetStartingPoint($flowID: FlowID!, $blockID: BlockID!) {
+  blockSetStartingPoint(flowID: $flowID, blockID: $blockID) {
+    ...FlowParts
+  }
+}
+
+# DefinedErrorCode: ComponentHasValidationErrors (element still invalid),
+# TriggerIsInInvalidState (triggered message EP).
+mutation EnableEntryPoint($flowID: FlowID!, $blockID: BlockID!) {
+  blockEnableEntryPoint(flowID: $flowID, blockID: $blockID) {
+    ...FlowParts
+  }
+}
+
+mutation DisableEntryPoint($flowID: FlowID!, $blockID: BlockID!) {
+  blockDisableEntryPoint(flowID: $flowID, blockID: $blockID) {
+    ...FlowParts
+  }
+}
+
+# ============================================================
+# Element (card) operations
+# ============================================================
+
+# NOTE: takes botID, not flowID — the one in this set that does.
+mutation DeleteElement($botID: BotID!, $elementID: BlockElementID!) {
+  blockElementDelete(botID: $botID, elementID: $elementID) {
+    ...FlowParts
+  }
+}
+
+mutation SortElements($blockID: BlockID!, $elementIDs: [BlockElementID!]!) {
+  sortBlockElements(blockID: $blockID, elementIDs: $elementIDs) {
+    ...BlockParts
+  }
+}
+
+# Adding a new element card to an EXISTING block: one <plugin>CreateInBlock
+# mutation per stackable family, all blockID-only, all returning the enclosing
+# block — same applyBlock reconcile as the setters. The fresh element usually
+# carries validation errors (empty text / no attribute) until it is filled in.
+# whatsAppTextCreateInBlock is covered by AddWhatsAppTextToBlock in the
+# creation-triad section below.
+
+mutation AddWidgetTextAndButtonsToBlock($blockID: BlockID!) {
+  widgetTextAndButtonsCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWidgetImageToBlock($blockID: BlockID!) {
+  widgetImageCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppImageToBlock($blockID: BlockID!) {
+  whatsAppImageCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppVideoToBlock($blockID: BlockID!) {
+  whatsAppVideoCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppAudioToBlock($blockID: BlockID!) {
+  whatsAppAudioCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppDocumentToBlock($blockID: BlockID!) {
+  whatsAppDocumentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddSetConditionToBlock($blockID: BlockID!) {
+  setConditionCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddSetContactPropertyToBlock($blockID: BlockID!) {
+  setContactPropertyCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddClearContactPropertyToBlock($blockID: BlockID!) {
+  clearContactPropertyCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddSendJsonToBlock($blockID: BlockID!) {
+  sendJsonCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddSummarizeChatToBlock($blockID: BlockID!) {
+  summarizeChatCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWidgetSwitchToHumanToBlock($blockID: BlockID!) {
+  widgetSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppSwitchToHumanToBlock($blockID: BlockID!) {
+  whatsAppSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddInstagramSwitchToHumanToBlock($blockID: BlockID!) {
+  instagramSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation AddTikTokSwitchToHumanToBlock($blockID: BlockID!) {
+  tiktokSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+# ============================================================
+# Connections
+# ============================================================
+
+# Block-level "next" edge: at most ONE per source block; create is an upsert.
+mutation ConnectBlocks($flowID: FlowID!, $request: BlockToBlockConnectionCreateRequest!) {
+  blockToBlockConnectionCreateOrUpdate(flowID: $flowID, request: $request) {
+    ...FlowParts
+  }
+}
+
+# From a handle inside an element (button id, condition handleID,
+# nextBlockHandleID, ...) to a target block.
+mutation ConnectComponent($flowID: FlowID!, $request: ComponentToBlockConnectionCreateRequest!) {
+  componentToBlockConnectionCreateOrUpdate(flowID: $flowID, request: $request) {
+    ...FlowParts
+  }
+}
+
+mutation DisconnectBlocks($flowID: FlowID!, $sourceBlockID: BlockID!) {
+  blockToBlockConnectionDelete(flowID: $flowID, sourceBlockID: $sourceBlockID) {
+    ...FlowParts
+  }
+}
+
+mutation DisconnectComponent(
+  $flowID: FlowID!
+  $sourceBlockElementID: BlockElementID!
+  $sourceHandleID: ComponentHandleID!
+) {
+  componentToBlockConnectionDelete(
+    flowID: $flowID
+    sourceBlockElementID: $sourceBlockElementID
+    sourceHandleID: $sourceHandleID
+  ) {
+    ...FlowParts
+  }
+}
+
+# ============================================================
+# Creating blocks — the plugin creation triad
+# ============================================================
+# There is NO createBlock. Every plugin family has:
+#   <plugin>CreateWithBlock(flowID, positionX, positionY)              -> Flow
+#   <plugin>CreateWithBlockAndConnection(flowID, request, x, y)        -> Flow
+#   <plugin>CreateInBlock(blockID)   (only stackable plugins)          -> Block
+# Swap the field name for other plugin families — same shape.
+
+mutation CreateWhatsAppTextBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppTextCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowParts
+  }
+}
+
+# request.sourceBlockID (+ optional sourceBlockElementID/sourceHandleID)
+# wires the dangling edge to the freshly created block.
+mutation CreateWhatsAppTextBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppTextCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowParts
+  }
+}
+
+mutation AddWhatsAppTextToBlock($blockID: BlockID!) {
+  whatsAppTextCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
+mutation CreateWidgetTextAndButtonsBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  widgetTextAndButtonsCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowParts
+  }
+}
+
+mutation CreateWidgetEntryPoint($flowID: FlowID!, $x: Int!, $y: Int!) {
+  widgetEPCreate(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowParts
+  }
+}
+
+mutation CreateAiAgentBlock($flowID: FlowID!, $x: Int!, $y: Int!, $templateID: AiAgentTemplateID!) {
+  aiAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y, templateID: $templateID) {
+    ...FlowParts
+  }
+}
+
+# The rest of the CreateWithBlock roster — every remaining plugin family, all
+# plain (flowID, positionX, positionY). aiAgent above is the ONLY family with
+# an extra arg. The chat-trigger entry-point families (triggered message,
+# one-time broadcast, scheduled message) are born with the entry point
+# disabled; their ...CreateWithBlockAndWATemplate variants (same args) also
+# attach a WhatsApp template element — not documented here.
+#
+# These select FlowBlocksSlim ON PURPOSE, not FlowParts: 22 more whole-flow
+# responses would each inline the 30-variant element union and blow up
+# generated-type size (and tsc memory). The slim response is enough to diff
+# out the new block's id — REFETCH FlowStructure afterwards for elements,
+# connections and validation errors.
+
+fragment FlowBlocksSlim on Flow {
+  id
+  blocks {
+    __typename
+    id
+    name
+    positionX
+    positionY
+  }
+}
+
+mutation CreateWidgetImageBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  widgetImageCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWidgetSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  widgetSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppImageBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppImageCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppVideoBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppVideoCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppAudioBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppAudioCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppDocumentBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppDocumentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTextAndButtonsBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppTextAndButtonsCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTextAndURLBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppTextAndURLCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppListBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppListCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTemplateBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppTemplateCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateInstagramSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  instagramSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateTikTokSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  tiktokSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSetConditionBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  setConditionCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSetContactPropertyBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  setContactPropertyCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateClearContactPropertyBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  clearContactPropertyCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSendJsonBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  sendJsonCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSummarizeChatBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  summarizeChatCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateRedirectToFlowBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  redirectToFlowCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateTriggeredMessageBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  triggeredMessageCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppOneTimeNotificationBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppOneTimeNotificationCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppScheduledMessageBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  whatsAppScheduledMessageCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+# ------------------------------------------------------------
+# Create-and-connect — the triad's second leg for every family
+# ------------------------------------------------------------
+# Dragging an edge into empty canvas creates the block AND wires the dangling
+# edge in one atomic round-trip: request.sourceBlockID (+ optional
+# sourceBlockElementID/sourceHandleID for element outlets) names the edge's
+# source. The four entry-point families (widgetEP, triggeredMessage,
+# whatsAppOneTimeNotification, whatsAppScheduledMessage) have NO connected
+# variant — entry points cannot be edge targets. whatsAppText's connected
+# variant is documented in the triad section above. Slim responses on purpose,
+# same as the plain CreateWithBlock roster: diff the new block id, refetch.
+
+mutation CreateWidgetTextAndButtonsBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  widgetTextAndButtonsCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWidgetImageBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  widgetImageCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWidgetSwitchToHumanBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  widgetSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppImageBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppImageCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppVideoBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppVideoCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppAudioBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppAudioCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppDocumentBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppDocumentCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTextAndButtonsBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppTextAndButtonsCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTextAndURLBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppTextAndURLCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppListBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppListCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppTemplateBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppTemplateCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateWhatsAppSwitchToHumanBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  whatsAppSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateInstagramSwitchToHumanBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  instagramSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateTikTokSwitchToHumanBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  tiktokSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSetConditionBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  setConditionCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSetContactPropertyBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  setContactPropertyCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateClearContactPropertyBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  clearContactPropertyCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSendJsonBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  sendJsonCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateSummarizeChatBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  summarizeChatCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateRedirectToFlowBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  redirectToFlowCreateWithBlockAndConnection(flowID: $flowID, request: $request, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+# aiAgent keeps its extra templateID arg on the connected leg too.
+mutation CreateAiAgentBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+  $templateID: AiAgentTemplateID!
+) {
+  aiAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+    templateID: $templateID
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+# ============================================================
+# Element setters — representative examples per family
+# ============================================================
+# All setters are single-field, keyed by blockElementID, and return the
+# enclosing block. Grep ../chatfuel-core/references/schema.graphql for the full family list
+# (~230 mutations follow these exact shapes).
+
+# --- Text (writes are plain strings; "{{attr}}" is parsed server-side) ---
+
+mutation SetWhatsAppText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextSetText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetTextAndButtonsText($elementID: BlockElementID!, $text: String!) {
+  widgetTextAndButtonsSetText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndButtonsBodyText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndButtonsSetBodyText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+# --- Buttons (widget: ContinueFlow | OpenURL | Phone; WA text+buttons:
+# ContinueFlow only; WA text+URL: SetButtonURL for its URL button) ---
+
+mutation AddWidgetContinueFlowButton($elementID: BlockElementID!) {
+  widgetTextAndButtonsAddNewContinueFlowButton(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWidgetOpenURLButton($elementID: BlockElementID!) {
+  widgetTextAndButtonsAddNewOpenURLButton(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetButtonTitle($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $title: String!) {
+  widgetTextAndButtonsSetButtonTitle(blockElementID: $elementID, buttonID: $buttonID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetButtonURL($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $url: String!) {
+  widgetTextAndButtonsSetButtonURL(blockElementID: $elementID, buttonID: $buttonID, url: $url) {
+    ...BlockParts
+  }
+}
+
+mutation MoveWidgetButtons($elementID: BlockElementID!, $orderedButtonIDs: [ComponentHandleID!]!) {
+  widgetTextAndButtonsMoveButton(blockElementID: $elementID, orderedButtonIDs: $orderedButtonIDs) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteWidgetButton($elementID: BlockElementID!, $buttonID: ComponentHandleID!) {
+  widgetTextAndButtonsDeleteButton(blockElementID: $elementID, buttonID: $buttonID) {
+    ...BlockParts
+  }
+}
+
+mutation AddWhatsAppContinueFlowButton($elementID: BlockElementID!) {
+  whatsAppTextAndButtonsAddNewContinueFlowButton(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppButtonTitle($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $title: String!) {
+  whatsAppTextAndButtonsSetButtonTitle(blockElementID: $elementID, buttonID: $buttonID, title: $title) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp list rows ---
+# DefinedErrorCode: WAListTooManyRows, WAListCannotDeleteLastRow,
+# WAListRowNotFound, WAListInvalidRowsOrdering
+
+mutation AddWAListRow($elementID: BlockElementID!) {
+  whatsAppListAddRow(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWAListRowTitle($elementID: BlockElementID!, $rowID: ComponentHandleID!, $title: String!) {
+  whatsAppListSetRowTitle(blockElementID: $elementID, rowID: $rowID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation ReorderWAListRows($elementID: BlockElementID!, $orderedRowIDs: [ComponentHandleID!]!) {
+  whatsAppListReorderRows(blockElementID: $elementID, orderedRowIDs: $orderedRowIDs) {
+    ...BlockParts
+  }
+}
+
+# --- Media (2-step: REST upload to
+# /api/filestorage/upload/plugin?fileType=…&botID=…&pluginID=… -> FileID,
+# then attach; see references/guide.md) ---
+
+mutation SetWhatsAppImageFile($elementID: BlockElementID!, $fileID: FileID!) {
+  whatsAppImageSetImageFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppVideoFile($elementID: BlockElementID!, $fileID: FileID!, $fileName: String!) {
+  whatsAppVideoSetVideoFile(blockElementID: $elementID, fileID: $fileID, fileName: $fileName) {
+    ...BlockParts
+  }
+}
+
+# --- Reply saving (common to content elements; null attribute clears it) ---
+
+mutation SetWhatsAppTextWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppTextSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextSaveReply(
+  $elementID: BlockElementID!
+  $saveContactReply: Boolean!
+  $attribute: AttributeName
+) {
+  whatsAppTextSetSaveContactReplyToAttribute(
+    blockElementID: $elementID
+    saveContactReply: $saveContactReply
+    attribute: $attribute
+  ) {
+    ...BlockParts
+  }
+}
+
+# --- Condition / actions ---
+
+# SegmentInput is built client-side with fresh UUIDs (../chatfuel-contacts/references/guide.md).
+mutation SetConditionSegment($elementID: BlockElementID!, $request: SegmentInput!) {
+  setConditionUpdateSegment(blockElementID: $elementID, request: $request) {
+    ...BlockParts
+  }
+}
+
+mutation SetContactPropertyAttribute($elementID: BlockElementID!, $name: AttributeName!) {
+  setContactPropertySetAttribute(blockElementID: $elementID, name: $name) {
+    ...BlockParts
+  }
+}
+
+mutation SetContactPropertyValue($elementID: BlockElementID!, $value: String!) {
+  setContactPropertySetValue(blockElementID: $elementID, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation SetRedirectTargetFlow($elementID: BlockElementID!, $targetFlowID: FlowID!) {
+  redirectToFlowSetTargetFlow(blockElementID: $elementID, targetFlowID: $targetFlowID) {
+    ...BlockParts
+  }
+}
+
+# --- Send JSON (external HTTP request block) ---
+
+mutation SetSendJsonURL($elementID: BlockElementID!, $url: String!) {
+  sendJsonUpdateURL(blockElementID: $elementID, url: $url) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonMethod($elementID: BlockElementID!, $method: SendJsonHTTPMethod!) {
+  sendJsonUpdateHTTPMethod(blockElementID: $elementID, method: $method) {
+    ...BlockParts
+  }
+}
+
+mutation AddSendJsonHeader($elementID: BlockElementID!) {
+  sendJsonAddHeader(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+# Dry-run: fires the real HTTP request and returns the exchange.
+# DefinedErrorCode: TestRequestConnectionRefused
+mutation TestSendJsonRequest($elementID: BlockElementID!) {
+  sendJsonTestRequest(blockElementID: $elementID) {
+    statusCode
+    statusName
+    requestURL
+    requestMethod
+    requestBody
+    requestHeaders {
+      header
+      value
+    }
+    responseBody
+    responseHeaders {
+      header
+      value
+    }
+  }
+}
+
+# --- AI agent block (Fuely hub variant uses aiAgent*; custom prompt agents
+# use aiAgentCustom* — separate mutation names, not a flag) ---
+
+mutation SetAiAgentInstructions($elementID: BlockElementID!, $instructions: String!) {
+  aiAgentUpdateAdditionalInstructions(blockElementID: $elementID, additionalInstructions: $instructions) {
+    ...BlockParts
+  }
+}
+
+mutation AddAiAgentRule($elementID: BlockElementID!) {
+  aiAgentCreateRule(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetAiAgentRuleTitle($elementID: BlockElementID!, $ruleID: ComponentHandleID!, $title: String!) {
+  aiAgentUpdateRuleTitle(blockElementID: $elementID, ruleID: $ruleID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetAiAgentRulePrompt($elementID: BlockElementID!, $ruleID: ComponentHandleID!, $prompt: String!) {
+  aiAgentUpdateRulePrompt(blockElementID: $elementID, ruleID: $ruleID, prompt: $prompt) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteAiAgentRule($elementID: BlockElementID!, $ruleID: ComponentHandleID!) {
+  aiAgentDeleteRule(blockElementID: $elementID, ruleID: $ruleID) {
+    ...BlockParts
+  }
+}
+
+mutation SetAiAgentCustomPrompt($elementID: BlockElementID!, $prompt: String!) {
+  aiAgentCustomUpdatePrompt(blockElementID: $elementID, prompt: $prompt) {
+    ...BlockParts
+  }
+}
+
+# --- Attribute default values (used by flow-builder attribute pickers) ---
+
+mutation SetAttributeDefaultValue($botID: BotID!, $attributeName: AttributeName!, $defaultValue: String!) {
+  botAttributeUpdateDefaultVal(botID: $botID, attributeName: $attributeName, defaultValue: $defaultValue) {
+    id
+  }
+}
+
+# ============================================================
+# Element setters — the full editable surface
+# ============================================================
+# Every remaining setter the schema exposes, grouped per family. Same contract
+# as the setters above: keyed by blockElementID, returning the enclosing block
+# (...BlockParts, errors recomputed server-side -> applyBlock). The only
+# exceptions are the trigger* ops (return Trigger! alone -> refetch).
+
+# --- WhatsApp media (image / video / audio / document) ---
+# File setters take a FileID from the PLUGIN upload endpoint
+# (/filestorage/upload/plugin?...&pluginID=<blockElementID> — see
+# ../chatfuel-core/references/cors-proxy.md and the guide's media section).
+# audio/document/video also persist the original fileName.
+
+mutation SetWhatsAppImageCaption($elementID: BlockElementID!, $caption: String!) {
+  whatsAppImageSetCaption(blockElementID: $elementID, caption: $caption) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppImageWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppImageSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppImageSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppImageSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppVideoCaption($elementID: BlockElementID!, $caption: String!) {
+  whatsAppVideoSetCaption(blockElementID: $elementID, caption: $caption) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppVideoWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppVideoSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppVideoSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppVideoSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppAudioFile($elementID: BlockElementID!, $fileID: FileID!, $fileName: String!) {
+  whatsAppAudioSetAudioFile(blockElementID: $elementID, fileID: $fileID, fileName: $fileName) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppAudioWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppAudioSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppAudioSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppAudioSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppDocumentFile($elementID: BlockElementID!, $fileID: FileID!, $fileName: String!) {
+  whatsAppDocumentSetDocumentFile(blockElementID: $elementID, fileID: $fileID, fileName: $fileName) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppDocumentCaption($elementID: BlockElementID!, $caption: String!) {
+  whatsAppDocumentSetCaption(blockElementID: $elementID, caption: $caption) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppDocumentWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppDocumentSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppDocumentSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppDocumentSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- Widget image ---
+
+mutation SetWidgetImageFile($elementID: BlockElementID!, $fileID: FileID!) {
+  widgetImageSetImageFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetImageWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  widgetImageSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetImageSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  widgetImageSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- Widget text + buttons (remaining pieces) ---
+
+mutation AddWidgetPhoneButton($elementID: BlockElementID!) {
+  widgetTextAndButtonsAddNewPhoneButton(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetButtonPhone($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $phone: String!) {
+  widgetTextAndButtonsSetButtonPhone(blockElementID: $elementID, buttonID: $buttonID, phone: $phone) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetTextAndButtonsWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  widgetTextAndButtonsSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWidgetTextAndButtonsSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  widgetTextAndButtonsSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp text + buttons (remaining pieces) ---
+# NOTE the schema's naming quirk: whatsAppTextAndButtonsWaitForReplies has no
+# "Set" in the field name; widgetTextAndButtonsSetWaitForReplies does.
+
+mutation SetWhatsAppTextAndButtonsHeaderText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndButtonsSetHeaderText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndButtonsFooterText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndButtonsSetFooterText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteWhatsAppButton($elementID: BlockElementID!, $buttonID: ComponentHandleID!) {
+  whatsAppTextAndButtonsDeleteButton(blockElementID: $elementID, buttonID: $buttonID) {
+    ...BlockParts
+  }
+}
+
+mutation MoveWhatsAppButtons($elementID: BlockElementID!, $orderedButtonIDs: [ComponentHandleID!]!) {
+  whatsAppTextAndButtonsMoveButton(blockElementID: $elementID, orderedButtonIDs: $orderedButtonIDs) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndButtonsWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppTextAndButtonsWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndButtonsSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppTextAndButtonsSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp text + URL (fixed URL button — no add/delete for buttons) ---
+
+mutation SetWhatsAppTextAndURLBodyText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndURLSetBodyText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLHeaderText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndURLSetHeaderText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLFooterText($elementID: BlockElementID!, $text: String!) {
+  whatsAppTextAndURLSetFooterText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLButtonTitle($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $title: String!) {
+  whatsAppTextAndURLSetButtonTitle(blockElementID: $elementID, buttonID: $buttonID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLButtonURL($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $url: String!) {
+  whatsAppTextAndURLSetButtonURL(blockElementID: $elementID, buttonID: $buttonID, url: $url) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppTextAndURLWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTextAndURLSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppTextAndURLSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp list (remaining pieces) ---
+# DefinedErrorCode: WAListCannotDeleteLastRow on whatsAppListDeleteRow.
+
+mutation SetWAListBodyText($elementID: BlockElementID!, $text: String!) {
+  whatsAppListSetBodyText(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWAListButtonTitle($elementID: BlockElementID!, $text: String!) {
+  whatsAppListSetButtonTitle(blockElementID: $elementID, text: $text) {
+    ...BlockParts
+  }
+}
+
+mutation SetWAListRowDescription($elementID: BlockElementID!, $rowID: ComponentHandleID!, $description: String!) {
+  whatsAppListSetRowDescription(blockElementID: $elementID, rowID: $rowID, description: $description) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteWAListRow($elementID: BlockElementID!, $rowID: ComponentHandleID!) {
+  whatsAppListDeleteRow(blockElementID: $elementID, rowID: $rowID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWAListWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppListWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWAListSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppListSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp template ---
+# The template picker: bot.whatsAppTemplates, filter client-side on
+# IsSupportedInFlowbuilder (the livechat-era isSupported flag is not in this schema).
+
+query WhatsAppTemplatesCatalog($botID: BotID!, $first: Int) {
+  bot(id: $botID) {
+    id
+    whatsAppTemplates(first: $first) {
+      edges {
+        node {
+          id
+          name
+          status
+          language
+          category
+          IsSupportedInFlowbuilder
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+mutation SetWhatsAppTemplate($elementID: BlockElementID!, $templateID: WhatsAppTemplateID!) {
+  whatsAppTemplateSetTemplate(blockElementID: $elementID, templateID: $templateID) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteWhatsAppTemplate($elementID: BlockElementID!) {
+  whatsAppTemplateDeleteTemplate(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+# Param setters are keyed by the param NAME within their section (body /
+# header / footer), not by an id — names come from the template definition.
+
+mutation SetWhatsAppTemplateBodyTextParam($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetBodyTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateHeaderTextParam($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetHeaderTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateFooterTextParam($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetFooterTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateHeaderImageFile($elementID: BlockElementID!, $fileID: FileID!) {
+  whatsAppTemplateSetHeaderImageFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateHeaderVideoFile($elementID: BlockElementID!, $fileID: FileID!) {
+  whatsAppTemplateSetHeaderVideoFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateHeaderDocumentFile($elementID: BlockElementID!, $fileID: FileID!, $fileName: String!) {
+  whatsAppTemplateSetHeaderDocumentFile(blockElementID: $elementID, fileID: $fileID, fileName: $fileName) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateURLButtonTextParam(
+  $elementID: BlockElementID!
+  $buttonID: ComponentHandleID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  whatsAppTemplateSetURLButtonTextParamValue(blockElementID: $elementID, buttonID: $buttonID, name: $name, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateCopyCodeButtonCode($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $codeValue: String!) {
+  whatsAppTemplateSetCopyCodeButtonCodeValue(blockElementID: $elementID, buttonID: $buttonID, codeValue: $codeValue) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateWaitForReplies($elementID: BlockElementID!, $waitForReplies: Boolean!) {
+  whatsAppTemplateSetWaitForReplies(blockElementID: $elementID, waitForReplies: $waitForReplies) {
+    ...BlockParts
+  }
+}
+
+mutation SetWhatsAppTemplateSaveReply($elementID: BlockElementID!, $save: Boolean!, $attribute: AttributeName) {
+  whatsAppTemplateSetSaveContactReplyToAttribute(blockElementID: $elementID, saveContactReply: $save, attribute: $attribute) {
+    ...BlockParts
+  }
+}
+
+# --- Clear contact property ---
+
+mutation SetClearContactPropertyAttribute($elementID: BlockElementID!, $name: AttributeName!) {
+  clearContactPropertySetAttribute(blockElementID: $elementID, name: $name) {
+    ...BlockParts
+  }
+}
+
+# --- Send JSON (headers, payload, URL params, response parsing rules) ---
+
+mutation SetSendJsonHeaderTitle($elementID: BlockElementID!, $headerID: SendJsonHeaderID!, $title: String!) {
+  sendJsonUpdateHeaderTitle(blockElementID: $elementID, headerID: $headerID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonHeaderValue($elementID: BlockElementID!, $headerID: SendJsonHeaderID!, $value: String!) {
+  sendJsonUpdateHeaderValue(blockElementID: $elementID, headerID: $headerID, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteSendJsonHeader($elementID: BlockElementID!, $headerID: SendJsonHeaderID!) {
+  sendJsonDeleteHeader(blockElementID: $elementID, headerID: $headerID) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonPayloadType($elementID: BlockElementID!, $payloadType: SendJsonPayloadType!) {
+  sendJsonUpdatePayloadType(blockElementID: $elementID, payloadType: $payloadType) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonCustomPayload($elementID: BlockElementID!, $payload: String!) {
+  sendJsonUpdateCustomRequestPayload(blockElementID: $elementID, payload: $payload) {
+    ...BlockParts
+  }
+}
+
+mutation AddSendJsonURLParam($elementID: BlockElementID!) {
+  sendJsonAddURLParam(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonURLParamTitle($elementID: BlockElementID!, $paramID: SendJsonURLParamID!, $title: String!) {
+  sendJsonUpdateURLParamTitle(blockElementID: $elementID, paramID: $paramID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonURLParamValue($elementID: BlockElementID!, $paramID: SendJsonURLParamID!, $value: String!) {
+  sendJsonUpdateURLParamValue(blockElementID: $elementID, paramID: $paramID, value: $value) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteSendJsonURLParam($elementID: BlockElementID!, $paramID: SendJsonURLParamID!) {
+  sendJsonDeleteURLParam(blockElementID: $elementID, paramID: $paramID) {
+    ...BlockParts
+  }
+}
+
+mutation AddSendJsonParsingRule($elementID: BlockElementID!) {
+  sendJsonResponseAddParsingRule(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonParsingRuleAttribute($elementID: BlockElementID!, $ruleID: SendJsonResponseParsingRuleID!, $name: AttributeName!) {
+  sendJsonUpdateResponseParsingRuleAttributeName(blockElementID: $elementID, ruleID: $ruleID, name: $name) {
+    ...BlockParts
+  }
+}
+
+mutation SetSendJsonParsingRuleJSONPath($elementID: BlockElementID!, $ruleID: SendJsonResponseParsingRuleID!, $path: String!) {
+  sendJsonUpdateResponseParsingRuleJSONPath(blockElementID: $elementID, ruleID: $ruleID, path: $path) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteSendJsonParsingRule($elementID: BlockElementID!, $ruleID: SendJsonResponseParsingRuleID!) {
+  sendJsonDeleteResponseParsingRule(blockElementID: $elementID, ruleID: $ruleID) {
+    ...BlockParts
+  }
+}
+
+mutation EnableSendJsonParsingRules($elementID: BlockElementID!) {
+  sendJsonEnableResponseParsingRules(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation DisableSendJsonParsingRules($elementID: BlockElementID!) {
+  sendJsonDisableResponseParsingRules(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+# --- Summarize chat (entries CRUD; Add/Update carry name+description together) ---
+
+mutation AddSummarizeChatEntry($elementID: BlockElementID!, $name: AttributeName!, $description: String!, $addAsFirst: Boolean!) {
+  summarizeChatAddEntry(blockElementID: $elementID, name: $name, description: $description, addAsFirst: $addAsFirst) {
+    ...BlockParts
+  }
+}
+
+mutation SetSummarizeChatEntry($elementID: BlockElementID!, $id: String!, $name: AttributeName!, $description: String!) {
+  summarizeChatUpdateEntry(blockElementID: $elementID, id: $id, name: $name, description: $description) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteSummarizeChatEntry($elementID: BlockElementID!, $id: String!) {
+  summarizeChatDeleteEntry(blockElementID: $elementID, id: $id) {
+    ...BlockParts
+  }
+}
+
+# --- Redirect to flow ---
+
+mutation RemoveRedirectTargetFlow($elementID: BlockElementID!) {
+  redirectToFlowRemoveTargetFlow(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+# --- Default reply ---
+
+mutation SetDefaultReplyFrequency($elementID: BlockElementID!, $frequency: DefaultReplyFrequency!) {
+  defaultReplySetFrequency(blockElementID: $elementID, frequency: $frequency) {
+    ...BlockParts
+  }
+}
+
+# --- Triggered message + its trigger ---
+# Segment setters take a whole SegmentInput (see the SegmentParts note).
+# The trigger* family is keyed by TriggerID (element.trigger.id), returns
+# Trigger! WITHOUT an enclosing block — refetch FlowStructure to reconcile.
+# DefinedErrorCode: EnabledTriggerIsImmutable — disable the entry point first.
+
+mutation SetTriggeredMessageSegment($elementID: BlockElementID!, $request: SegmentInput!) {
+  triggeredMessageSetSegment(blockElementID: $elementID, request: $request) {
+    ...BlockParts
+  }
+}
+
+mutation SetTriggerConditionType($triggerID: TriggerID!, $conditionType: TriggerConditionType!) {
+  triggerSetConditionType(id: $triggerID, conditionType: $conditionType) {
+    ...TriggerParts
+  }
+}
+
+mutation SetTriggerDelay($triggerID: TriggerID!, $delay: TriggerDelayInput!) {
+  triggerSetDelay(id: $triggerID, delay: $delay) {
+    ...TriggerParts
+  }
+}
+
+mutation SetTriggerAttributeFilter($triggerID: TriggerID!, $attrCondition: AttrFilterInput!) {
+  triggerSetAttributeFilter(id: $triggerID, attrCondition: $attrCondition) {
+    ...TriggerParts
+  }
+}
+
+mutation DeleteTriggerAttributeFilter($triggerID: TriggerID!) {
+  triggerDeleteAttributeFilter(id: $triggerID) {
+    ...TriggerParts
+  }
+}
+
+# --- WhatsApp one-time broadcast ---
+# whatsAppOneTimeNotificationSend is LIVE-FIRE: it starts the broadcast to
+# every contact the segment matches. Only offered while status is Draft;
+# DefinedErrorCode: WhatsAppOneTimeBroadcastAlreadyStarted.
+
+mutation SetOneTimeNotificationSegment($elementID: BlockElementID!, $request: SegmentInput!) {
+  whatsAppOneTimeNotificationUpdateSegment(blockElementID: $elementID, request: $request) {
+    ...BlockParts
+  }
+}
+
+mutation SendOneTimeNotification($elementID: BlockElementID!) {
+  whatsAppOneTimeNotificationSend(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+# --- WhatsApp scheduled message ---
+# firstSendTime is UTC; correctedWeekdays must be the weekday set AFTER the
+# local->UTC shift (a 01:00 Monday broadcast in UTC+3 is 22:00 SUNDAY in UTC)
+# — the weekday-shift rules live in ../chatfuel-core/references/misc.md.
+
+mutation SetScheduledMessageSegment($elementID: BlockElementID!, $request: SegmentInput!) {
+  whatsAppScheduledMessageUpdateSegment(blockElementID: $elementID, request: $request) {
+    ...BlockParts
+  }
+}
+
+mutation SetScheduledMessageRepeatType($elementID: BlockElementID!, $repeatType: BroadcastRepeatType!) {
+  whatsAppScheduledMessageSetRepeatType(blockElementID: $elementID, repeatType: $repeatType) {
+    ...BlockParts
+  }
+}
+
+mutation SetScheduledMessageWeekdays($elementID: BlockElementID!, $weekdays: [Weekday!]) {
+  whatsAppScheduledMessageSetWeekdays(blockElementID: $elementID, weekdays: $weekdays) {
+    ...BlockParts
+  }
+}
+
+mutation SetScheduledMessageRepeatEveryNDays($elementID: BlockElementID!, $everyNDays: Int!) {
+  whatsAppScheduledMessageSetRepeatEveryNDays(blockElementID: $elementID, everyNDays: $everyNDays) {
+    ...BlockParts
+  }
+}
+
+mutation SetScheduledMessageOnCertainDates($elementID: BlockElementID!, $certainDates: [Time!]!) {
+  whatsAppScheduledMessageSetOnCertainDates(blockElementID: $elementID, certainDates: $certainDates) {
+    ...BlockParts
+  }
+}
+
+mutation SetScheduledMessageFirstSendTime($elementID: BlockElementID!, $firstSendTime: Time!, $correctedWeekdays: [Weekday!]!) {
+  whatsAppScheduledMessageSetFirstSendTime(blockElementID: $elementID, firstSendTime: $firstSendTime, correctedWeekdays: $correctedWeekdays) {
+    ...BlockParts
+  }
+}
+
+# --- Legacy AiAgent knowledge items + custom AI agent rules ---
+# The rule setters above (AddAiAgentRule etc.) are shared with the legacy
+# AiAgentBlockElement; these cover its knowledge-item prompts and the
+# AiAgentCustomBlockElement's own rule CRUD.
+
+mutation SetAiAgentKnowledgeItemPrompt($elementID: BlockElementID!, $knowledgeItemID: AiAgentKnowledgeItemID!, $prompt: String!) {
+  aiAgentUpdateKnowledgeItemPrompt(blockElementID: $elementID, knowledgeItemID: $knowledgeItemID, prompt: $prompt) {
+    ...BlockParts
+  }
+}
+
+mutation ClearAiAgentKnowledgeItemPrompts($elementID: BlockElementID!) {
+  aiAgentClearAllKnowledgeItemPrompts(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation AddAiAgentCustomRule($elementID: BlockElementID!) {
+  aiAgentCustomCreateRule(blockElementID: $elementID) {
+    ...BlockParts
+  }
+}
+
+mutation SetAiAgentCustomRuleTitle($elementID: BlockElementID!, $ruleID: ComponentHandleID!, $title: String!) {
+  aiAgentCustomUpdateRuleTitle(blockElementID: $elementID, ruleID: $ruleID, title: $title) {
+    ...BlockParts
+  }
+}
+
+mutation SetAiAgentCustomRulePrompt($elementID: BlockElementID!, $ruleID: ComponentHandleID!, $prompt: String!) {
+  aiAgentCustomUpdateRulePrompt(blockElementID: $elementID, ruleID: $ruleID, prompt: $prompt) {
+    ...BlockParts
+  }
+}
+
+mutation DeleteAiAgentCustomRule($elementID: BlockElementID!, $ruleID: ComponentHandleID!) {
+  aiAgentCustomDeleteRule(blockElementID: $elementID, ruleID: $ruleID) {
+    ...BlockParts
+  }
+}
+
+# ============================================================
+# Test the flow — a real preview conversation
+# ============================================================
+# `previewResponsesStartInFlow` mints a preview conversation on a synthetic
+# contact and IMMEDIATELY runs this flow from its starting-point block, so the
+# first bot messages arrive on the subscription with nobody having typed
+# anything. Everything after that rides the ORDINARY livechat API:
+# `conversationID` is the preview contact's conversation, history is
+# `bot.conversation.messages`, realtime is `messageAdded`/`messageUpdated`.
+#
+# In a preview YOU are the contact: your sends come back as In* message types
+# and the flow's output arrives as Out* types — which is why the thread renders
+# In on the right and Out on the left.
+#
+# Own copies of the preview surface: a module may not import another module's
+# generated documents, and the automations Test panel keeps its own set for the
+# same reason. Returns stay slim — this file's generated types are the ones
+# with the heap-size history.
+
+fragment FtFile on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment FtMessageCommon on Message {
+  __typename
+  id
+  clientId
+  sentTime
+  updatedAt
+  sender {
+    __typename
+    id
+    name
+  }
+  errors {
+    code
+    date
+  }
+}
+
+# Message-side button types (WhatsApp*MessageButton, plain title strings) are
+# NOT the flow-builder's button types (the WhatsAppButton union, TemplateStr
+# titles) — a click is addressed by the rendered title, not by a handle id.
+fragment FtWhatsAppParts on Message {
+  ... on WhatsAppInTextMessage {
+    text
+  }
+  ... on WhatsAppInContinueFlowButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInTemplateQuickReplyButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInListRowClickMessage {
+    rowTitle
+    rowDescription
+  }
+  ... on WhatsAppOutTextMessage {
+    text
+  }
+  ... on WhatsAppOutTextAndButtonsMessage {
+    headerText
+    bodyText
+    footerText
+    whatsappButtons {
+      __typename
+      title
+      ... on WhatsAppOpenURLMessageButton {
+        url
+      }
+    }
+  }
+  ... on WhatsAppOutTextAndURLMessage {
+    headerText
+    bodyText
+    footerText
+    whatsappButtons {
+      __typename
+      title
+      ... on WhatsAppOpenURLMessageButton {
+        url
+      }
+    }
+  }
+  ... on WhatsAppOutListMessage {
+    bodyText
+    buttonTitle
+    listRows {
+      title
+      description
+    }
+  }
+  ... on WhatsAppOutTemplateMessage {
+    header {
+      __typename
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+      ... on WhatsAppOutTemplateMessageComponentImage {
+        file {
+          ...FtFile
+        }
+      }
+      ... on WhatsAppOutTemplateMessageComponentVideo {
+        file {
+          ...FtFile
+        }
+      }
+      ... on WhatsAppOutTemplateMessageComponentDocument {
+        file {
+          ...FtFile
+        }
+      }
+    }
+    body {
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+    }
+    footer {
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+    }
+    waTemplateButtons {
+      __typename
+      ... on WhatsAppOutTemplateMessageURLButton {
+        text
+        url
+      }
+      ... on WhatsAppOutTemplateMessageQuickReplyButton {
+        text
+      }
+    }
+  }
+  ... on WhatsAppOutImageMessage {
+    caption
+    file {
+      ...FtFile
+    }
+  }
+  ... on WhatsAppOutVideoMessage {
+    caption
+    file {
+      ...FtFile
+    }
+  }
+  ... on WhatsAppOutAudioMessage {
+    file {
+      ...FtFile
+    }
+  }
+  ... on WhatsAppOutDocumentMessage {
+    caption
+    fileName
+    file {
+      ...FtFile
+    }
+  }
+}
+
+# The widget's text message is ONE typename in both directions — read the
+# sender to know which way it went.
+fragment FtWidgetParts on Message {
+  ... on WebWidgetTextMessage {
+    text
+  }
+  ... on WebWidgetTextAndButtonsMessage {
+    text
+    buttons {
+      __typename
+      title
+      ... on WebWidgetOpenURLButton {
+        url
+      }
+      ... on WebWidgetCallPhoneButton {
+        phone
+      }
+    }
+  }
+  ... on WebWidgetContinueFlowButtonClickMessage {
+    button {
+      title
+    }
+  }
+  ... on WebWidgetOpenURLButtonClickMessage {
+    button {
+      title
+      url
+    }
+  }
+  ... on WebWidgetCallPhoneButtonClickMessage {
+    button {
+      title
+      phone
+    }
+  }
+}
+
+fragment FtOtherPlatformParts on Message {
+  ... on InstagramInTextMessage {
+    text
+  }
+  ... on InstagramOutTextMessage {
+    text
+  }
+  ... on TikTokInTextMessage {
+    text
+  }
+  ... on TikTokOutTextMessage {
+    text
+  }
+  ... on FacebookInTextMessage {
+    text
+  }
+  ... on FacebookOutTextMessage {
+    text
+  }
+}
+
+# SystemTypingMessage is a hint with an expiry, not a row.
+# SystemLivechatOpenedByComponentMessage as the NEWEST message means the flow
+# handed the conversation to a human: nothing else will answer, so the composer
+# closes and Restart is the way on.
+fragment FtSystemParts on Message {
+  ... on SystemTypingMessage {
+    until
+  }
+  ... on SystemConversationSummaryMessage {
+    summary
+  }
+  ... on SystemLivechatOpenedByComponentMessage {
+    originallyDecidedByAI
+  }
+}
+
+fragment FtMessageParts on Message {
+  ...FtMessageCommon
+  ...FtWhatsAppParts
+  ...FtWidgetParts
+  ...FtOtherPlatformParts
+  ...FtSystemParts
+}
+
+# The flow session carries no platform of its own — the FLOW's platform is what
+# picks the send mutation. `startingBlock` is nullable: the block may have been
+# deleted since.
+fragment FtSessionParts on PreviewResponsesFlowSession {
+  id
+  conversationID
+  startedAt
+  startingBlock {
+    id
+    name
+  }
+}
+
+# DefinedErrorCode: FlowStartingPointBlockDoesNotExist, ScopeNotConnectedToBot
+mutation FlowTestStart($flowID: FlowID!) {
+  previewResponsesStartInFlow(flowID: $flowID) {
+    ...FtSessionParts
+  }
+}
+
+# The latest session of the signed-in user for THIS flow, or null. Flows are
+# the only preview target with a readback, which is what lets the panel survive
+# a page reload instead of starting over.
+query FlowTestSessionReadback($botID: BotID!, $flowID: FlowID!) {
+  bot(id: $botID) {
+    id
+    flow(flowID: $flowID) {
+      id
+      previewResponsesSession {
+        ...FtSessionParts
+      }
+    }
+  }
+}
+
+# No cursor => newest-first; older pages via after: pageInfo.endCursor.
+query FlowTestMessages(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $first: Int
+  $after: MessagesCursor
+) {
+  bot(id: $botID) {
+    id
+    conversation(conversationID: $conversationID) {
+      __typename
+      id
+      platform
+      messages(first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            ...FtMessageParts
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+# Subscribe FIRST, then load one page: the subscription needs 1-3 s to become
+# active and events emitted before that are lost.
+subscription FlowTestMessageAdded($botID: BotID!, $conversationID: ConversationID!) {
+  messageAdded(botID: $botID, conversationID: $conversationID) {
+    ...FtMessageParts
+  }
+}
+
+subscription FlowTestMessageUpdated($botID: BotID!, $conversationID: ConversationID!) {
+  messageUpdated(botID: $botID, conversationID: $conversationID) {
+    ...FtMessageParts
+  }
+}
+
+# ------------------------------------------------------------
+# Sending as the (preview) contact — text
+# ------------------------------------------------------------
+# A fresh UUID clientId per send; the result is YOUR echo and its `id` may be
+# null on the wire, so merge by clientId and never by id.
+
+mutation FlowTestWidgetTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WidgetTextMessageSendInput!
+) {
+  previewResponsesWidgetTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWhatsAppTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WhatsAppTextMessageSendInput!
+) {
+  previewResponsesWhatsappTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestInstagramTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: InstagramTextMessageSendInput!
+) {
+  previewResponsesInstagramTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...FtMessageParts
+  }
+}
+
+# Note the capital K: previewResponsesTikTokTextSend.
+mutation FlowTestTikTokTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: TikTokTextMessageSendInput!
+) {
+  previewResponsesTikTokTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...FtMessageParts
+  }
+}
+
+# In the schema, refused by the official dashboard, and facebook has no
+# flow-builder blocks — kept so the platform switch has no hole in it.
+mutation FlowTestFacebookTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: FacebookTextMessageSendInput!
+) {
+  previewResponsesFacebookTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...FtMessageParts
+  }
+}
+
+# ------------------------------------------------------------
+# Sending as the (preview) contact — button and list clicks
+# ------------------------------------------------------------
+# Clicks are matched server-side by messageId + the button's TITLE STRING, not
+# by a handle id; duplicate titles in one message are ambiguous and the first
+# match wins. Only ContinueFlow / QuickReply / list-row clicks advance the
+# flow — URL and call-phone buttons are client-side (open it yourself; the
+# widget's click mutations exist only to record that it happened, and WhatsApp
+# URL buttons have no click mutation at all).
+
+mutation FlowTestWidgetContinueFlowClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesBtnClickInput!
+) {
+  previewResponsesWidgetContinueFlowBtnClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWidgetOpenURLClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesBtnClickInput!
+) {
+  previewResponsesWidgetOpenURLBtnClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWidgetCallPhoneClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesBtnClickInput!
+) {
+  previewResponsesWidgetCallPhoneBtnClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWhatsAppContinueFlowClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesBtnClickInput!
+) {
+  previewResponsesWhatsappContinueFlowBtnClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWhatsAppTemplateQuickReplyClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesBtnClickInput!
+) {
+  previewResponsesWhatsappTemplateQuickReplyBtnClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}
+
+mutation FlowTestWhatsAppListRowClick(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $click: PreviewResponsesWAListRowClickInput!
+) {
+  previewResponsesWhatsappListRowClickSend(
+    botID: $botID
+    conversationID: $conversationID
+    click: $click
+  ) {
+    ...FtMessageParts
+  }
+}

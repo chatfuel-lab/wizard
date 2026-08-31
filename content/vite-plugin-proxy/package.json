@@ -1,0 +1,35 @@
+{
+  "name": "@chatfuel/vite-plugin-proxy",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Chatfuel proxy for scaffolded apps (cors-proxy.md shape A): HTTP forward with server-side Authorization injection, REST passthrough for file uploads, a message-aware graphql-transport-ws relay that sends connection_init itself — the token never reaches the browser — and, in front of all of it, the Supabase auth gate (is this session a member of this tenant?). core.ts is host-agnostic; vite.ts mounts it on the dev server; server.ts is the production static+proxy server. The wizard vendors the whole src/ directory into scaffolded apps as vendor/chatfuel-proxy/.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/core.ts",
+    "./gate": "./src/gate.ts",
+    "./vite": "./src/vite.ts",
+    "./server": "./src/server.ts",
+    "./egress": "./src/egress.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "live-check": "node --env-file-if-exists=../../.env --import tsx scripts/live-check-proxy.ts"
+  },
+  "dependencies": {
+    "graphql": "^16.9.0",
+    "https-proxy-agent": "^9.0.0",
+    "undici": "^7.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@chatfuel/api-client": "workspace:*",
+    "@types/ws": "^8.18.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@chatfuel/module-manifest",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Module manifest JSON Schema + its TypeScript shape. Node-side; bundled into the wizard by tsdown.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ajv": "^8.17.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,20 @@
+body:
+  - type: textarea
+    id: built
+    attributes:
+      label: What did you build?
+      description: Screenshots welcome. So is a link, if it is public.
+    validations:
+      required: true
+  - type: input
+    id: modules
+    attributes:
+      label: Which modules
+      placeholder: 'livechat, contacts, deals'
+  - type: textarea
+    id: changed
+    attributes:
+      label: What did you have to change?
+      description: >
+        The most useful part for everyone else — what you edited in the vendored
+        code, what the agent got wrong, what was missing.

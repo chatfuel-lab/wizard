@@ -1,0 +1,9 @@
+{
+  "id": "core",
+  "name": "Core",
+  "description": "Skill foundation installed with every module: transport & auth, error envelope, pagination, gotchas, CORS proxy spec, the bundled schema, and the operation validator. No UI.",
+  "status": "ready",
+  "requires": [],
+  "recommends": [],
+  "skill": { "installAs": "chatfuel-core" }
+}

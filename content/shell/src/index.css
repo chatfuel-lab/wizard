@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+/* Self-hosted, not linked: a scaffolded app has to build and run behind the
+   proxy fence with no third-party origin. Variable faces, one file each. */
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/manrope';
+
+/* @chatfuel:ui-css (the wizard rewrites this block for the vendored layout) */
+@import '../../ui/src/styles/tokens.css';
+@import '../../ui/src/styles/base.css';
+@source "../../ui/src";
+/* @chatfuel:end-ui-css */

@@ -1,0 +1,54 @@
+{
+  "name": "chatfuel-wizard-monorepo",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Monorepo for @chatfuel/wizard: the CLI, the app template it scaffolds from, the vendored packages, and the module content it ships.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chatfuel-lab/wizard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chatfuel-lab/wizard/issues"
+  },
+  "homepage": "https://github.com/chatfuel-lab/wizard#readme",
+  "packageManager": "pnpm@10.30.2",
+  "engines": {
+    "node": ">=22.18.1"
+  },
+  "scripts": {
+    "validate": "node scripts/validate.ts",
+    "content-index": "node scripts/content-index.ts",
+    "codegen": "pnpm --filter @chatfuel/api-client codegen",
+    "codegen:check": "pnpm codegen && git diff --exit-code -- content/api-client/src/generated",
+    "build": "pnpm -r build",
+    "test": "pnpm -r --no-bail test",
+    "check": "tsc -p scripts --noEmit && pnpm -r check",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "live-check": "pnpm --filter @chatfuel/api-client live-check && pnpm --filter @chatfuel/vite-plugin-proxy live-check",
+    "live-check:supabase": "pnpm --filter @chatfuel/wizard live-check:supabase"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/node": "^22.0.0",
+      "lodash": "^4.18.1",
+      "fast-uri": "^3.1.7"
+    }
+  },
+  "devDependencies": {
+    "@chatfuel/api-client": "workspace:*",
+    "@chatfuel/module-manifest": "workspace:*",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "ajv": "^8.17.0",
+    "eslint": "^10.9.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "graphql": "^16.9.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.67.0"
+  }
+}

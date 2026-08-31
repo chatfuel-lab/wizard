@@ -1,0 +1,173 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  gates:
+    name: The seven gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # No secret is declared anywhere in this job, and none may be: every step
+      # below runs the branch's own code - `pnpm install` alone runs whatever
+      # lifecycle scripts the tree asks for, and eslint, vitest, tsc and tsdown
+      # bring hundreds of third-party packages with them. A pull request queued
+      # for merge is a contributor's tree running here, so a secret in this
+      # environment is a secret they can print. The publishability gate needs
+      # the private half of the ban list; it runs in `publishable` below, which
+      # holds the secret and runs none of this.
+      #
+      # The publishability pass inside `pnpm validate` still runs here. Without
+      # the overlay it enforces the tracked half of the list, which is the fast
+      # answer on every push; the full list is enforced once, in the other job.
+      - run: pnpm validate
+
+      - run: pnpm codegen:check
+      - run: pnpm check
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+      - name: Pack smoke
+        run: pnpm --filter @chatfuel/wizard pack-smoke
+
+  publishable:
+    # The full ban list, private half included, over the tree this run is about.
+    #
+    # It is a job of its own because of what it holds. It runs on every trigger
+    # this workflow has, and on all but one of them it holds the secret: a pull
+    # request from a fork is handed none, which is GitHub's boundary rather than
+    # a setting. So a fork's pull request is the one case the scan is skipped
+    # rather than failed, and the two triggers that cannot be a fork - the push
+    # to `main`, and the merge queue where the repository enables one - are what
+    # close it: nothing lands without one pass over the whole list. The tree
+    # under test is a contributor's either way, so the pass cannot be a step in
+    # `gates` and it cannot run the tree's own copy of the gate either.
+    #
+    # So: the gate is checked out from the default branch, which no pull request
+    # can rewrite, and the branch under test is checked out beside it as data.
+    # Nothing from `subject/` is executed - no install, no lifecycle scripts, no
+    # dependencies at all. `scripts/check-publishable.ts` reads only node
+    # builtins and the two files next to it.
+    #
+    # The cost is that a pull request which changes the rules or the tree lists
+    # is judged by the rules as they stand on the default branch, so it goes red
+    # until that change lands there. That is the right direction to fail in: the
+    # rules are the thing the gate cannot let a branch edit on its own way past.
+    name: The full ban list
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: The gate, from a branch no pull request can change
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: gate
+          persist-credentials: false
+
+      - name: The tree under test, as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: subject
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: gate/.nvmrc
+
+      # REQUIRE_OVERLAY is what makes this job different from the pass inside
+      # `pnpm validate`. There the tracked half is the whole answer and an absent
+      # overlay is normal; here an absent one means the secret did not arrive, and
+      # the gate would print `clean` having read half the list. A fork's pull
+      # request gets no secret, which is GitHub's boundary rather than a setting -
+      # so this job is skipped there rather than failed, and the merge queue,
+      # which is not a fork, is where the whole list is enforced before `main`.
+      - name: Scan it against the whole list
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          CHECK_PUBLISHABLE_OVERLAY: ${{ secrets.CHECK_PUBLISHABLE_OVERLAY }}
+          CHECK_PUBLISHABLE_REQUIRE_OVERLAY: '1'
+          CHECK_PUBLISHABLE_ROOT: ${{ github.workspace }}/subject
+        run: node gate/scripts/check-publishable.ts
+
+      - name: Say why it did not run
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          echo "A pull request from a fork is handed no secret, so the private half of the"
+          echo "ban list cannot be read here. The tracked half already ran in \`gates\`."
+          echo "The whole list is enforced on the push to main, and in the merge queue if"
+          echo "this repository has one, before the branch becomes main."
+
+  published-floor:
+    # The wizard runs on Node 20.18.1 while the repository needs 22 to build it.
+    # pack-smoke proves the tarball works on the version that built it; this proves
+    # it works on the version the package actually claims.
+    name: Published floor (Node 20)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build the tarball
+        run: npm pack --pack-destination "$RUNNER_TEMP"
+        working-directory: packages/wizard
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 20.18.1
+
+      - name: Run it on the floor
+        # Pinned to the commit it was built from, on purpose. A published wizard
+        # follows `main` and refuses a branch its own commit does not lead to,
+        # and the commit this tarball pins is the one this run is testing --
+        # never on `main`, and behind it by construction. Naming the sha skips
+        # the resolution entirely, which leaves the job asking the one question
+        # it exists to ask: do the published bytes run on the version the
+        # package claims? Resolution itself is covered by the unit suites and,
+        # through a real tarball, by pack-smoke.
+        env:
+          CHATFUEL_CONTENT_REF: ${{ github.sha }}
+        run: |
+          mkdir -p empty && cd empty
+          npx --yes --package="$(ls "$RUNNER_TEMP"/chatfuel-wizard-*.tgz)" chatfuel-wizard doctor
+        working-directory: ${{ runner.temp }}

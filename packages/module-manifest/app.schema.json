@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "chatfuel-apps/app.schema.json",
+  "title": "Chatfuel app preset manifest",
+  "type": "object",
+  "required": ["id", "name", "tagline", "description", "category", "status", "modules", "brand", "listing"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Must equal the app's directory name; doubles as the site slug."
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "tagline": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "description": "Meta/OG description, one or two sentences."
+    },
+    "category": { "enum": ["instagram", "whatsapp", "facebook", "website", "other"] },
+    "status": {
+      "enum": ["draft", "published"],
+      "description": "The site lists only published apps; the wizard scaffolds drafts too (pre-publish testing)."
+    },
+    "minWizardVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+      "description": "Wizard module ids (what --modules takes), not the site's marketing slugs."
+    },
+    "brand": {
+      "type": "object",
+      "required": ["appName"],
+      "additionalProperties": false,
+      "properties": {
+        "appName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "logo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.[A-Za-z0-9]+$",
+          "description": "App-dir-relative path, e.g. listing/icon.png. Passed to the wizard's brand step. An app-dir-relative path. No dots outside the extension, so it cannot climb out of the app directory - the same shape module.schema.json requires of a module's paths. The wizard also refuses a path that leaves the directory or is a symlink when it reads one (insideProblem); this is the half a catalog's own CI can refuse before anybody fetches it."
+        }
+      }
+    },
+    "env": {
+      "type": "array",
+      "description": "Extra .env lines for the scaffold. Deliberately narrower than module env: no secret, no resolve, no prompt — an app preset must not hook wizard steps or declare secrets.",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "default": { "type": "string" },
+          "optional": { "type": "boolean", "default": false }
+        }
+      }
+    },
+    "npmDependencies": {
+      "type": "object",
+      "propertyNames": { "maxLength": 214, "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$" },
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "pattern": "^(?:[a-z][a-z0-9-]*|[~^<>=]{0,2}[0-9xX*][0-9A-Za-z.+-]*(?:\\s*(?:\\|\\|)?\\s*[~^<>=]{0,2}[0-9xX*][0-9A-Za-z.+-]*)*)$",
+        "description": "A semver range or a dist-tag, and nothing else — the same rule module.schema.json states for a module embed, for the same reason. The wizard joins name and version into one npm install argument and runs it, with install scripts, inside the user's own project, so a value carrying \":\" or \"/\" — file:, link:, portal:, workspace:, npm:, git+ssh://, https://, or a bare user/repo — would name a source the manifest is not allowed to choose. parseAppManifest() in the wizard re-checks both patterns: an npx run reaches no schema."
+      },
+      "description": "Package names the app preset adds to the scaffold's package.json, mapped to version ranges."
+    },
+    "playbook": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.md$",
+      "default": "playbook.md",
+      "description": "App-dir-relative path to the agent build plan. No dots outside the extension, so it cannot climb out of the app directory."
+    },
+    "listing": {
+      "type": "object",
+      "required": ["icon", "screenshots"],
+      "additionalProperties": false,
+      "properties": {
+        "icon": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.[A-Za-z0-9]+$",
+          "description": "Square PNG, at least 256x256. An app-dir-relative path. No dots outside the extension, so it cannot climb out of the app directory - the same shape module.schema.json requires of a module's paths. The wizard also refuses a path that leaves the directory or is a symlink when it reads one (insideProblem); this is the half a catalog's own CI can refuse before anybody fetches it."
+        },
+        "screenshots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "alt"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string", "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.[A-Za-z0-9]+$" },
+              "alt": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "provides": {
+          "type": "array",
+          "description": "What the app itself ships (overlay modules, product surfaces) — rendered on the site beside the wizard modules, so the install section tells the whole truth.",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+              "description": { "type": "string", "minLength": 1, "maxLength": 160 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "if": { "properties": { "status": { "const": "published" } } },
+  "then": {
+    "properties": {
+      "listing": {
+        "type": "object",
+        "properties": { "screenshots": { "type": "array", "minItems": 1 } }
+      }
+    }
+  }
+}

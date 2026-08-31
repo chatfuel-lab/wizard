@@ -1,0 +1,109 @@
+# A tag becomes a GitHub Release. It does NOT publish to npm: the maintainer names
+# the version and runs `npm publish` by hand, so that the thing every `npx` in the
+# world downloads is never the side effect of a git push.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions: {}
+
+jobs:
+  # The full ban list over the tagged tree, in a job that installs nothing.
+  #
+  # This used to be two steps inside `release`, on the reasoning that a tag is
+  # pushed by someone who may already read the secret. True of the person, and
+  # beside the point: the job also runs `pnpm install`, which runs whatever
+  # lifecycle scripts the tree asks for, and then eslint, vitest and tsc, which
+  # bring hundreds of packages with them. Any of them could leave something
+  # behind for the step that does hold the secret to run. CI already says this
+  # in as many words - the secret goes in a job that runs none of the tree - so
+  # the release path says it too rather than making an exception for itself.
+  publishable:
+    name: The full ban list
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: The gate, from a branch no tag can change
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: gate
+          persist-credentials: false
+
+      - name: The tagged tree, as data
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: subject
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: gate/.nvmrc
+
+      # This is the last pass before a release exists, so it is the one that
+      # least deserves to enforce half the list: an overlay that did not arrive
+      # fails the release rather than passing it quietly.
+      - name: Scan it against the whole list
+        env:
+          CHECK_PUBLISHABLE_OVERLAY: ${{ secrets.CHECK_PUBLISHABLE_OVERLAY }}
+          CHECK_PUBLISHABLE_REQUIRE_OVERLAY: '1'
+          CHECK_PUBLISHABLE_ROOT: ${{ github.workspace }}/subject
+        run: node gate/scripts/check-publishable.ts
+
+  release:
+    name: Publish the release notes
+    needs: publishable
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
+      # No dependency cache here on purpose: this job builds what gets published,
+      # and a cache another workflow can write is a way into it. setup-node caches
+      # unless told not to, so it is turned off rather than left unmentioned.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - run: pnpm install --frozen-lockfile
+
+      # The same gates a pull request passes. A tag is not a promise that they were run.
+      # No secret is declared in this job and none may be, for the reason CI gives:
+      # every step below runs the tagged tree's own code. The private half of the
+      # ban list is enforced in `publishable` above, which this job waits for.
+      - run: pnpm validate
+      - run: pnpm check
+      - run: pnpm lint
+      - run: pnpm test
+      - name: Pack smoke
+        run: pnpm --filter @chatfuel/wizard pack-smoke
+
+      - name: The tag must match the version in the manifest
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(node -p "require('./packages/wizard/package.json').version")"
+          if [ "$tag" != "$manifest" ]; then
+            echo "tag $GITHUB_REF_NAME does not match packages/wizard version $manifest" >&2
+            exit 1
+          fi
+
+      - name: Take the notes from the changelog
+        run: node scripts/release-notes.ts "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          body_path: ${{ runner.temp }}/notes.md
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

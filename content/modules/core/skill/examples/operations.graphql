@@ -1,0 +1,207 @@
+# Chatfuel GraphQL — core operations every module needs (chatfuel-core skill):
+# identity, bot discovery, permission check, file readback.
+# Validate against references/schema.graphql (node scripts/validate-operations.mjs).
+# Transport & auth: references/transport-auth.md. Files & tasks: references/files-tasks.md.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment RoleInfo on Role {
+  roleTypeV2
+  botPermissions {
+    object
+    action
+  }
+}
+
+fragment BotInfo on Bot {
+  id
+  title
+  isReady
+  timezone
+  workspace {
+    id
+    title
+  }
+}
+
+# ============================================================
+# Identity & bot discovery
+# ============================================================
+
+query CurrentUser {
+  currentUser {
+    id
+    name
+    email
+    dashboardLocale
+    countryCode
+    isWhiteLabel
+    profilePicture {
+      id
+      url
+    }
+  }
+}
+
+# The shared bot picker: how you discover botIDs once the token works.
+query BotsList($first: Int, $after: BotsCursor, $filter: BotsFilter, $orderBy: BotsOrderByInput) {
+  currentUser {
+    id
+    botsV2(first: $first, after: $after, filter: $filter, orderBy: $orderBy) {
+      edges {
+        node {
+          ...BotInfo
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+# The Chatfuel workspace is the BILLING container: an agency pays for a
+# workspace, and every bot inside it draws on that payment. `workspaces` lives
+# on currentUser (there is no root `workspaces` field).
+query WorkspacesList {
+  currentUser {
+    id
+    workspaces {
+      id
+      title
+      botsLimit
+      bots {
+        id
+        title
+      }
+    }
+  }
+}
+
+# Creates a bot INSIDE a workspace. `createBot` without one makes a throwaway
+# workspace per bot (and leaves it behind when the bot is deleted), so anything
+# that must bill to a paid workspace goes through this mutation.
+# Errors arrive nested: errors[].extensions.errors[].extensions.code —
+# TooManyBotsInWorkspace when the plan's bot limit is reached,
+# NotEnoughPermissions when the id is unknown or belongs to somebody else.
+mutation WorkspaceCreateBot($workspaceID: WorkspaceID!, $initialTitle: String!) {
+  workspaceCreateBot(workspaceID: $workspaceID, initialTitle: $initialTitle) {
+    id
+    title
+  }
+}
+
+# Own role + permissions in a bot. PermissionObject values gate each domain
+# (Inbox = live chat, People = contacts, etc.) — see references/transport-auth.md.
+query MyBotRole($botID: BotID!) {
+  currentUser {
+    id
+    botRole(botID: $botID) {
+      ...RoleInfo
+    }
+  }
+}
+
+# ============================================================
+# Files (uploads are REST — see references/files-tasks.md)
+# ============================================================
+
+query FileGet($fileID: FileID!) {
+  file(id: $fileID) {
+    id
+    url
+    type
+    status
+    size
+  }
+}
+
+mutation FileStartDownload($fileID: FileID!) {
+  fileStartDownload(id: $fileID) {
+    id
+    url
+    type
+    status
+    size
+  }
+}
+
+# ============================================================
+# Per-user storage
+# ============================================================
+# `setUserStorageItem` is the ONLY persistence this API offers a client, and it
+# is scoped to the SIGNED-IN USER, not to the team or the bot. Any UI built on
+# it must say "your views", never "shared views".
+#
+# It lives in core rather than in a module because it is a generic mechanism —
+# an arbitrary id, an arbitrary string — that any module can use: a module may
+# import `~api/generated/core` and nothing else, so one pair here serves all ten.
+#
+# `value` is nullable: an id that was never written reads back as an item with
+# `value: null` rather than erroring, so a first-run read needs no special case.
+# The stored string is UNTRUSTED — it is whatever some past version of the app
+# wrote, and it must be parsed defensively rather than cast.
+
+query UserStorageGet($id: ID!) {
+  currentUser {
+    id
+    userStorageItem(id: $id) {
+      id
+      value
+    }
+  }
+}
+
+mutation UserStorageSet($id: ID!, $value: String!) {
+  setUserStorageItem(id: $id, value: $value) {
+    id
+    value
+  }
+}
+
+# ============================================================
+# Whole-bot preview session (seeding only)
+# ============================================================
+# `previewResponsesStartForBot` mints a preview conversation on a synthetic
+# contact and runs the bot's real pipeline against it. No module ships a UI for
+# it — testing happens where the work is, pinned to one flow (flow-builder) or
+# one automation (automations), and each of those owns its own start mutation.
+#
+# It lives in core because three SEED RECIPES need it and nothing else does:
+# livechat, contacts and deals all bootstrap a demo conversation with it, and a
+# recipe may not reach into another module's generated documents any more than
+# app code may. One pair here serves all three.
+#
+# `ScopeNotConnectedToBot` is the expected refusal when the platform is not
+# wired to the bot — recipes walk the platform list and try the next one.
+
+fragment PreviewBotSessionParts on PreviewResponsesBotSession {
+  id
+  conversationID
+  startedAt
+  platform
+}
+
+mutation PreviewStartForBot($botID: BotID!, $platform: Platform!) {
+  previewResponsesStartForBot(botID: $botID, platform: $platform) {
+    ...PreviewBotSessionParts
+  }
+}
+
+# Seeds one contact-side message into that conversation. The result is the echo
+# of what you just sent; recipes do not read it, so it stays two fields wide.
+mutation PreviewWidgetTextSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WidgetTextMessageSendInput!
+) {
+  previewResponsesWidgetTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    id
+    clientId
+  }
+}

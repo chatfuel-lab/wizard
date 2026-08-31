@@ -1,0 +1,560 @@
+# Chatfuel GraphQL — knowledge base operations (the product "Knowledge base"
+# page: structured business info + FAQs + goods catalog + specialists), plus
+# the read-only conversation scan the Gaps source runs.
+#
+# This is NOT a document store; it is a structured record under
+# bot.fuelyConfig.knowledgeBase, plus catalog/specialist entities on Bot.
+# There is no ingestion API, no chunking, no embeddings, no retrieval endpoint
+# and NO SUBSCRIPTION — the only Fuely subscription in the schema is
+# fuelyAutomationUpdated, which belongs to the automations module. Freshness
+# here is refetch-on-write, refetch-on-reconnect and a manual Refresh.
+#
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment KBFileInfo on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment GoodsProductInfo on GoodsProduct {
+  id
+  title
+  description
+  price {
+    amount
+    currency
+  }
+  isAvailable
+  images {
+    ...KBFileInfo
+  }
+}
+
+fragment GoodsServiceInfo on GoodsService {
+  id
+  title
+  description
+  durationSeconds
+  price {
+    amount
+    currency
+  }
+  isAvailable
+  images {
+    ...KBFileInfo
+  }
+}
+
+fragment KBSpecialistDay on SpecialistDaySchedule {
+  enabled
+  start
+  end
+  break {
+    start
+    end
+  }
+}
+
+# `schedule` is read even though the Team source never shows it: an update
+# takes the WHOLE SpecialistInfoInput, `schedule` is non-null in it, and the
+# only honest source for the days is the record the API last returned. Without
+# it, editing a name here would silently clear the specialist's working hours.
+fragment SpecialistInfo on Specialist {
+  id
+  profile {
+    firstName
+    lastName
+    aboutInfo
+    logo {
+      ...KBFileInfo
+    }
+  }
+  schedule {
+    enabled
+    sun {
+      ...KBSpecialistDay
+    }
+    mon {
+      ...KBSpecialistDay
+    }
+    tue {
+      ...KBSpecialistDay
+    }
+    wed {
+      ...KBSpecialistDay
+    }
+    thu {
+      ...KBSpecialistDay
+    }
+    fri {
+      ...KBSpecialistDay
+    }
+    sat {
+      ...KBSpecialistDay
+    }
+  }
+  services {
+    id
+  }
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# This is the whole readable knowledge base. The persona knobs — agent name, chat
+# language, greeting, message length, emoji policy, catalog photo sharing, the
+# missing-info fallback, the extra agent instructions, who to respond to — are not
+# on this type: they are per-scope fuely automation settings (the automations
+# module). They are not on FuelyKnowledgeBase at all.
+query KnowledgeBase($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        companyName
+        email
+        phone
+        address
+        website
+        businessHoursSchedule {
+          workingHours {
+            day
+            enabled
+            start
+            end
+          }
+        }
+        howToPay
+        additionalInstructions
+        faqs {
+          question
+          answer
+        }
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+query GoodsCatalog($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    goodsCatalog {
+      __typename
+      ...GoodsProductInfo
+      ...GoodsServiceInfo
+    }
+  }
+}
+
+query Specialists($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    specialists {
+      ...SpecialistInfo
+    }
+  }
+}
+
+# ============================================================
+# Queries — the Gaps scan (read-only)
+# ============================================================
+# What the AI could not answer, from the only two signals the API exposes:
+#
+#   Contact.unhandledSwitchToHuman  the automation handed the chat to a human
+#                                   and no operator has opened it yet
+#   Contact.assignee                a PublicUserAccount means a human owns the
+#                                   chat now; FuelyAIAssignee means the AI does
+#
+# Both are contact-level, so the scan pages the chat list newest-first and then
+# reads the tail of the flagged conversations. Needs Inbox: View.
+#
+# The fragments are deliberately SLIM — id, time, sender kind, text. The
+# livechat module's generated types are 1.7 MB because its message fragments
+# select every payload field of every platform; this one selects the five
+# inbound text shapes and nothing else.
+
+fragment KBGapContact on Contact {
+  # __typename on Contact and Conversation is REQUIRED — without it fields come back missing.
+  __typename
+  id
+  name
+  updatedAt
+  lastConversationMessageTime
+  unhandledSwitchToHuman
+  assignee {
+    __typename
+  }
+  conversation {
+    __typename
+    id
+    platform
+    status
+    updatedAt
+  }
+}
+
+fragment KBGapMessage on Message {
+  __typename
+  id
+  sentTime
+  sender {
+    __typename
+  }
+  ... on WhatsAppInTextMessage {
+    text
+  }
+  ... on InstagramInTextMessage {
+    text
+  }
+  ... on FacebookInTextMessage {
+    text
+  }
+  ... on TikTokInTextMessage {
+    text
+  }
+  ... on WebWidgetTextMessage {
+    text
+  }
+  # The OUTBOUND halves. The schema splits every channel in two - an inbound
+  # text message and an outbound one are different types - so selecting only the
+  # inbound shapes reads the customer and leaves the assistant's own reply
+  # blank on every channel except the web widget, whose one type carries both
+  # directions. The sweep keys off `sender.__typename` and works either way;
+  # this is what lets the UI quote the hand-off line instead of an empty string.
+  ... on WhatsAppOutTextMessage {
+    text
+  }
+  ... on InstagramOutTextMessage {
+    text
+  }
+  ... on FacebookOutTextMessage {
+    text
+  }
+  ... on TikTokOutTextMessage {
+    text
+  }
+}
+
+# Page the chat list newest-first. Pass assigneeFilter: {type: Any},
+# unreadOnly: false, salesStageV2Filter: [] for an unfiltered sweep.
+query KBGapChats($botID: BotID!, $first: Int!, $after: ContactSearchCursor, $assigneeFilter: ContactAssigneeFilter!) {
+  bot(id: $botID) {
+    id
+    contactChatsConnection(first: $first, after: $after, assigneeFilter: $assigneeFilter, unreadOnly: false, salesStageV2Filter: []) {
+      edges {
+        cursor
+        node {
+          ...KBGapContact
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# conversationID IS the contact id (server-side alias). No cursor => newest
+# first (descending), which is what the scan wants: the question that preceded
+# the hand-off is near the top.
+query KBGapConversation($botID: BotID!, $conversationID: ConversationID!, $first: Int!) {
+  bot(id: $botID) {
+    id
+    conversation(conversationID: $conversationID) {
+      __typename
+      id
+      platform
+      messages(first: $first) {
+        edges {
+          node {
+            ...KBGapMessage
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutations — business info (one granular mutation per field)
+# ============================================================
+
+mutation KBSetCompanyName($botID: BotID!, $companyName: String!) {
+  fuelyConfigSetCompanyName(botID: $botID, companyName: $companyName) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        companyName
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetPhone($botID: BotID!, $phone: String!) {
+  fuelyConfigSetPhone(botID: $botID, phone: $phone) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        phone
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetEmail($botID: BotID!, $email: String!) {
+  fuelyConfigSetEmail(botID: $botID, email: $email) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        email
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetAddress($botID: BotID!, $address: String!) {
+  fuelyConfigSetAddress(botID: $botID, address: $address) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        address
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetWebsite($botID: BotID!, $website: String!) {
+  fuelyConfigSetWebsite(botID: $botID, website: $website) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        website
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetHowToPay($botID: BotID!, $howToPay: String!) {
+  fuelyConfigSetHowToPay(botID: $botID, howToPay: $howToPay) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        howToPay
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetAdditionalInstructions($botID: BotID!, $additionalInstructions: String!) {
+  fuelyConfigSetAdditionalInstructions(botID: $botID, additionalInstructions: $additionalInstructions) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        additionalInstructions
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation KBSetBusinessHours($botID: BotID!, $schedule: FuelyBusinessHoursScheduleUpdateInput!) {
+  fuelyConfigSetBusinessHoursSchedule(botID: $botID, schedule: $schedule) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        businessHoursSchedule {
+          workingHours {
+            day
+            enabled
+            start
+            end
+          }
+        }
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+# Replaces the WHOLE FAQ list — there is no per-entry CRUD, and entry identity
+# on the wire is positional. Read-merge-write: re-query the live list, apply the
+# change, send the whole array back.
+mutation KBSetFAQs($botID: BotID!, $faqs: [FuelyKnowledgeBaseFAQInput!]!) {
+  fuelyConfigSetFAQs(botID: $botID, faqs: $faqs) {
+    id
+    fuelyConfig {
+      knowledgeBase {
+        faqs {
+          question
+          answer
+        }
+      }
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutations — goods catalog (products & services)
+# ============================================================
+# Product/service images: upload via REST first
+# (POST {base}/api/filestorage/upload/bot?fileType=Image&botID=…) and pass the
+# FileIDs in the input.
+# All goods mutations can fail with FuelyKnowledgeBaseLimitReached.
+
+mutation GoodsProductCreate($botID: BotID!, $product: GoodsProductInput!) {
+  goodsProductCreate(botID: $botID, product: $product) {
+    id
+    goodsCatalog {
+      __typename
+      ...GoodsProductInfo
+      ...GoodsServiceInfo
+    }
+    fuelyConfig {
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation GoodsProductUpdate($botID: BotID!, $itemID: GoodsItemID!, $product: GoodsProductInput!) {
+  goodsProductUpdate(botID: $botID, itemID: $itemID, product: $product) {
+    ...GoodsProductInfo
+  }
+}
+
+mutation GoodsProductDelete($botID: BotID!, $itemID: GoodsItemID!) {
+  goodsProductDelete(botID: $botID, itemID: $itemID) {
+    id
+    goodsCatalog {
+      __typename
+      ...GoodsProductInfo
+      ...GoodsServiceInfo
+    }
+    fuelyConfig {
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation GoodsServiceCreate($botID: BotID!, $service: GoodsServiceInput!) {
+  goodsServiceCreate(botID: $botID, service: $service) {
+    id
+    goodsCatalog {
+      __typename
+      ...GoodsProductInfo
+      ...GoodsServiceInfo
+    }
+    fuelyConfig {
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+mutation GoodsServiceUpdate($botID: BotID!, $itemID: GoodsItemID!, $service: GoodsServiceInput!) {
+  goodsServiceUpdate(botID: $botID, itemID: $itemID, service: $service) {
+    ...GoodsServiceInfo
+  }
+}
+
+mutation GoodsServiceDelete($botID: BotID!, $itemID: GoodsItemID!) {
+  goodsServiceDelete(botID: $botID, itemID: $itemID) {
+    id
+    goodsCatalog {
+      __typename
+      ...GoodsProductInfo
+      ...GoodsServiceInfo
+    }
+    fuelyConfig {
+      usage {
+        total
+        catalog
+      }
+    }
+  }
+}
+
+# ============================================================
+# Mutations — specialists
+# ============================================================
+# The Team source is a read-only mirror while the bookings module is installed
+# (it owns staff); these are what it falls back to when bookings is absent.
+
+mutation SpecialistCreate($botID: BotID!, $info: SpecialistInfoInput!) {
+  specialistCreate(botID: $botID, info: $info) {
+    id
+    specialists {
+      ...SpecialistInfo
+    }
+  }
+}
+
+mutation SpecialistUpdate($botID: BotID!, $specialistID: SpecialistID!, $info: SpecialistInfoInput!) {
+  specialistUpdate(botID: $botID, specialistID: $specialistID, info: $info) {
+    ...SpecialistInfo
+  }
+}
+
+mutation SpecialistDelete($botID: BotID!, $specialistID: SpecialistID!) {
+  specialistDelete(botID: $botID, specialistID: $specialistID) {
+    id
+    specialists {
+      ...SpecialistInfo
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "coworker",
+  "name": "Coworker (operator AI assistant)",
+  "description": "The operator's AI assistant as a page and as a dock beside every module: streamed markdown, tool runs as steps, a manual approval gate for account changes, and an assistant that reads the current screen and can navigate the app.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["livechat"],
+  "skill": { "installAs": "chatfuel-coworker" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/coworker"],
+      "entryComponent": "CoworkerApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Bot", "action": "View", "requiredFor": "creating conversations, chatting with the assistant, subscribing to updates" }
+  ]
+}

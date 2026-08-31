@@ -1,0 +1,25 @@
+{
+  "id": "livechat",
+  "name": "Live Chat Inbox",
+  "description": "Operator inbox: conversation list with live updates, message thread with per-platform rendering, composer, take-over and close-to-flow.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["contacts"],
+  "skill": { "installAs": "chatfuel-livechat" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/livechat"],
+      "entryComponent": "LivechatApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Inbox", "action": "View", "requiredFor": "reading the inbox" },
+    { "object": "Inbox", "action": "Edit", "requiredFor": "sending, mark-as-read and take-over" }
+  ]
+}

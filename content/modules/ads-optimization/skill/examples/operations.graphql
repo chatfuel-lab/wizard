@@ -1,0 +1,344 @@
+# Chatfuel Ads Optimization — validated operations.
+#
+# Conversion reporting for click-to-WhatsApp ads. Everything here works on ONE
+# automation scope: WhatsAppClickFromAds is the only scope that carries a
+# send-events-to-meta setting, and the only one whose custom automations carry a
+# list of ads.
+#
+# An "event set" below is a FuelyAutomation of that scope. The base one
+# (isBase: true) applies to every ad; a custom one applies to the ads it lists
+# and overrides the base for them. A custom set INHERITS each setting from a
+# parent until it is written explicitly — see `inheritsFrom` / `canInheritFrom`.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+# Enough of an automation to name it in an inheritance line.
+fragment AdsAutomationRef on FuelyAutomation {
+  __typename
+  id
+  isBase
+  name
+  enabled
+  scope
+}
+
+# The conversion an event reports: one of Meta's own names, or a name the bot
+# invented and Meta stores verbatim.
+fragment AdsEventName on FuelySettingSendEventsToMetaEventName {
+  __typename
+  ... on FuelySettingSendEventsToMetaStandardName {
+    standardName
+  }
+  ... on FuelySettingSendEventsToMetaCustomName {
+    customName
+  }
+}
+
+# A contact-attribute condition, with whatever the server found wrong with it.
+# A condition that fails validation is STORED rather than refused, so the errors
+# come back on the event and have to be read.
+fragment AdsAttributeCondition on FuelySettingSendEventsToMetaAttributeCondition {
+  attributeCondition {
+    attribute {
+      name
+      type
+      dataType
+    }
+    defaultStrategy {
+      operator
+      comparableValues
+    }
+    dateStrategy {
+      operator
+      comparableDate
+    }
+  }
+  attributeConditionErrors
+}
+
+# One reported conversion: what fires it, and whatever that needs.
+fragment AdsEvent on FuelySettingSendEventsToMetaEvent {
+  __typename
+  ... on FuelySettingSendEventsToMetaOnSwitchToHumanEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+    switchToHumanFrom
+  }
+  ... on FuelySettingSendEventsToMetaOnSalesStageEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+    salesStages
+  }
+  ... on FuelySettingSendEventsToMetaOnContactFirstMessageEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+  }
+  ... on FuelySettingSendEventsToMetaOnBookingEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+  }
+  ... on FuelySettingSendEventsToMetaOnCustomPromptEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+    conditionPrompt
+  }
+  ... on FuelySettingSendEventsToMetaOnContactMessageKeywordEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+    keywordsRule
+    keywords
+  }
+  ... on FuelySettingSendEventsToMetaOnContactAttributeEvent {
+    id
+    eventName {
+      ...AdsEventName
+    }
+    attributeConditions {
+      ...AdsAttributeCondition
+    }
+  }
+}
+
+# Only the two settings this surface owns are expanded. The others still arrive
+# in `settings` and are carried untouched; a write names one setting at a time.
+fragment AdsSettingParts on FuelySetting {
+  __typename
+  inheritsFrom {
+    ...AdsAutomationRef
+  }
+  canInheritFrom {
+    ...AdsAutomationRef
+  }
+  ... on FuelySettingListOfAds {
+    adIDs
+  }
+  ... on FuelySettingSendEventsToMeta {
+    events {
+      ...AdsEvent
+    }
+  }
+}
+
+fragment AdsEventSetParts on FuelyAutomation {
+  __typename
+  id
+  isBase
+  name
+  enabled
+  scope
+  updatedAt
+  settings {
+    ...AdsSettingParts
+  }
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# Every event set of the bot: the base one plus its custom ones, base first is
+# NOT guaranteed — order by `isBase` on the client.
+query AdsEventSets($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    fuelyAutomations(scope: WhatsAppClickFromAds) {
+      ...AdsEventSetParts
+    }
+  }
+}
+
+# One set. Answers FuelyAutomationNotFound when the id belongs to another bot.
+query AdsEventSetGet($botID: BotID!, $automationID: FuelyAutomationID!) {
+  bot(id: $botID) {
+    id
+    fuelyAutomation(id: $automationID) {
+      ...AdsEventSetParts
+    }
+  }
+}
+
+# The conversion names an event may be given: Meta's own, plus the ones already
+# used on this bot. Refetch after saving an event that invents a new name.
+query AdsEventNames($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    availableMetaConversionEventNames {
+      standardEvents
+      customEvents
+    }
+  }
+}
+
+# Whether conversions can be delivered at all. No WhatsApp scope, or
+# hasMetaConversionsAPIPermission false, and nothing configured here is sent.
+query AdsConnection($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      id
+      ... on WhatsAppPhoneContactScope {
+        phone {
+          id
+          displayPhoneNumber
+          accessLost
+          whatsAppBusinessAccount {
+            id
+            name
+            accessLost
+            hasMetaConversionsAPIPermission
+          }
+        }
+      }
+    }
+  }
+}
+
+# Custom contact attributes, for the on-contact-attribute trigger. Paged and
+# substring-filtered so a bot with thousands stays usable.
+query AdsAttributes($botID: BotID!, $inputSubstring: String, $first: Int, $after: BotAttributeCursor) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: En
+      platforms: [whatsapp]
+      attributeTypes: [custom, system]
+      filters: []
+      orderBy: { orderBy: AttributeName, direction: Asc }
+      inputSubstring: $inputSubstring
+      first: $first
+      after: $after
+    ) {
+      edges {
+        node {
+          botAttribute {
+            name
+            type
+            dataType
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# ============================================================
+# Subscription
+# ============================================================
+
+# One change can emit several updates: a write on a parent republishes every set
+# that inherits from it. Merge by id.
+subscription AdsEventSetUpdated($botID: BotID!) {
+  fuelyAutomationUpdated(botID: $botID) {
+    ...AdsEventSetParts
+  }
+}
+
+# ============================================================
+# Mutations
+# ============================================================
+
+# At most 30 custom sets per scope; beyond that, FuelyAutomationScopeLimitReached.
+# The name is required and at most 200 characters.
+mutation AdsEventSetCreate($botID: BotID!, $name: String!) {
+  fuelyAutomationCreate(botID: $botID, scope: WhatsAppClickFromAds, name: $name) {
+    ...AdsEventSetParts
+  }
+}
+
+# Only a custom set can be deleted; the base one answers
+# FuelyAutomationNotDeletable. The whole list comes back so the caller does not
+# have to guess what inheriting sets now look like.
+mutation AdsEventSetDelete($botID: BotID!, $automationID: FuelyAutomationID!) {
+  fuelyAutomationDelete(botID: $botID, id: $automationID) {
+    id
+    fuelyAutomations(scope: WhatsAppClickFromAds) {
+      ...AdsEventSetParts
+    }
+  }
+}
+
+mutation AdsEventSetRename($botID: BotID!, $automationID: FuelyAutomationID!, $name: String!) {
+  fuelyAutomationSetName(botID: $botID, id: $automationID, name: $name) {
+    id
+    name
+    updatedAt
+  }
+}
+
+mutation AdsEventSetSetEnabled($botID: BotID!, $automationID: FuelyAutomationID!, $enabled: Boolean!) {
+  fuelyAutomationSetEnabled(botID: $botID, id: $automationID, enabled: $enabled) {
+    id
+    enabled
+    updatedAt
+  }
+}
+
+# The list of ads a custom set answers. At most 50 ids of at most 60 characters:
+# FuelyListOfAdsTooManyEntries / FuelyAdIDTooLong. Blanks and duplicates are
+# dropped server-side. Ids are NOT checked against Meta.
+mutation AdsSetAds($botID: BotID!, $automationID: FuelyAutomationID!, $adIDs: [AdID!]!) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { listOfAds: { update: { adIDs: $adIDs } } }
+  ) {
+    ...AdsEventSetParts
+  }
+}
+
+mutation AdsInheritAds($botID: BotID!, $automationID: FuelyAutomationID!, $from: FuelyAutomationID!) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { listOfAds: { setInheritFrom: $from } }
+  ) {
+    ...AdsEventSetParts
+  }
+}
+
+# The whole ordered list, every time: order is stored, an empty list reports
+# nothing, and at most 20 events fit. Omit an event's id to add it. Saving here
+# while the setting still inherits takes a private copy and regenerates every id.
+mutation AdsSetEvents(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $events: [FuelySettingSendEventsToMetaEventInput!]!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { sendEventsToMeta: { update: { events: $events } } }
+  ) {
+    ...AdsEventSetParts
+  }
+}
+
+mutation AdsInheritEvents($botID: BotID!, $automationID: FuelyAutomationID!, $from: FuelyAutomationID!) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { sendEventsToMeta: { setInheritFrom: $from } }
+  ) {
+    ...AdsEventSetParts
+  }
+}

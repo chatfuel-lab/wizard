@@ -1,0 +1,30 @@
+labels: ['question']
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: What are you trying to do?
+      description: The goal, not only the error. The best answer is often a different route.
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Commands, config, and what happened. Redact anything token-shaped.
+  - type: input
+    id: version
+    attributes:
+      label: Wizard version
+      placeholder: 'npx @chatfuel/wizard doctor prints it'
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - The wizard (scaffolding, flags, doctor)
+        - The app it wrote
+        - Deploying
+        - A module
+        - The coding agent and its skills
+        - Somewhere else

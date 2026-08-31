@@ -1,0 +1,1755 @@
+# Chatfuel GraphQL — live chat operations (chatfuel-livechat skill).
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+
+# ============================================================
+# Shared fragments
+# ============================================================
+
+fragment FileInfo on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment SenderInfo on MessageSender {
+  __typename
+  id
+  name
+  profilePicture {
+    ...FileInfo
+  }
+}
+
+# Base fields shared by every concrete Message type.
+fragment MessageCommon on Message {
+  __typename
+  id
+  clientId
+  sentTime
+  updatedAt
+  sender {
+    ...SenderInfo
+  }
+  errors {
+    code
+    date
+    originalErrCode
+    originalErrMessage
+  }
+}
+
+# Per-platform message payloads. Field names are platform-prefixed on
+# purpose — delivery state is `whatsappStatus` on the WhatsApp types,
+# `status` on the widget types, `instagramStatus` / `facebookStatus` /
+# `tiktokStatus` on the other three — so never assume a field exists on
+# every Message implementer: read a field only under a check on the
+# concrete `__typename`. Every concrete type the schema can put in a thread
+# is selected here with everything a bubble needs; the Placeholder and
+# Unknown types have no payload fields at all.
+#
+# NOTE: there is no template NAME on the wire. `WhatsAppOutTemplateMessage`
+# carries the rendered header/body/footer/buttons and nothing that says
+# which template produced them.
+fragment WhatsAppMessageParts on Message {
+  ... on WhatsAppInTextMessage {
+    text
+  }
+  ... on WhatsAppInImageMessage {
+    caption
+    file {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppInVideoMessage {
+    caption
+    file {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppInAudioMessage {
+    file {
+      ...FileInfo
+    }
+    transcriptionStatus
+    transcribedText
+  }
+  ... on WhatsAppInDocumentMessage {
+    caption
+    fileName
+    file {
+      ...FileInfo
+    }
+  }
+  # The contact tapped something rather than writing.
+  ... on WhatsAppInContinueFlowButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInTemplateQuickReplyButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInListRowClickMessage {
+    rowTitle
+    rowDescription
+  }
+  # Every outbound WhatsApp type carries whatsappStatus; select it wherever
+  # the type is selected at all, or the bubble shows a time and no ticks.
+  ... on WhatsAppOutTextMessage {
+    text
+    whatsappStatus
+  }
+  ... on WhatsAppOutImageMessage {
+    whatsappStatus
+    caption
+    file {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppOutVideoMessage {
+    whatsappStatus
+    caption
+    file {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppOutAudioMessage {
+    whatsappStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppOutDocumentMessage {
+    whatsappStatus
+    caption
+    fileName
+    file {
+      ...FileInfo
+    }
+  }
+  # Message-side button types (WhatsApp*MessageButton, plain strings) are
+  # NOT the flow-builder button types (WhatsAppButton union, TemplateStr).
+  ... on WhatsAppOutTextAndButtonsMessage {
+    whatsappStatus
+    headerText
+    bodyText
+    footerText
+    whatsappButtons {
+      __typename
+      title
+      ... on WhatsAppOpenURLMessageButton {
+        url
+      }
+    }
+  }
+  ... on WhatsAppOutTextAndURLMessage {
+    whatsappStatus
+    headerText
+    bodyText
+    footerText
+    whatsappButtons {
+      __typename
+      title
+      ... on WhatsAppOpenURLMessageButton {
+        url
+      }
+    }
+  }
+  ... on WhatsAppOutListMessage {
+    whatsappStatus
+    bodyText
+    buttonTitle
+    listRows {
+      title
+      description
+    }
+  }
+  ... on WhatsAppOutTemplateMessage {
+    whatsappStatus
+    header {
+      __typename
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+      ... on WhatsAppOutTemplateMessageComponentImage {
+        file {
+          ...FileInfo
+        }
+      }
+      ... on WhatsAppOutTemplateMessageComponentVideo {
+        file {
+          ...FileInfo
+        }
+      }
+      ... on WhatsAppOutTemplateMessageComponentDocument {
+        file {
+          ...FileInfo
+        }
+        fileName
+      }
+    }
+    body {
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+    }
+    footer {
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+    }
+    waTemplateButtons {
+      __typename
+      ... on WhatsAppOutTemplateMessageURLButton {
+        text
+        url
+      }
+      ... on WhatsAppOutTemplateMessageQuickReplyButton {
+        text
+      }
+      ... on WhatsAppOutTemplateMessageCallPhoneButton {
+        text
+        phoneNumber
+      }
+      ... on WhatsAppOutTemplateMessageWhatsAppCallButton {
+        text
+      }
+      ... on WhatsAppOutTemplateMessageCopyCodeButton {
+        text
+        code
+      }
+    }
+  }
+}
+
+# No In/Out prefix on this platform: a widget message's direction is on
+# `sender.__typename` and nowhere else. `status` is the delivery field.
+fragment WebWidgetMessageParts on Message {
+  ... on WebWidgetTextMessage {
+    text
+    status
+  }
+  # `WebWidgetAttachmentType` has one member, `image`.
+  ... on WebWidgetAttachmentMessage {
+    status
+    attachment {
+      type
+      file {
+        ...FileInfo
+      }
+    }
+  }
+  ... on WebWidgetTextAndButtonsMessage {
+    status
+    text
+    buttons {
+      __typename
+      title
+      ... on WebWidgetOpenURLButton {
+        url
+      }
+      ... on WebWidgetCallPhoneButton {
+        phone
+      }
+    }
+  }
+  ... on WebWidgetContinueFlowButtonClickMessage {
+    status
+    button {
+      title
+    }
+  }
+  ... on WebWidgetOpenURLButtonClickMessage {
+    status
+    button {
+      title
+      url
+    }
+  }
+  ... on WebWidgetCallPhoneButtonClickMessage {
+    status
+    button {
+      title
+      phone
+    }
+  }
+}
+
+# `instagramStatus` on every Out type; InstagramMessageStatus is
+# Sending | Sent | Read | Failed (no Delivered). A comment arrives with the
+# media it was left on under `mediaContainer` — the flat `post` / `reel` /
+# The flat `ad` / `story` fields are not in this schema — read the media container.
+fragment InstagramMediaSource on InstagramMediaContainer {
+  id
+  media {
+    __typename
+    ... on InstagramPost {
+      isUnknown
+      caption
+      ownerUsername
+      url
+      thumbnailPreview {
+        ...FileInfo
+      }
+    }
+    ... on InstagramReel {
+      isUnknown
+      caption
+      ownerUsername
+      url
+      thumbnailPreview {
+        ...FileInfo
+      }
+    }
+    ... on InstagramAd {
+      isUnknown
+      caption
+      ownerUsername
+      url
+      thumbnailPreview {
+        ...FileInfo
+      }
+    }
+    ... on InstagramStory {
+      isUnknown
+      caption
+      ownerUsername
+      url
+      thumbnailPreview {
+        ...FileInfo
+      }
+    }
+  }
+}
+
+fragment InstagramMessageParts on Message {
+  ... on InstagramInTextMessage {
+    text
+  }
+  ... on InstagramInImageMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on InstagramInVideoMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on InstagramInAudioMessage {
+    file {
+      ...FileInfo
+    }
+    transcriptionStatus
+    transcribedText
+  }
+  ... on InstagramInFeedCommentMessage {
+    text
+    commentID
+    mediaContainer {
+      ...InstagramMediaSource
+    }
+  }
+  ... on InstagramInReelCommentMessage {
+    text
+    commentID
+    mediaContainer {
+      ...InstagramMediaSource
+    }
+  }
+  ... on InstagramInAdCommentMessage {
+    text
+    commentID
+    mediaContainer {
+      ...InstagramMediaSource
+    }
+  }
+  ... on InstagramInStoryReplyMessage {
+    text
+    mediaContainer {
+      ...InstagramMediaSource
+    }
+  }
+  ... on InstagramOutTextMessage {
+    instagramStatus
+    text
+  }
+  ... on InstagramOutImageMessage {
+    instagramStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on InstagramOutVideoMessage {
+    instagramStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on InstagramOutAudioMessage {
+    instagramStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on InstagramOutPublicCommentReplyMessage {
+    instagramStatus
+    text
+  }
+}
+
+# `facebookStatus` on every Out type; FacebookMessageStatus is
+# Sending | Sent | Read | Failed. `FacebookPost` has only an id, and a
+# `FacebookInFileMessage` has no fileName.
+fragment FacebookMessageParts on Message {
+  ... on FacebookInTextMessage {
+    text
+  }
+  ... on FacebookInImageMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookInVideoMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookInAudioMessage {
+    file {
+      ...FileInfo
+    }
+    transcriptionStatus
+    transcribedText
+  }
+  ... on FacebookInFileMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookInPostCommentMessage {
+    text
+    commentID
+  }
+  ... on FacebookOutTextMessage {
+    facebookStatus
+    text
+  }
+  ... on FacebookOutImageMessage {
+    facebookStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookOutVideoMessage {
+    facebookStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookOutAudioMessage {
+    facebookStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on FacebookOutPublicCommentReplyMessage {
+    facebookStatus
+    text
+  }
+}
+
+# `tiktokStatus` on every Out type; TikTokMessageStatus is
+# Sending | Sent | Read | Failed.
+fragment TikTokMessageParts on Message {
+  ... on TikTokInTextMessage {
+    text
+  }
+  ... on TikTokInImageMessage {
+    file {
+      ...FileInfo
+    }
+  }
+  ... on TikTokInTextPostCommentMessage {
+    text
+    commentID
+    post {
+      isUnknown
+      url
+    }
+  }
+  ... on TikTokOutTextMessage {
+    tiktokStatus
+    text
+  }
+  ... on TikTokOutImageMessage {
+    tiktokStatus
+    file {
+      ...FileInfo
+    }
+  }
+  ... on TikTokOutPublicCommentReplyMessage {
+    tiktokStatus
+    text
+  }
+}
+
+# The system lines can name the operator, the auto-close delay and whether
+# the AI decided the hand-over. `delay` is a string the server has already
+# formatted, and it arrives in more than one shape ("1h23m", "24h:00m:00s"),
+# so read it apart and print it in words rather than showing it as it came.
+fragment SystemMessageParts on Message {
+  ... on SystemTypingMessage {
+    until
+  }
+  ... on SystemConversationSummaryMessage {
+    summary
+  }
+  ... on SystemLivechatOpenedManuallyMessage {
+    byUser {
+      id
+      name
+      isUnknown
+    }
+  }
+  ... on SystemLivechatClosedByAutoClosingMessage {
+    delay
+  }
+  ... on SystemLivechatOpenedByComponentMessage {
+    originallyDecidedByAI
+  }
+}
+
+# Slim projection for the chat-list preview line: the one string that
+# summarises the message, plus the Out status field of every platform so
+# the row can show a delivery tick. `sender.__typename` is the direction —
+# widget typenames carry `status` in both directions and no In/Out prefix,
+# so without it a contact's own message would show a tick.
+fragment LastMessagePreview on Message {
+  __typename
+  id
+  sentTime
+  sender {
+    __typename
+  }
+  ... on WhatsAppInTextMessage {
+    text
+  }
+  ... on WhatsAppInImageMessage {
+    caption
+  }
+  ... on WhatsAppInVideoMessage {
+    caption
+  }
+  ... on WhatsAppInDocumentMessage {
+    caption
+  }
+  ... on WhatsAppInContinueFlowButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInTemplateQuickReplyButtonClickMessage {
+    buttonTitle
+  }
+  ... on WhatsAppInListRowClickMessage {
+    rowTitle
+  }
+  ... on WhatsAppOutTextMessage {
+    text
+    whatsappStatus
+  }
+  ... on WhatsAppOutImageMessage {
+    caption
+    whatsappStatus
+  }
+  ... on WhatsAppOutVideoMessage {
+    caption
+    whatsappStatus
+  }
+  ... on WhatsAppOutAudioMessage {
+    whatsappStatus
+  }
+  ... on WhatsAppOutDocumentMessage {
+    caption
+    whatsappStatus
+  }
+  ... on WhatsAppOutTextAndButtonsMessage {
+    bodyText
+    whatsappStatus
+  }
+  ... on WhatsAppOutTextAndURLMessage {
+    bodyText
+    whatsappStatus
+  }
+  ... on WhatsAppOutListMessage {
+    bodyText
+    whatsappStatus
+  }
+  ... on WhatsAppOutTemplateMessage {
+    whatsappStatus
+    body {
+      ... on WhatsAppOutTemplateMessageComponentText {
+        text
+      }
+    }
+  }
+  ... on WebWidgetTextMessage {
+    text
+    status
+  }
+  ... on WebWidgetAttachmentMessage {
+    status
+  }
+  ... on WebWidgetTextAndButtonsMessage {
+    text
+    status
+  }
+  ... on WebWidgetContinueFlowButtonClickMessage {
+    status
+    button {
+      title
+    }
+  }
+  ... on WebWidgetOpenURLButtonClickMessage {
+    status
+    button {
+      title
+    }
+  }
+  ... on WebWidgetCallPhoneButtonClickMessage {
+    status
+    button {
+      title
+    }
+  }
+  ... on InstagramInTextMessage {
+    text
+  }
+  ... on InstagramInFeedCommentMessage {
+    text
+  }
+  ... on InstagramInReelCommentMessage {
+    text
+  }
+  ... on InstagramInAdCommentMessage {
+    text
+  }
+  ... on InstagramInStoryReplyMessage {
+    text
+  }
+  ... on InstagramOutTextMessage {
+    text
+    instagramStatus
+  }
+  ... on InstagramOutImageMessage {
+    instagramStatus
+  }
+  ... on InstagramOutVideoMessage {
+    instagramStatus
+  }
+  ... on InstagramOutAudioMessage {
+    instagramStatus
+  }
+  ... on InstagramOutPublicCommentReplyMessage {
+    text
+    instagramStatus
+  }
+  ... on FacebookInTextMessage {
+    text
+  }
+  ... on FacebookInPostCommentMessage {
+    text
+  }
+  ... on FacebookOutTextMessage {
+    text
+    facebookStatus
+  }
+  ... on FacebookOutImageMessage {
+    facebookStatus
+  }
+  ... on FacebookOutVideoMessage {
+    facebookStatus
+  }
+  ... on FacebookOutAudioMessage {
+    facebookStatus
+  }
+  ... on FacebookOutPublicCommentReplyMessage {
+    text
+    facebookStatus
+  }
+  ... on TikTokInTextMessage {
+    text
+  }
+  ... on TikTokInTextPostCommentMessage {
+    text
+  }
+  ... on TikTokOutTextMessage {
+    text
+    tiktokStatus
+  }
+  ... on TikTokOutImageMessage {
+    tiktokStatus
+  }
+  ... on TikTokOutPublicCommentReplyMessage {
+    text
+    tiktokStatus
+  }
+}
+
+fragment AssigneeInfo on ContactAssignee {
+  __typename
+  ... on PublicUserAccount {
+    id
+    name
+    isUnknown
+    profilePicture {
+      ...FileInfo
+    }
+  }
+  ... on FuelyAIAssignee {
+    fakeField
+  }
+}
+
+# __typename on Contact and Conversation is REQUIRED — without it fields come back missing.
+fragment ChatListContact on Contact {
+  __typename
+  id
+  name
+  profilePictureUrl
+  updatedAt
+  unreadMessagesCount
+  unhandledSwitchToHuman
+  lastConversationMessageTime
+  salesStageV2
+  assignee {
+    ...AssigneeInfo
+  }
+  conversation {
+    __typename
+    id
+    platform
+    status
+    read
+    updatedAt
+    lastMessage {
+      ...LastMessagePreview
+    }
+  }
+  ... on WhatsappContact {
+    phone
+  }
+  ... on InstagramContact {
+    availableForDMs
+  }
+  ... on TikTokContact {
+    availableForDMs
+  }
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# Left pane: paginated chat list. first is REQUIRED here.
+# Pass assigneeFilter: {type: Any}, unreadOnly: false, salesStageV2Filter: []
+# for an unfiltered list.
+query ChatList(
+  $botID: BotID!
+  $first: Int!
+  $after: ContactSearchCursor
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $salesStageV2Filter: [SalesStageV2!]!
+  $textInputFilter: String
+) {
+  bot(id: $botID) {
+    id
+    contactChatsConnection(
+      first: $first
+      after: $after
+      assigneeFilter: $assigneeFilter
+      unreadOnly: $unreadOnly
+      salesStageV2Filter: $salesStageV2Filter
+      textInputFilter: $textInputFilter
+    ) {
+      edges {
+        cursor
+        node {
+          ...ChatListContact
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+query ChatListCount($botID: BotID!, $filter: ContactChatsCountFilter!) {
+  bot(id: $botID) {
+    id
+    contactChatsCountV2(filter: $filter)
+  }
+}
+
+# Message history. conversationID IS the contact id (server-side alias).
+# No cursor or `after` => newest-first (descending); paginate into history
+# with after: pageInfo.endCursor.
+query ConversationMessages(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $first: Int
+  $after: MessagesCursor
+) {
+  bot(id: $botID) {
+    id
+    conversation(conversationID: $conversationID) {
+      __typename
+      id
+      platform
+      status
+      read
+      updatedAt
+      contact {
+        __typename
+        id
+        name
+      }
+      messages(first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            ...MessageCommon
+            ...WhatsAppMessageParts
+            ...WebWidgetMessageParts
+            ...InstagramMessageParts
+            ...FacebookMessageParts
+            ...TikTokMessageParts
+            ...SystemMessageParts
+          }
+        }
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+query UnseenOpenDialogsCount($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    unseenOpenDialogsCount
+  }
+}
+
+# ============================================================
+# Subscriptions (WebSocket, graphql-transport-ws)
+# ============================================================
+
+subscription MessageAdded($botID: BotID!, $conversationID: ConversationID!) {
+  messageAdded(botID: $botID, conversationID: $conversationID) {
+    ...MessageCommon
+    ...WhatsAppMessageParts
+    ...WebWidgetMessageParts
+    ...InstagramMessageParts
+    ...FacebookMessageParts
+    ...TikTokMessageParts
+    ...SystemMessageParts
+  }
+}
+
+subscription MessageUpdated($botID: BotID!, $conversationID: ConversationID!) {
+  messageUpdated(botID: $botID, conversationID: $conversationID) {
+    ...MessageCommon
+    ...WhatsAppMessageParts
+    ...WebWidgetMessageParts
+    ...InstagramMessageParts
+    ...FacebookMessageParts
+    ...TikTokMessageParts
+    ...SystemMessageParts
+  }
+}
+
+# Chat-list live updates. Handle BOTH union branches: the batch of
+# Add/Update/Remove edge actions, and the throttle signal
+# ContactListUpdateStopped (refetch at willResumeAt).
+subscription ChatListUpdates(
+  $botID: BotID!
+  $assigneeFilter: ContactAssigneeFilter!
+  $unreadOnly: Boolean!
+  $salesStageV2Filter: [SalesStageV2!]!
+  $textInputFilter: String
+) {
+  contactsChatUpdates(
+    botID: $botID
+    assigneeFilter: $assigneeFilter
+    unreadOnly: $unreadOnly
+    salesStageV2Filter: $salesStageV2Filter
+    textInputFilter: $textInputFilter
+  ) {
+    __typename
+    ... on ContactListUpdateStopped {
+      willResumeAt
+    }
+    ... on ContactsChatUpdatesBatch {
+      updates {
+        action
+        edge {
+          cursor
+          node {
+            ...ChatListContact
+          }
+        }
+      }
+    }
+  }
+}
+
+# Pointed subscription for the currently open contact only.
+# Do NOT open many of these at once: each one is a live fan-out the server pays
+# for, and the list subscription above already covers every other contact.
+subscription OpenContactUpdated($botID: BotID!, $contactID: ContactID!) {
+  contactUpdated(botID: $botID, contactID: $contactID) {
+    ...ChatListContact
+  }
+}
+
+subscription UnseenOpenDialogsCountChanged($botID: BotID!) {
+  unseenOpenDialogsCountChanged(botID: $botID)
+}
+
+# ============================================================
+# Mutations — sending (branch on Conversation.platform)
+# ============================================================
+# Every *SendInput takes an optional clientId — generate a fresh UUID per
+# message; it must be globally unique across all clients of the account.
+
+mutation SendWidgetText(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WidgetTextMessageSendInput
+) {
+  widgetTextMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...WebWidgetMessageParts
+  }
+}
+
+mutation SendWidgetAttachment(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WidgetAttachmentMessageSendInput
+) {
+  widgetAttachmentMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...WebWidgetMessageParts
+  }
+}
+
+mutation SendWhatsAppText(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WhatsAppTextMessageSendInput
+) {
+  whatsAppTextMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...WhatsAppMessageParts
+  }
+}
+
+# Note the lowercase "whatsapp" here — mutation casing is inconsistent in the schema.
+mutation SendWhatsAppAttachment(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: WhatsAppAttachmentMessageSendInput!
+) {
+  whatsappAttachmentMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...WhatsAppMessageParts
+  }
+}
+
+mutation SendWhatsAppTemplate(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $template: WhatsAppTemplateSendInput!
+) {
+  whatsAppTemplateSend(botID: $botID, conversationID: $conversationID, template: $template) {
+    ...MessageCommon
+    ...WhatsAppMessageParts
+  }
+}
+
+mutation SendInstagramText(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: InstagramTextMessageSendInput!
+) {
+  instagramTextMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...InstagramMessageParts
+  }
+}
+
+mutation SendInstagramAttachment(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: InstagramAttachmentMessageSendInput!
+) {
+  instagramAttachmentMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...InstagramMessageParts
+  }
+}
+
+mutation SendFacebookText(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: FacebookTextMessageSendInput!
+) {
+  facebookTextMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...FacebookMessageParts
+  }
+}
+
+mutation SendFacebookAttachment(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: FacebookAttachmentMessageSendInput!
+) {
+  facebookAttachmentMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...FacebookMessageParts
+  }
+}
+
+mutation SendTikTokText(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: TikTokTextMessageSendInput!
+) {
+  tiktokTextMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...TikTokMessageParts
+  }
+}
+
+mutation SendTikTokAttachment(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $message: TikTokAttachmentMessageSendInput!
+) {
+  tiktokAttachmentMessageSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...MessageCommon
+    ...TikTokMessageParts
+  }
+}
+
+# ============================================================
+# Mutations — conversation lifecycle
+# ============================================================
+
+# Mark messages read up to and including `before` (use the newest cursor /
+# message id from the first page).
+mutation MarkConversationRead(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $before: MessageID!
+) {
+  conversationReadMessages(botID: $botID, conversationID: $conversationID, before: $before) {
+    __typename
+    id
+    read
+    updatedAt
+  }
+}
+
+# Operator takes the conversation over from automation (status -> open).
+mutation TakeOverConversation($botID: BotID!, $conversationID: ConversationID!) {
+  conversationStart(botID: $botID, conversationID: $conversationID) {
+    __typename
+    id
+    status
+    updatedAt
+  }
+}
+
+# Close the live chat and hand the contact back to a flow.
+mutation CloseConversationToFlow(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $flowID: FlowID!
+) {
+  conversationFinishSendToFlow(botID: $botID, conversationID: $conversationID, flowID: $flowID) {
+    __typename
+    id
+    status
+    updatedAt
+  }
+}
+
+# "Close as won / lost" is not a conversation state at all — it is the
+# CONTACT's sales stage, the same field the deals board moves cards by. The
+# conversation stays whatever it was; what changes is what this person is to
+# the business. `id` here is a ContactID (Conversation.contact.id), never the
+# conversation's. Same body as the deals module's DealSetStage; a different
+# name because operation names are global.
+mutation InboxSetSalesStage($contactID: ContactID!, $stage: SalesStageV2!) {
+  contactSetSalesStage(id: $contactID, salesStageV2: $stage) {
+    __typename
+    id
+    salesStageV2
+    lastSalesStageUpdateTime
+    updatedAt
+  }
+}
+
+mutation CreateConversation($contactID: ContactID!) {
+  conversationCreate(contactID: $contactID) {
+    __typename
+    id
+    status
+    updatedAt
+  }
+}
+
+# ============================================================
+# Contact panel — fragments
+# ============================================================
+# Own copies under an Inbox* prefix. Operation names are globally unique
+# across all module documents, so this module cannot reuse contacts'
+# ContactGet / ContactSetNote / ContactSetAssignee even though the underlying
+# fields are the same — same precedent as deals (DealGet, DealSetNote,
+# DealAssign). FileInfo and AssigneeInfo above are already byte-identical to
+# the contacts copies, which IS allowed, so they are spread here rather than
+# duplicated under a new name.
+
+fragment InboxBotAttribute on BotAttribute {
+  name
+  type
+  dataType
+  aliases {
+    locale
+    alias
+  }
+}
+
+# One value object, five branches. For a CUSTOM attribute the server answers
+# the String branch (see the deals module). The other branches are selected
+# anyway so system attributes still read correctly. `id` comes off the
+# interface, so it does not need repeating per branch.
+fragment InboxAttributeValue on BotAttributeValue {
+  __typename
+  id
+  ... on BotAttributeValueString {
+    stringValue
+  }
+  ... on BotAttributeValueLong {
+    longValue
+  }
+  ... on BotAttributeValueDouble {
+    doubleValue
+  }
+  ... on BotAttributeValueBoolean {
+    booleanValue
+  }
+  ... on BotAttributeValueDatetime {
+    datetimeValue
+  }
+}
+
+fragment InboxContactAttribute on ContactAttribute {
+  id
+  attr {
+    ...InboxBotAttribute
+  }
+  value {
+    ...InboxAttributeValue
+  }
+}
+
+# The panel's contact card. __typename on Contact and Conversation is REQUIRED.
+#
+# `attributes` is selected with NO names argument = every attribute the contact
+# carries, which is what the panel renders. Deals asks for a configured subset
+# and therefore has to thread a $fieldNames variable through every operation
+# that spreads its fragment; this one deliberately does not.
+#
+# The identity fields are per-platform and there is no common "handle" on the
+# Contact interface: `phone` exists only on WhatsappContact, `username` and
+# `availableForDMs` only on Instagram/TikTok, and UnavailableContact/
+# WidgetContact/FacebookContact have neither. The header must branch on
+# __typename — `scope` names the inbox side of the conversation (which WA
+# number, which IG account), not the contact.
+fragment InboxContactDetail on Contact {
+  __typename
+  id
+  name
+  profilePictureUrl
+  updatedAt
+  note
+  salesStageV2
+  lastSalesStageUpdateTime
+  lastConversationMessageTime
+  unreadMessagesCount
+  unhandledSwitchToHuman
+  assignee {
+    ...AssigneeInfo
+  }
+  attributes {
+    ...InboxContactAttribute
+  }
+  conversation {
+    __typename
+    id
+    platform
+    status
+    read
+    updatedAt
+  }
+  scope {
+    __typename
+    id
+    ... on WhatsAppPhoneContactScope {
+      phone {
+        id
+        displayPhoneNumber
+        verifiedName
+      }
+    }
+    ... on InstagramAccountContactScope {
+      instagramAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on TikTokAccountContactScope {
+      tiktokAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on FacebookContactScope {
+      facebookPage {
+        id
+        name
+      }
+    }
+    ... on WebWidgetContactScope {
+      webWidget {
+        id
+        name
+      }
+    }
+  }
+  ... on WhatsappContact {
+    phone
+  }
+  ... on InstagramContact {
+    username
+    availableForDMs
+  }
+  ... on TikTokContact {
+    username
+    availableForDMs
+  }
+}
+
+# Flow is an interface; both flowsWithoutGroup and flowGroups[].flows return
+# RegularFlow, so a fragment on the interface covers both buckets. `platform`
+# is the load-bearing field: the picker must not offer an Instagram flow for a
+# WhatsApp conversation.
+fragment InboxFlowListItem on Flow {
+  __typename
+  id
+  name
+  platform
+}
+
+# ============================================================
+# Contact panel — queries
+# ============================================================
+
+# `bot.contact` is Contact! — a bad id is a GraphQL error, never a null row.
+query InboxContactGet($botID: BotID!, $contactID: ContactID!) {
+  bot(id: $botID) {
+    id
+    contact(id: $contactID) {
+      ...InboxContactDetail
+    }
+  }
+}
+
+# The catalog behind the panel's attribute picker. Every argument except
+# inputSubstring/first/after is REQUIRED by the schema — there is no
+# "just give me the attributes" call. Fire it with attributeTypes [custom] for
+# the user-defined fields and [system] for the built-ins the panel shows
+# read-only. `defaultValue` here is the node's bot-wide default (no botID arg,
+# unlike BotAttribute.defaultValue) — a contact with no value of its own reads
+# back this one.
+query InboxAttributesCatalog(
+  $botID: BotID!
+  $locale: DashboardLocale!
+  $platforms: [Platform!]!
+  $attributeTypes: [AttributeType!]!
+  $filters: [BotAttributeFilter!]!
+  $orderBy: BotAttributeOrderByInput!
+  $inputSubstring: String
+  $first: Int
+  $after: BotAttributeCursor
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: $locale
+      platforms: $platforms
+      attributeTypes: $attributeTypes
+      filters: $filters
+      orderBy: $orderBy
+      inputSubstring: $inputSubstring
+      first: $first
+      after: $after
+    ) {
+      edges {
+        cursor
+        node {
+          botAttribute {
+            ...InboxBotAttribute
+          }
+          usersCount
+          defaultValue
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The assignee picker's roster. assigneeID for InboxSetAssignee is
+# member.user.id — a UserAccountID — NOT member.id, which is a
+# BotTeamMemberID. Both hang off the same object and both are opaque strings,
+# so passing the wrong one fails at runtime, not at compile time.
+query InboxTeam($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    members {
+      id
+      role {
+        roleTypeV2
+      }
+      user {
+        id
+        name
+        isUnknown
+        profilePicture {
+          ...FileInfo
+        }
+      }
+    }
+  }
+}
+
+# The close-to-flow picker: two flat buckets, no pagination.
+# defaultReplyFlows is deliberately not offered — a default-reply flow is the
+# fallback the bot already runs, so handing a conversation to it is a no-op
+# from the operator's point of view.
+query InboxFlowsList($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    flowGroups {
+      id
+      name
+      flows {
+        ...InboxFlowListItem
+      }
+    }
+    flowsWithoutGroup {
+      ...InboxFlowListItem
+    }
+  }
+}
+
+# ============================================================
+# Mutations — contact panel
+# ============================================================
+
+# note is nullable: pass null to clear it. There is no separate delete.
+mutation InboxSetNote($contactID: ContactID!, $note: String) {
+  contactSetNote(id: $contactID, note: $note) {
+    __typename
+    id
+    note
+    updatedAt
+  }
+}
+
+# attrValue is ALWAYS a String, whatever the attribute's dataType: pass a
+# millisecond timestamp for datetime ("1720456863000"), "true"/"false" for
+# boolean, a bare number for long/double. Writing a name that does not exist
+# yet creates the attribute on the contact — that is the only way to add one.
+# Both of these return the whole Contact, so the panel re-renders from the
+# response instead of patching its own copy.
+mutation InboxAttributeUpdate(
+  $contactID: ContactID!
+  $attrName: AttributeName!
+  $attrValue: String!
+) {
+  contactAttributeUpdate(id: $contactID, attrName: $attrName, attrValue: $attrValue) {
+    ...InboxContactDetail
+  }
+}
+
+mutation InboxAttributeDelete($contactID: ContactID!, $attrName: AttributeName!) {
+  contactAttributeDelete(id: $contactID, attrName: $attrName) {
+    ...InboxContactDetail
+  }
+}
+
+# The three assignee states: a human, Fuely AI, nobody. Each returns the
+# assignee union, so the panel reads the new state off the response.
+mutation InboxSetAssignee($contactID: ContactID!, $assigneeID: UserAccountID!) {
+  contactSetAssignee(id: $contactID, assigneeID: $assigneeID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+mutation InboxSetAIAssignee($contactID: ContactID!) {
+  contactSetFuelyAIAssignee(id: $contactID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+mutation InboxRemoveAssignee($contactID: ContactID!) {
+  contactRemoveAssignee(id: $contactID) {
+    __typename
+    id
+    assignee {
+      ...AssigneeInfo
+    }
+    updatedAt
+  }
+}
+
+# ============================================================
+# WhatsApp templates — the only way to write outside the 24-hour window
+# ============================================================
+#
+# A template message is sent by FilledWhatsAppTemplateID, and nothing else in
+# this file produces one: the chain is list → create a TEMPORARY filled copy →
+# set each parameter → send. "Temporary" is the schema's own word — the filled
+# template is not persisted anywhere, which is exactly right for a one-off
+# message from an inbox.
+#
+# `errors` on FilledWhatsAppTemplate IS the send gate. A non-empty array means
+# the template cannot be sent, and each error names the component (and the
+# parameter, or the button) it is about, so the form shows the server's verdict
+# rather than checking completeness itself.
+#
+# Own fragments rather than flow-builder's WATplText/TStr: those chain into
+# AttrName, and the inbox has no use for attribute references in a template it
+# is filling with plain strings. The value of a filled part is still a
+# TemplateStr — its text parts are what the preview substitutes.
+
+fragment InboxTplStr on TemplateStr {
+  parts {
+    __typename
+    ... on TemplateStrText {
+      text
+    }
+    ... on TemplateStrAttribute {
+      attribute {
+        name
+      }
+    }
+  }
+}
+
+fragment InboxTplText on WhatsAppTemplateComponentText {
+  text {
+    __typename
+    ... on WhatsAppTemplateComponentTextPartText {
+      text
+    }
+    ... on WhatsAppTemplateComponentTextPartParam {
+      name
+      value {
+        ...InboxTplStr
+      }
+    }
+  }
+}
+
+fragment InboxTplHeader on WhatsAppTemplateHeader {
+  __typename
+  ... on WhatsAppTemplateComponentText {
+    ...InboxTplText
+  }
+  ... on WhatsAppTemplateComponentImage {
+    image {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppTemplateComponentVideo {
+    video {
+      ...FileInfo
+    }
+  }
+  ... on WhatsAppTemplateComponentDocument {
+    document {
+      ...FileInfo
+    }
+    fileName
+  }
+}
+
+fragment InboxTplButton on WhatsAppTemplateButton {
+  __typename
+  ... on WhatsAppTemplateURLButton {
+    id
+    text
+    url {
+      __typename
+      ... on WhatsAppTemplateComponentTextPartText {
+        text
+      }
+      ... on WhatsAppTemplateComponentTextPartParam {
+        name
+        value {
+          ...InboxTplStr
+        }
+      }
+    }
+  }
+  ... on WhatsAppTemplateQuickReplyButton {
+    id
+    text
+  }
+  ... on WhatsAppTemplateCallPhoneButton {
+    text
+    phoneNumber
+  }
+  ... on WhatsAppTemplateWhatsAppCallButton {
+    text
+  }
+  ... on WhatsAppTemplateCopyCodeButton {
+    id
+    text
+    code {
+      ...InboxTplStr
+    }
+  }
+}
+
+# The catalog row AND the preview: header/body/footer/buttons come along so
+# the picker can show what a template says before anyone commits to filling
+# it. `IsSupportedInLivechat` is the filter — a template Meta approved for
+# marketing broadcasts is not necessarily one this channel can send.
+fragment InboxWhatsAppTemplate on WhatsAppTemplate {
+  id
+  name
+  status
+  language
+  category
+  IsSupportedInLivechat
+  header {
+    ...InboxTplHeader
+  }
+  body {
+    ... on WhatsAppTemplateComponentText {
+      ...InboxTplText
+    }
+  }
+  footer {
+    ... on WhatsAppTemplateComponentText {
+      ...InboxTplText
+    }
+  }
+  buttons {
+    ...InboxTplButton
+  }
+}
+
+# The filled copy. `errors` gates the send; the three concrete error types
+# say WHERE — a text param by name, a button by id, or the whole component.
+fragment InboxFilledTemplate on FilledWhatsAppTemplate {
+  id
+  template {
+    id
+    name
+    language
+  }
+  header {
+    ...InboxTplHeader
+  }
+  body {
+    ... on WhatsAppTemplateComponentText {
+      ...InboxTplText
+    }
+  }
+  footer {
+    ... on WhatsAppTemplateComponentText {
+      ...InboxTplText
+    }
+  }
+  buttons {
+    ...InboxTplButton
+  }
+  errors {
+    __typename
+    code
+    componentType
+    ... on FilledWhatsAppTemplateTextParamError {
+      paramName
+    }
+    ... on FilledWhatsAppTemplateButtonError {
+      paramName
+      buttonID
+    }
+  }
+}
+
+query InboxWhatsAppTemplates($botID: BotID!, $first: Int, $after: WhatsAppTemplateCursor) {
+  bot(id: $botID) {
+    id
+    whatsAppTemplates(first: $first, after: $after) {
+      edges {
+        node {
+          ...InboxWhatsAppTemplate
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Re-read after a setter, or to resume a form. Every setter below also returns
+# the whole filled template, so this is the recovery path rather than the
+# common one.
+query InboxFilledTemplate($botID: BotID!, $id: FilledWhatsAppTemplateID!) {
+  bot(id: $botID) {
+    id
+    filledWhatsAppTemplate(id: $id) {
+      ...InboxFilledTemplate
+    }
+  }
+}
+
+mutation InboxFilledTemplateCreate($botID: BotID!, $templateID: WhatsAppTemplateID!) {
+  filledWhatsAppTemplateCreateTemporary(botID: $botID, templateID: $templateID) {
+    ...InboxFilledTemplate
+  }
+}
+
+mutation InboxFilledTemplateSetHeaderText(
+  $templateID: FilledWhatsAppTemplateID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  filledWhatsAppTemplateSetHeaderTextParamValue(templateID: $templateID, name: $name, value: $value) {
+    ...InboxFilledTemplate
+  }
+}
+
+mutation InboxFilledTemplateSetBodyText(
+  $templateID: FilledWhatsAppTemplateID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  filledWhatsAppTemplateSetBodyTextParamValue(templateID: $templateID, name: $name, value: $value) {
+    ...InboxFilledTemplate
+  }
+}
+
+mutation InboxFilledTemplateSetFooterText(
+  $templateID: FilledWhatsAppTemplateID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  filledWhatsAppTemplateSetFooterTextParamValue(templateID: $templateID, name: $name, value: $value) {
+    ...InboxFilledTemplate
+  }
+}
+
+# Errors: FileContentTypeNotSupported, FileTooBig
+mutation InboxFilledTemplateSetHeaderImage($templateID: FilledWhatsAppTemplateID!, $fileID: FileID!) {
+  filledWhatsAppTemplateSetHeaderImageFile(templateID: $templateID, fileID: $fileID) {
+    ...InboxFilledTemplate
+  }
+}
+
+# Errors: FileContentTypeNotSupported, FileTooBig
+mutation InboxFilledTemplateSetHeaderVideo($templateID: FilledWhatsAppTemplateID!, $fileID: FileID!) {
+  filledWhatsAppTemplateSetHeaderVideoFile(templateID: $templateID, fileID: $fileID) {
+    ...InboxFilledTemplate
+  }
+}
+
+# Errors: FileContentTypeNotSupported, FileTooBig, FileNameTooLong, FileNameFormatNotSupported
+mutation InboxFilledTemplateSetHeaderDocument(
+  $templateID: FilledWhatsAppTemplateID!
+  $fileID: FileID!
+  $fileName: String!
+) {
+  filledWhatsAppTemplateSetHeaderDocumentFile(templateID: $templateID, fileID: $fileID, fileName: $fileName) {
+    ...InboxFilledTemplate
+  }
+}
+
+mutation InboxFilledTemplateSetURLButton(
+  $templateID: FilledWhatsAppTemplateID!
+  $buttonID: ComponentHandleID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  filledWhatsAppTemplateSetURLButtonParamValue(
+    templateID: $templateID
+    buttonID: $buttonID
+    name: $name
+    value: $value
+  ) {
+    ...InboxFilledTemplate
+  }
+}
+
+# Errors: CopyCodeButtonCodeValueTooLong
+mutation InboxFilledTemplateSetCopyCode(
+  $templateID: FilledWhatsAppTemplateID!
+  $buttonID: ComponentHandleID!
+  $codeValue: String!
+) {
+  filledWhatsAppTemplateSetCopyCodeButtonCodeValue(
+    templateID: $templateID
+    buttonID: $buttonID
+    codeValue: $codeValue
+  ) {
+    ...InboxFilledTemplate
+  }
+}

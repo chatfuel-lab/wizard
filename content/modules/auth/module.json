@@ -1,0 +1,54 @@
+{
+  "id": "auth",
+  "name": "Auth & Team",
+  "description": "Sign-in for the people who use this app: Supabase Auth (email + password) on your own Supabase project, one tenant per deployed bot, owner/admin/member roles, invite links, a Team page \u2014 and the proxy lets only signed-in members reach the Chatfuel token. Opt-in: needs a Supabase project (the wizard can create one from an access token).",
+  "status": "ready",
+  "hidden": true,
+  "selection": "opt-in",
+  "requires": [],
+  "recommends": [],
+  "skill": {
+    "installAs": "chatfuel-auth"
+  },
+  "app": {
+    "env": [
+      {
+        "name": "VITE_SUPABASE_URL",
+        "resolve": "authSetup"
+      },
+      {
+        "name": "VITE_SUPABASE_ANON_KEY",
+        "resolve": "authSetup"
+      },
+      {
+        "name": "CHATFUEL_WORKSPACE_ID",
+        "resolve": "workspacePick"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "secret": true,
+        "resolve": "authSetup"
+      },
+      {
+        "name": "AUTH_RECOVERY_LINK_LOG",
+        "optional": true,
+        "resolve": "authSetup"
+      },
+      {
+        "name": "SUPABASE_PROJECT_REF",
+        "optional": true,
+        "resolve": "authSetup"
+      }
+    ],
+    "embed": {
+      "roots": [
+        "src/modules/auth"
+      ],
+      "entryComponent": "AuthGate",
+      "npmDependencies": {
+        "@supabase/supabase-js": "^2.49.0"
+      },
+      "playbook": "playbooks/embed.md"
+    }
+  }
+}

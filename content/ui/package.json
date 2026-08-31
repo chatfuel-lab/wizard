@@ -1,0 +1,28 @@
+{
+  "name": "@chatfuel/ui",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Source-only design system vendored into scaffolded apps as src/vendor/ui. Rules that keep vendoring working: every internal import is relative; only react/react-dom may be imported; components use only the semantic Tailwind utilities defined by styles/tokens.css. Apps never depend on this package via node_modules — they reach it through the ~ui alias in both workspace and vendored modes.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jsdom": "^30.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  }
+}

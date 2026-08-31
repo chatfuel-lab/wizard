@@ -1,0 +1,31 @@
+# The labels in .github/labels.yml are the ones this repository has. Editing a
+# label in the web UI is undone the next time this runs, on purpose: the set is
+# reviewable in a diff or it drifts.
+name: Labels
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/labels.yml', '.github/workflows/labels.yml']
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  sync:
+    name: Sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: crazy-max/ghaction-github-labeler@548a7c3603594ec17c819e1239f281a3b801ab4d # v6.0.0
+        with:
+          yaml-file: .github/labels.yml
+          skip-delete: false
+          dry-run: false

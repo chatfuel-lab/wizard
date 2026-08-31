@@ -1,0 +1,50 @@
+{
+  "id": "automations",
+  "name": "AI Automations",
+  "description": "AI Automations: the rail of 18 per-scope sources beside the selected source's page — the Default rules and the custom rules, all 15 setting types, inheritance and compare, drafts for prompts and lists, real pickers for Instagram media, Facebook posts, Meta ads, teammates and attributes, duplicate / copy-to / delete with restore — and an always-open Test panel that runs the preview chat pinned to the source's Default or one rule. Live via the fan-out subscription, ⌘K, keyboard, undo.",
+  "status": "ready",
+  "requires": [],
+  "recommends": [
+    "knowledge-base",
+    "livechat",
+    "bookings"
+  ],
+  "skill": {
+    "installAs": "chatfuel-automations"
+  },
+  "app": {
+    "env": [
+      {
+        "name": "CHATFUEL_TOKEN",
+        "secret": true
+      },
+      {
+        "name": "VITE_CHATFUEL_WORKSPACE_ID",
+        "resolve": "workspacePick"
+      },
+      {
+        "name": "CHATFUEL_API_BASE",
+        "default": "https://panel.chatfuel.com"
+      }
+    ],
+    "embed": {
+      "roots": [
+        "src/modules/automations"
+      ],
+      "entryComponent": "AutomationsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "Ai",
+      "action": "View",
+      "requiredFor": "reading automations, channels, team, attributes and the knowledge-base facts"
+    },
+    {
+      "object": "Ai",
+      "action": "Edit",
+      "requiredFor": "every write, the composites (duplicate, copy, every rule on / off) and the test chat (managers cannot test)"
+    }
+  ]
+}

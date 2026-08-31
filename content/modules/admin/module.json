@@ -1,0 +1,54 @@
+{
+  "id": "admin",
+  "name": "Admin",
+  "description": "The account behind this deployment's Chatfuel token, for the person who owns it: every workspace and every bot, created, renamed and deleted from inside the app, one bot's details and connected channels, and a health page saying whether the token still works and what this deployment is missing. Where the auth module is installed it also hands a bot to one of the app's own accounts and takes it back. Reached only with a password held next to the token in the server environment — never a Chatfuel identity, so it works whether or not anybody has an account in the app. Opt-in: the wizard writes ADMIN_PASSWORD.",
+  "status": "ready",
+  "selection": "opt-in",
+  "requires": [],
+  "recommends": [
+    "auth"
+  ],
+  "skill": {
+    "installAs": "chatfuel-admin"
+  },
+  "app": {
+    "env": [
+      {
+        "name": "CHATFUEL_TOKEN",
+        "secret": true
+      },
+      {
+        "name": "VITE_CHATFUEL_WORKSPACE_ID",
+        "resolve": "workspacePick"
+      },
+      {
+        "name": "CHATFUEL_API_BASE",
+        "default": "https://panel.chatfuel.com"
+      },
+      {
+        "name": "ADMIN_PASSWORD",
+        "secret": true,
+        "resolve": "adminSetup"
+      }
+    ],
+    "embed": {
+      "roots": [
+        "src/modules/admin"
+      ],
+      "entryComponent": "AdminApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "Bot",
+      "action": "View",
+      "requiredFor": "listing the account's workspaces and bots, and reading one bot's details"
+    },
+    {
+      "object": "Bot",
+      "action": "Edit",
+      "requiredFor": "creating, renaming and deleting bots"
+    }
+  ]
+}

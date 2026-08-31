@@ -1,0 +1,26 @@
+{
+  "id": "bookings",
+  "name": "Bookings",
+  "description": "Booking workspace over bookingsV2: day/week/month calendar with drag-and-drop, appointments list, staff with weekly hours and Google Calendar sync, services catalog, AI booking settings, insights; live updates and an availability-driven booking wizard.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["knowledge-base", "contacts"],
+  "skill": { "installAs": "chatfuel-bookings" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/bookings"],
+      "entryComponent": "BookingsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "People", "action": "View", "requiredFor": "reading the calendar and appointments" },
+    { "object": "People", "action": "Edit", "requiredFor": "creating, moving, resolving and deleting bookings" },
+    { "object": "Ai", "action": "Edit", "requiredFor": "managing staff and services, the AI booking settings and the bot time zone" }
+  ]
+}

@@ -1,0 +1,21 @@
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem?
+      description: What you cannot do today, or what costs more than it should.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you do about it?
+      description: Rough is fine. This is the place for a shape, not a specification.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What else could work?
+      description: Including "keep doing it by hand" — sometimes that is the right answer.

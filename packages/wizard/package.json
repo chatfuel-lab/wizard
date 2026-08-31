@@ -1,0 +1,78 @@
+{
+  "name": "@chatfuel/wizard",
+  "version": "0.4.0",
+  "type": "module",
+  "description": "Set up a Chatfuel app: pick the modules you want, get a working React app wired to your bot, with the skills your coding agent needs to keep building it.",
+  "keywords": [
+    "chatfuel",
+    "chatbot",
+    "whatsapp",
+    "instagram",
+    "scaffold",
+    "cli",
+    "starter",
+    "claude",
+    "agent-skills"
+  ],
+  "license": "MIT",
+  "author": "Chatfuel",
+  "homepage": "https://chatfuel.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chatfuel-lab/wizard.git",
+    "directory": "packages/wizard"
+  },
+  "bugs": {
+    "url": "https://github.com/chatfuel-lab/wizard/issues"
+  },
+  "bin": {
+    "chatfuel-wizard": "bin/chatfuel-wizard.cjs"
+  },
+  "scripts": {
+    "dev": "tsx src/bin.ts",
+    "build": "tsdown",
+    "pack-content": "node scripts/pack-content.mjs",
+    "pack-smoke": "node scripts/pack-smoke.mjs",
+    "check": "tsc --noEmit && tsc -p tsconfig.stripping.json",
+    "test": "vitest run",
+    "live-check:supabase": "node --env-file-if-exists=../../.env --import tsx scripts/live-check-supabase.ts",
+    "prepack": "npm run build && npm run pack-content",
+    "prepublishOnly": "node ../../scripts/check-publishable.ts && npm test"
+  },
+  "dependencies": {
+    "@clack/core": "0.5.0",
+    "@clack/prompts": "^0.11.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "commander": "^14.0.0",
+    "execa": "^9.0.0",
+    "graphql": "^16.9.0",
+    "graphql-ws": "^6.2.1",
+    "picocolors": "^1.1.0",
+    "undici": "^7.0.0"
+  },
+  "devDependencies": {
+    "@chatfuel/api-client": "workspace:*",
+    "@chatfuel/module-manifest": "workspace:*",
+    "@chatfuel/vite-plugin-proxy": "workspace:*",
+    "@types/node": "^22.0.0",
+    "tsdown": "^0.22.14",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "manifests",
+    "content.lock",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ]
+}

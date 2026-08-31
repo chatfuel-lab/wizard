@@ -1,0 +1,19 @@
+node_modules
+dist
+server/dist
+.env
+.env.*
+.git
+
+# `.env.*` does not cover `.envrc` — the pattern needs a literal dot after `env`,
+# and that file exists for one thing: `export CHATFUEL_TOKEN=…`. Keys and the
+# server log follow it out; with AUTH_RECOVERY_LINK_LOG on, the log is the only
+# place a password recovery link is ever written.
+.envrc
+*.pem
+*.key
+*.log
+
+# CLI working directories, local to the machine that ran them.
+.vercel/
+.supabase/

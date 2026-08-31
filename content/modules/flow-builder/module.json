@@ -1,0 +1,27 @@
+{
+  "id": "flow-builder",
+  "name": "Flow Builder",
+  "description": "Visual flow editor: canvas viewer with inspector, element content editing, block/connection editing, full element-type coverage with validation-as-state.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["contacts"],
+  "skill": { "installAs": "chatfuel-flow-builder" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/flow-builder"],
+      "entryComponent": "FlowBuilderApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Flows", "action": "View", "requiredFor": "rendering the canvas" },
+    { "object": "Flows", "action": "Edit", "requiredFor": "content editing" },
+    { "object": "Inbox", "action": "View", "requiredFor": "reading the Test panel's preview conversation" },
+    { "object": "Inbox", "action": "Edit", "requiredFor": "sending messages and button clicks in the Test panel" }
+  ]
+}

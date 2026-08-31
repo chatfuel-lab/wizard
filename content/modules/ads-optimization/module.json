@@ -1,0 +1,26 @@
+{
+  "id": "ads-optimization",
+  "name": "Ads Optimization",
+  "description": "Conversion reporting for click-to-WhatsApp ads: event sets over the WhatsAppClickFromAds automations — the default set that covers every ad, custom sets that claim ads by id and override it, and the conversions each one reports back to Meta over the Conversions API. Seven triggers (keywords, first message, contact property, booking, contact status, hand-off to a human, a condition in words), Meta's own conversion names or your own, drag-ordered, with inheritance and the WhatsApp permission state that decides whether any of it is delivered.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["automations", "contacts"],
+  "skill": { "installAs": "chatfuel-ads-optimization" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/ads-optimization"],
+      "entryComponent": "AdsOptimizationApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Flows", "action": "View", "requiredFor": "reading the event sets and their settings" },
+    { "object": "Flows", "action": "Edit", "requiredFor": "creating, renaming and deleting sets, and writing ads and events" },
+    { "object": "Bot", "action": "View", "requiredFor": "reading the WhatsApp connection that conversions are delivered through" }
+  ]
+}

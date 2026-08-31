@@ -1,0 +1,25 @@
+{
+  "id": "knowledge-base",
+  "name": "Knowledge Base",
+  "description": "Everything the AI knows about the business, as one workspace: a rail of knowledge sources beside the selected source's page. Business profile with opening hours, free-text business notes with starter templates, FAQs as a searchable reorderable table with bulk actions and undo, the products catalog with photos, read-only mirrors of the services and staff that Bookings owns, import from a file or pasted text, CSV and JSON export, a character-budget breakdown across the sources, a quality lint, and Gaps - the questions the assistant handed to a human, clustered into a list of FAQs worth writing.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["automations", "bookings"],
+  "skill": { "installAs": "chatfuel-knowledge-base" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/knowledge-base"],
+      "entryComponent": "KnowledgeBaseApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Ai", "action": "Edit", "requiredFor": "editing the business profile, the business notes, FAQs and the catalog" },
+    { "object": "Inbox", "action": "View", "requiredFor": "the Gaps source, which reads conversations to find questions the assistant handed to a human" }
+  ]
+}

@@ -1,0 +1,292 @@
+# Chatfuel Publishing — validated operations.
+#
+# Publishing to Instagram, and reading back what is on the account.
+#
+# The publishing half of this API is four mutations and one shape: each takes a
+# botID and an input carrying PUBLICLY REACHABLE URLs — never a FileID. Instagram
+# fetches the bytes itself, from its own servers, so a URL that only resolves with
+# an Authorization header cannot be published. Where the URL comes from is the
+# caller's problem; see references/guide.md.
+#
+# Two things this API does not have, and no operation below can fake:
+#
+#   * scheduling. There is no publishAt argument and no draft entity. A queue is
+#     the app's own; the mutations publish immediately and block while they do.
+#   * insights. InstagramPost / Reel / Ad / Story carry no metrics and no
+#     timestamp, so there is nothing to chart and no way to date media that was
+#     published outside this app.
+#
+# Reel, Story-video and carousel publishes wait for Instagram to finish
+# transcoding — up to five minutes inside the mutation, with no subscription to
+# poll instead. Callers need a timeout budget that survives that.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+# A stored file. `status: Expired` means the bytes are gone — do not read `url`.
+fragment InstagramFileRef on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+# The shared shape of the four media kinds. `isUnknown` means the platform could
+# not resolve the media: render a placeholder and ignore every other field.
+# `childMedias` is non-empty on a carousel — there is no dedicated carousel type.
+fragment InstagramMediaRef on InstagramMedia {
+  __typename
+  ... on InstagramPost {
+    id
+    isUnknown
+    caption
+    ownerUsername
+    url
+    file {
+      ...InstagramFileRef
+    }
+    thumbnailPreview {
+      ...InstagramFileRef
+    }
+    childMedias {
+      __typename
+      ... on InstagramPost {
+        id
+        url
+        file {
+          ...InstagramFileRef
+        }
+      }
+      ... on InstagramReel {
+        id
+        url
+        file {
+          ...InstagramFileRef
+        }
+      }
+    }
+  }
+  ... on InstagramReel {
+    id
+    isUnknown
+    caption
+    ownerUsername
+    url
+    file {
+      ...InstagramFileRef
+    }
+    thumbnailPreview {
+      ...InstagramFileRef
+    }
+  }
+  ... on InstagramAd {
+    id
+    isUnknown
+    caption
+    ownerUsername
+    url
+    file {
+      ...InstagramFileRef
+    }
+    thumbnailPreview {
+      ...InstagramFileRef
+    }
+  }
+  ... on InstagramStory {
+    id
+    isUnknown
+    caption
+    ownerUsername
+    url
+    file {
+      ...InstagramFileRef
+    }
+    thumbnailPreview {
+      ...InstagramFileRef
+    }
+  }
+}
+
+# The connected account. `permissions` is the gate: without
+# InstagramBusinessContentPublish every publish mutation fails, and the app can
+# see that before it offers a compose button rather than after.
+fragment InstagramAccountRef on InstagramAccount {
+  id
+  username
+  name
+  biography
+  website
+  permissions
+  profilePicture {
+    ...InstagramFileRef
+  }
+}
+
+# What one publish answers with. `permalink` may be an empty string even on
+# success — Instagram does not always return a link.
+fragment InstagramPublishedRef on InstagramPublishedMedia {
+  id
+  permalink
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# Is there an Instagram account on this bot, and may it publish?
+#
+# The account hangs off a contact scope, not off the bot directly, so the list
+# has to be walked for the one branch that carries it. An empty result is the
+# "connect Instagram" state; a result without InstagramBusinessContentPublish in
+# `permissions` is the "reconnect with publishing" state. They are different
+# screens and this one query tells them apart.
+query InstagramAccountState($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      id
+      ... on InstagramAccountContactScope {
+        instagramAccount {
+          ...InstagramAccountRef
+        }
+      }
+    }
+  }
+}
+
+# The account's media, newest first — posts, reels, ads and stories together.
+#
+# The connection is over the BOT, which is what an app scoped to one bot wants;
+# the same list hangs off InstagramAccount for a caller that has the account id.
+# Page info carries no hasPreviousPage: this cursor only walks forward.
+query InstagramLibrary($botID: BotID!, $first: Int!, $after: InstagramMediasCursor) {
+  bot(id: $botID) {
+    id
+    instagramMediasConnection(first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          ...InstagramMediaRef
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# One media by id, for reusing an existing post as the basis of a new one.
+# Null when the id is unknown or belongs to another account.
+#
+# Reached through the bot's contact scopes rather than through currentUser, so
+# every read in this module is scoped by the same bot id the publish mutations
+# take — one authorization surface instead of two.
+query InstagramMediaOne($botID: BotID!, $id: InstagramMediaID!) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      id
+      ... on InstagramAccountContactScope {
+        instagramAccount {
+          id
+          media(id: $id) {
+            ...InstagramMediaRef
+          }
+        }
+      }
+    }
+  }
+}
+
+# A file the app has just uploaded, read back for its URL.
+#
+# Uploads are REST (POST {base}/api/filestorage/upload/bot?fileType=Image&botID=…)
+# and answer with a
+# FileID alone; this is the only way to turn that id into something a publish
+# input can carry. Poll while `status` is DownloadInProgress.
+query InstagramFile($id: FileID!) {
+  file(id: $id) {
+    ...InstagramFileRef
+  }
+}
+
+# ============================================================
+# Mutations — publishing
+# ============================================================
+
+# A single photo in the feed. The URL must be publicly reachable and JPEG.
+mutation InstagramPublishImage($botID: BotID!, $input: InstagramPublishImageInput!) {
+  instagramAccountPublishImage(botID: $botID, input: $input) {
+    ...InstagramPublishedRef
+  }
+}
+
+# A Reel. Blocks while Instagram transcodes the video — up to five minutes.
+# `coverURL` and `thumbOffset` are two ways to say the same thing and Instagram
+# takes the cover if both are set; `shareToFeed` also puts it in the grid.
+mutation InstagramPublishReel($botID: BotID!, $input: InstagramPublishReelInput!) {
+  instagramAccountPublishReel(botID: $botID, input: $input) {
+    ...InstagramPublishedRef
+  }
+}
+
+# A Story, image or video. There is NO caption on this input — a story cannot
+# carry one, so a composer must not offer the field rather than disable it.
+mutation InstagramPublishStory($botID: BotID!, $input: InstagramPublishStoryInput!) {
+  instagramAccountPublishStory(botID: $botID, input: $input) {
+    ...InstagramPublishedRef
+  }
+}
+
+# Two to ten items, images and videos mixed. Reels cannot go inside a carousel,
+# and the whole thing counts as one published post.
+mutation InstagramPublishCarousel($botID: BotID!, $input: InstagramPublishCarouselInput!) {
+  instagramAccountPublishCarousel(botID: $botID, input: $input) {
+    ...InstagramPublishedRef
+  }
+}
+
+# ============================================================
+# Mutations — account
+# ============================================================
+
+# Pull the newest media down from Instagram before listing. Media created on the
+# Instagram side is not in the connection until this has run. Capped at 100
+# server-side whatever is asked for.
+mutation InstagramRefetchMedias($accountID: InstagramAccountID!, $count: Int!) {
+  instagramAccountRefetchLatestMedias(id: $accountID, count: $count) {
+    ...InstagramAccountRef
+  }
+}
+
+# Where to send someone to connect an account, or to re-grant permissions.
+# `Full` is the group that contains InstagramBusinessContentPublish; `Minimal`
+# does not, so it can never publish.
+mutation InstagramConnectUrl($permGroup: InstagramPermissionGroupName!, $state: String) {
+  instagramOAuthMakeUrl(permGroup: $permGroup, state: $state)
+}
+
+# ============================================================
+# Subscriptions
+# ============================================================
+
+# Fires when new media appears on the connected account — including media this
+# app has just published. It keeps the library fresh.
+#
+# It does NOT tell a publish whose HTTP call died apart from one that never
+# happened: it marks the platform ingesting media, not this API publishing it.
+# Do not wait on it after a publish. For that distinction, refetch
+# `instagramMediasConnection` and diff against the ids captured before
+# publishing — see "Publishing twice is the failure mode that matters" in
+# references/guide.md.
+subscription InstagramMediaAdded($botID: BotID!) {
+  botInstagramMediaAdded(id: $botID) {
+    ...InstagramMediaRef
+  }
+}

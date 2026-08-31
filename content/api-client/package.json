@@ -1,0 +1,45 @@
+{
+  "name": "@chatfuel/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Source-only Chatfuel API client: typed operations via graphql-codegen, HTTP transport, error envelope, throttle and pagination helpers. Everything under src/ is browser-safe (relative imports only, no Node built-ins) and is vendored into scaffolded apps as src/vendor/api.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./generated/core": "./src/generated/core/graphql.ts",
+    "./generated/livechat": "./src/generated/livechat/graphql.ts",
+    "./generated/contacts": "./src/generated/contacts/graphql.ts",
+    "./generated/deals": "./src/generated/deals/graphql.ts",
+    "./generated/knowledge-base": "./src/generated/knowledge-base/graphql.ts",
+    "./generated/coworker": "./src/generated/coworker/graphql.ts",
+    "./generated/bookings": "./src/generated/bookings/graphql.ts",
+    "./generated/automations": "./src/generated/automations/graphql.ts",
+    "./generated/flow-builder": "./src/generated/flow-builder/graphql.ts",
+    "./generated/ads-optimization": "./src/generated/ads-optimization/graphql.ts",
+    "./generated/publishing": "./src/generated/publishing/graphql.ts",
+    "./domain/livechat": "./src/domain/livechat.ts"
+  },
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts && node --import tsx ../codegen/hoist-cli.ts src/generated",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "live-check": "node --env-file-if-exists=../../.env --import tsx scripts/live-check-direct.ts"
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "graphql": "16.14.2",
+    "graphql-ws": "^6.2.1"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typed-document-node": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/typescript-operations": "^4.0.0",
+    "@types/ws": "^8.18.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0",
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,694 @@
+# Chatfuel GraphQL — bookings workspace operations (chatfuel-bookings skill):
+# calendar + appointments over bookingsV2, availability, specialists (staff) with
+# weekly schedules and Google Calendar sync, the services catalog, the AI
+# booking settings and the bot time zone.
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+#
+# Operation names are globally unique across skills (the validator enforces
+# it), so the specialist/service operations here carry a `Booking` prefix even
+# though chatfuel-knowledge-base has its own `Specialist*` / `GoodsService*`
+# operations over the same entities. Fragment names are unique too — a fragment
+# may only be shared across skills if it is byte-identical, and these select
+# more than the knowledge-base ones do.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment BookingFileRef on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+# Deleted references arrive as union branches (DeletedGoodsService /
+# DeletedSpecialist) — always branch on __typename. A DeletedGoodsService keeps
+# its title, duration and price, so a past appointment can still say what it was.
+fragment BookingServiceRef on CommonGoodsService {
+  __typename
+  ... on GoodsService {
+    id
+    title
+    durationSeconds
+    isAvailable
+    price {
+      amount
+      currency
+    }
+  }
+  ... on DeletedGoodsService {
+    id
+    title
+    durationSeconds
+    price {
+      amount
+      currency
+    }
+  }
+}
+
+fragment BookingSpecialistRef on CommonSpecialist {
+  __typename
+  ... on Specialist {
+    id
+    profile {
+      firstName
+      lastName
+      logo {
+        ...BookingFileRef
+      }
+    }
+  }
+  ... on DeletedSpecialist {
+    id
+    profile {
+      firstName
+      lastName
+    }
+  }
+}
+
+# The chat contact behind a booking. `note` is documented as "used both in the
+# contact card in Live Chat and in the appointment cards in booking".
+# `conversation` is null for contacts created from the booking flow that have
+# never chatted; `phone` is the WhatsApp number (only WhatsApp contacts can be
+# booked — BookingContactPlatformNotAllowed).
+fragment BookingContactRef on Contact {
+  __typename
+  id
+  name
+  profilePictureUrl
+  note
+  conversation {
+    __typename
+    id
+  }
+  ... on WhatsappContact {
+    phone
+  }
+}
+
+# A contact that exists only inside bookings ({botID}_{phoneNumber} id space);
+# never listed on the Contacts tab. On a WhatsApp-connected bot the API turns
+# inline-contact input into a real WhatsappContact instead.
+fragment BookingInlineContactInfo on BookingInlineContact {
+  id
+  name
+  phoneNumber
+  note
+}
+
+# Queries/mutations return the BookingBase interface; subscriptions return
+# the concrete Booking type — handle the asymmetry client-side. Both concrete
+# types carry contact/inlineContact; the Google Calendar branch adds the
+# calendar reference of an imported event.
+fragment BookingInfo on BookingBase {
+  __typename
+  id
+  startTime
+  endTime
+  status
+  service {
+    ...BookingServiceRef
+  }
+  specialist {
+    ...BookingSpecialistRef
+  }
+  ... on Booking {
+    contact {
+      ...BookingContactRef
+    }
+    inlineContact {
+      ...BookingInlineContactInfo
+    }
+  }
+  ... on BookingWithGoogleCalendarRef {
+    contact {
+      ...BookingContactRef
+    }
+    inlineContact {
+      ...BookingInlineContactInfo
+    }
+    googleCalendarRefData {
+      calendar {
+        id
+        summary
+      }
+      eventID
+      summary
+    }
+  }
+}
+
+# Full service record — the whole thing is needed because goodsServiceUpdate
+# takes a full GoodsServiceInput (no partial update).
+fragment BookingServiceFull on GoodsService {
+  id
+  title
+  description
+  durationSeconds
+  isAvailable
+  price {
+    amount
+    currency
+  }
+  images {
+    ...BookingFileRef
+  }
+}
+
+fragment BookingDayHours on SpecialistDaySchedule {
+  enabled
+  start
+  end
+  break {
+    start
+    end
+  }
+}
+
+fragment BookingScheduleInfo on SpecialistSchedule {
+  enabled
+  sun {
+    ...BookingDayHours
+  }
+  mon {
+    ...BookingDayHours
+  }
+  tue {
+    ...BookingDayHours
+  }
+  wed {
+    ...BookingDayHours
+  }
+  thu {
+    ...BookingDayHours
+  }
+  fri {
+    ...BookingDayHours
+  }
+  sat {
+    ...BookingDayHours
+  }
+}
+
+fragment BookingTaskInfo on Task {
+  id
+  statuses {
+    type
+    startedAt
+  }
+  completedPoints
+  totalPoints
+  deadline
+  data {
+    __typename
+    ... on BookingGoogleCalendarSync {
+      id
+      calendar {
+        id
+        summary
+      }
+      startedAt
+      finishedAt
+      isFailed
+      syncedEventsCount
+    }
+  }
+}
+
+# Full specialist record — specialistUpdate takes a full SpecialistInfoInput
+# (profile + schedule + services, no partial update), so every editor needs
+# the whole thing. `latestGoogleCalendarSyncTask` needs the bot id.
+fragment BookingSpecialistFull on Specialist {
+  id
+  profile {
+    firstName
+    lastName
+    aboutInfo
+    logo {
+      ...BookingFileRef
+    }
+  }
+  schedule {
+    ...BookingScheduleInfo
+  }
+  services {
+    id
+  }
+  connectedGoogleCalendar {
+    id
+    summary
+  }
+  googleCalendarConnectionLink {
+    id
+    createdBy {
+      id
+      name
+    }
+  }
+  latestGoogleCalendarSyncTask(botID: $botID) {
+    ...BookingTaskInfo
+  }
+}
+
+fragment BookingConfigInfo on FuelyBookingConfig {
+  notificationChannel
+  bookingConfirmation
+  bookingConfirmationAdditionalInfo
+  twoHoursAppointment
+  twoHoursAppointmentAdditionalInfo
+  twentyFourHoursAppointment
+  twentyFourHoursAppointmentAdditionalInfo
+  locale
+  aiAutonomyLevel
+  calendarLandingURL
+}
+
+# ============================================================
+# Queries — calendar
+# ============================================================
+
+# bookingsV2 has no pagination, filter or sort: it returns every booking that
+# overlaps the range. Query one visible range at a time and send the bounds
+# with the bot's time-zone offset (see references/guide.md, "Time zone").
+query BookingsRange($botID: BotID!, $startTime: Time!, $endTime: Time!) {
+  bot(id: $botID) {
+    id
+    bookingsV2(startTime: $startTime, endTime: $endTime) {
+      ...BookingInfo
+    }
+  }
+}
+
+query BookingGet($botID: BotID!, $bookingID: BookingID!) {
+  bot(id: $botID) {
+    id
+    bookingV2(id: $bookingID) {
+      ...BookingInfo
+    }
+  }
+}
+
+# Inline contacts are a separate identity space from Contact. A miss answers
+# with BookingInlineContactDoesNotExist wrapped in a generic error —
+# treat any error as "not found".
+query BookingInlineContactSearch($botID: BotID!, $phoneNumber: String!) {
+  bot(id: $botID) {
+    id
+    inlineContact(phoneNumber: $phoneNumber) {
+      ...BookingInlineContactInfo
+    }
+  }
+}
+
+# ============================================================
+# Queries — catalog (services + specialists)
+# ============================================================
+# goodsCatalog is unpaginated and mixes GoodsProduct | GoodsService |
+# DeletedGoodsService; keep only GoodsService here (products belong to the
+# knowledge-base module).
+
+query BookingServices($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    goodsCatalog {
+      __typename
+      ...BookingServiceFull
+    }
+  }
+}
+
+query BookingSpecialists($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    specialists {
+      ...BookingSpecialistFull
+    }
+  }
+}
+
+# ============================================================
+# Queries — availability
+# ============================================================
+# One service × one day per call. Answers per specialist with free START-TIME
+# periods ("HH:mm", inclusive end = schedule end − duration) in the BOT's time
+# zone; hasSchedule:false means the list is always empty. Existing bookings
+# (except Canceled) are already subtracted.
+query BookingAvailability($botID: BotID!, $serviceID: GoodsItemID!, $date: String!) {
+  bot(id: $botID) {
+    id
+    goodsService(id: $serviceID) {
+      __typename
+      ... on GoodsService {
+        id
+        bookingAvailableStartTime(botID: $botID, date: $date) {
+          specialistID
+          date
+          hasSchedule
+          isWorkingDay
+          availableStartTime {
+            start
+            end
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Queries — customers
+# ============================================================
+# Server-side text search over chats (name + phone). Only WhatsApp contacts can
+# be booked; the wizard disables the other platforms client-side.
+query BookingContactsSearch($botID: BotID!, $first: Int!, $textInputFilter: String) {
+  bot(id: $botID) {
+    id
+    contactChatsConnection(
+      first: $first
+      assigneeFilter: { type: Any }
+      unreadOnly: false
+      salesStageV2Filter: []
+      textInputFilter: $textInputFilter
+    ) {
+      edges {
+        node {
+          ...BookingContactRef
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Queries — settings, tasks, Google Calendar
+# ============================================================
+
+query BookingConfig($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    timezone
+    countryCode
+    fuelyConfig {
+      booking {
+        ...BookingConfigInfo
+      }
+    }
+  }
+}
+
+query BookingTask($taskID: TaskID!) {
+  getTask(id: $taskID) {
+    ...BookingTaskInfo
+  }
+}
+
+query BookingGoogleCalendarLinkInfo($linkID: SpecialistGoogleCalendarLinkID!) {
+  specialistGoogleCalendarLinkInfo(linkID: $linkID) {
+    id
+    specialistName
+    botTitle
+    createdBy {
+      id
+      name
+    }
+  }
+}
+
+# ============================================================
+# Mutations — bookings
+# ============================================================
+# BookingUpdateInput is a FULL REPLACE with the same shape as BookingInput:
+# omitting inlineContact clears the customer, omitting specialistID unassigns.
+# There is no status field on either input — status only moves through
+# bookingStatusResolveV2, and no dedicated cancel/reschedule mutation exists.
+
+mutation BookingCreate($botID: BotID!, $req: BookingInput!) {
+  bookingCreateV2(botID: $botID, req: $req) {
+    ...BookingInfo
+  }
+}
+
+mutation BookingUpdate($botID: BotID!, $bookingID: BookingID!, $req: BookingUpdateInput!) {
+  bookingUpdateV2(botID: $botID, id: $bookingID, req: $req) {
+    ...BookingInfo
+  }
+}
+
+# Pending is the initial state only; it is not a valid target. Every other
+# transition works.
+mutation BookingStatusResolve($botID: BotID!, $bookingID: BookingID!, $status: BookingStatus!) {
+  bookingStatusResolveV2(botID: $botID, bookingID: $bookingID, status: $status) {
+    ...BookingInfo
+  }
+}
+
+mutation BookingDelete($botID: BotID!, $bookingID: BookingID!) {
+  bookingDeleteV2(botID: $botID, id: $bookingID) {
+    ...BookingInfo
+  }
+}
+
+mutation BookingInlineContactSetNote($inlineContactID: InlineContactID!, $note: String) {
+  bookingInlineContactSetNote(id: $inlineContactID, note: $note) {
+    ...BookingInlineContactInfo
+  }
+}
+
+# The cross-cutting note on a real chat contact (shown on the appointment card).
+mutation BookingContactSetNote($contactID: ContactID!, $note: String) {
+  contactSetNote(id: $contactID, note: $note) {
+    ...BookingContactRef
+  }
+}
+
+# Creates a real WhatsApp contact from the booking flow (source CalendarBooking
+# is the only value of ContactDashboardSource — it exists for this).
+mutation BookingWhatsappContactCreate($botID: BotID!, $data: WhatsappContactCreateInput!) {
+  whatsappContactCreateV2(botID: $botID, data: $data) {
+    ...BookingContactRef
+  }
+}
+
+# ============================================================
+# Mutations — services
+# ============================================================
+# Create/Delete answer with the whole catalog (Bot), Update with the item.
+
+mutation BookingServiceCreate($botID: BotID!, $service: GoodsServiceInput!) {
+  goodsServiceCreate(botID: $botID, service: $service) {
+    id
+    goodsCatalog {
+      __typename
+      ...BookingServiceFull
+    }
+  }
+}
+
+mutation BookingServiceUpdate($botID: BotID!, $serviceID: GoodsItemID!, $service: GoodsServiceInput!) {
+  goodsServiceUpdate(botID: $botID, itemID: $serviceID, service: $service) {
+    ...BookingServiceFull
+  }
+}
+
+mutation BookingServiceDelete($botID: BotID!, $serviceID: GoodsItemID!) {
+  goodsServiceDelete(botID: $botID, itemID: $serviceID) {
+    id
+    goodsCatalog {
+      __typename
+      ...BookingServiceFull
+    }
+  }
+}
+
+# ============================================================
+# Mutations — specialists (staff)
+# ============================================================
+# SpecialistInfoInput is a full replace of profile + schedule + services. A
+# schedule with enabled:true needs at least one enabled day
+# (SpecialistScheduleIsEmpty).
+
+mutation BookingSpecialistCreate($botID: BotID!, $info: SpecialistInfoInput!) {
+  specialistCreate(botID: $botID, info: $info) {
+    id
+    specialists {
+      ...BookingSpecialistFull
+    }
+  }
+}
+
+mutation BookingSpecialistUpdate($botID: BotID!, $specialistID: SpecialistID!, $info: SpecialistInfoInput!) {
+  specialistUpdate(botID: $botID, specialistID: $specialistID, info: $info) {
+    ...BookingSpecialistFull
+  }
+}
+
+mutation BookingSpecialistDelete($botID: BotID!, $specialistID: SpecialistID!) {
+  specialistDelete(botID: $botID, specialistID: $specialistID) {
+    id
+    specialists {
+      ...BookingSpecialistFull
+    }
+  }
+}
+
+# ============================================================
+# Mutations — Google Calendar (per specialist)
+# ============================================================
+# The connect flow: create a link → hand it to the specialist → they finish the
+# OAuth on Chatfuel's own landing page (googleCalendarOauthFinishBySpecialistLink
+# runs there, not here) → Specialist.connectedGoogleCalendar appears → start a
+# sync and follow the Task through BookingTaskUpdated.
+
+mutation BookingGoogleCalendarLinkCreate($botID: BotID!, $specialistID: SpecialistID!) {
+  specialistCreateGoogleCalendarConnectionLink(botID: $botID, specialistID: $specialistID) {
+    id
+    createdBy {
+      id
+      name
+    }
+  }
+}
+
+mutation BookingGoogleCalendarLinkDelete($botID: BotID!, $specialistID: SpecialistID!) {
+  specialistDeleteGoogleCalendarConnectionLink(botID: $botID, specialistID: $specialistID) {
+    id
+    specialists {
+      ...BookingSpecialistFull
+    }
+  }
+}
+
+mutation BookingGoogleCalendarDisconnect(
+  $botID: BotID!
+  $specialistID: SpecialistID!
+  $googleCalendarID: GoogleCalendarID!
+) {
+  specialistDisconnectGoogleCalendar(
+    botID: $botID
+    specialistID: $specialistID
+    googleCalendarID: $googleCalendarID
+  ) {
+    ...BookingSpecialistFull
+  }
+}
+
+# Errors: SpecialistDoesNotExist, GoogleCalendarSyncAlreadyInProgress,
+# GoogleCalendarNotConnected, GoogleCalendarSyncRateLimited.
+mutation BookingGoogleCalendarSyncStart($botID: BotID!, $specialistID: SpecialistID!) {
+  specialistStartGoogleCalendarSync(botID: $botID, specialistID: $specialistID) {
+    ...BookingTaskInfo
+  }
+}
+
+# ============================================================
+# Mutations — AI booking settings + time zone
+# ============================================================
+# Every setter answers with the whole Bot; select the config back so the
+# settings store reconciles from the response.
+
+mutation BookingConfigSetNotificationChannel($botID: BotID!, $channel: FuelyBookingNotificationChannel!) {
+  fuelyConfigBookingUpdateNotificationChannel(botID: $botID, channel: $channel) {
+    id
+    fuelyConfig {
+      booking {
+        ...BookingConfigInfo
+      }
+    }
+  }
+}
+
+mutation BookingConfigSetConfirmation($botID: BotID!, $enabled: Boolean!, $additionalInfo: String) {
+  fuelyConfigBookingUpdateConfirmation(botID: $botID, enabled: $enabled, additionalInfo: $additionalInfo) {
+    id
+    fuelyConfig {
+      booking {
+        ...BookingConfigInfo
+      }
+    }
+  }
+}
+
+mutation BookingConfigSetAppointments($botID: BotID!, $update: FuelyConfigBookingAppointmentsUpdateInput!) {
+  fuelyConfigBookingUpdateAppointments(botID: $botID, update: $update) {
+    id
+    fuelyConfig {
+      booking {
+        ...BookingConfigInfo
+      }
+    }
+  }
+}
+
+mutation BookingConfigSetLocale($botID: BotID!, $locale: DashboardLocale!) {
+  fuelyConfigBookingUpdateLocale(botID: $botID, locale: $locale) {
+    id
+    fuelyConfig {
+      booking {
+        ...BookingConfigInfo
+      }
+    }
+  }
+}
+
+# The AI's booking autonomy is a per-scope automation setting since the bot moved
+# to the per-scope model, and this schema publishes no setter for the old one:
+# `fuelyConfigBookingSetAIAutonomyLevel` is not in the bundle. Bookings
+# READS the Default (All-scope base) value here and sends the person to the
+# AI Automations module to change it. `FuelyBookingConfig.aiAutonomyLevel` still
+# reads back, but it is not what the AI obeys.
+query BookingAiAutonomy($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    fuelyAutomations(scope: All) {
+      id
+      isBase
+      settings {
+        __typename
+        ... on FuelySettingBookingRules {
+          autonomyLevel
+        }
+      }
+    }
+  }
+}
+
+# Errors: BotInvalidTimezone.
+mutation BookingTimezoneSet($botID: BotID!, $timezone: BotTimezone!) {
+  botUpdateTimezone(botID: $botID, timezone: $timezone) {
+    id
+    timezone
+  }
+}
+
+# ============================================================
+# Subscriptions
+# ============================================================
+# All three are bot-wide (no filter arguments) — subscribe once per workspace.
+
+subscription BookingAdded($botID: BotID!) {
+  bookingAdded(botID: $botID) {
+    ...BookingInfo
+  }
+}
+
+subscription BookingUpdated($botID: BotID!) {
+  bookingUpdated(botID: $botID) {
+    ...BookingInfo
+  }
+}
+
+subscription BookingDeleted($botID: BotID!) {
+  bookingDeleted(botID: $botID)
+}
+
+# Progress of a Google Calendar sync task.
+subscription BookingTaskUpdated($taskID: TaskID!) {
+  taskUpdated(id: $taskID) {
+    ...BookingTaskInfo
+  }
+}

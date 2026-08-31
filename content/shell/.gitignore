@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Vercel CLI project link (created by `npm run deploy`).
+.vercel/
+
+# Supabase CLI working directory.
+.supabase/
+
+# `.envrc` exists for one purpose — `export CHATFUEL_TOKEN=…` — and direnv users
+# never think of it as a dotenv file, so the rules above do not cover it.
+.envrc
+
+# Keys, and the server log: with AUTH_RECOVERY_LINK_LOG on, the log is the only
+# place a password recovery link is ever written.
+*.pem
+*.key
+*.log

@@ -1,0 +1,1170 @@
+# Chatfuel GraphQL — automations (the dashboard's "Automations" tab: how the AI
+# behaves, configured per scope instead of through one flat bot config).
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs). Usage notes: references/guide.md.
+#
+# Notes:
+#   - FuelySettingUpdateInput and every FuelySetting*Input are @oneOf: send EXACTLY
+#     one key. The bundled SDL does not carry the directive, so the validator will
+#     not catch a violation — the server will
+#   - FuelySetting has no id; __typename is the only discriminator. Keep it on every
+#     selection and do not let a normalized cache try to normalize the list
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment AutomationFile on File {
+  id
+  url
+  type
+  status
+}
+
+# The parent/candidate-parent shape used by inheritance UI. Deliberately shallow:
+# settings are not read through inheritsFrom/canInheritFrom.
+fragment FuelyAutomationRef on FuelyAutomation {
+  __typename
+  id
+  isBase
+  name
+  enabled
+  scope
+}
+
+fragment FuelySettingParts on FuelySetting {
+  __typename
+  inheritsFrom {
+    ...FuelyAutomationRef
+  }
+  canInheritFrom {
+    ...FuelyAutomationRef
+  }
+  ... on FuelySettingMessageDelays {
+    enabled
+  }
+  ... on FuelySettingWhenAIReplies {
+    option
+  }
+  ... on FuelySettingCatalogImages {
+    whenToShow
+    imagesPerCatalogItem
+  }
+  ... on FuelySettingIncomingMessages {
+    howToReply
+    messagePrompt
+  }
+  ... on FuelySettingBookingRules {
+    autonomyLevel
+  }
+  ... on FuelySettingSwitchToHuman {
+    howToSwitch
+    rules {
+      switchingConditions
+      messagePrompt
+      assignees {
+        user {
+          id
+          name
+          isUnknown
+          profilePicture {
+            ...AutomationFile
+          }
+        }
+      }
+    }
+  }
+  ... on FuelySettingFollowUps {
+    howToSend
+    messagePrompt
+  }
+  ... on FuelySettingCollectContactInfo {
+    howToCollect
+    captures {
+      description
+      attribute {
+        name
+        type
+        dataType
+      }
+      validationErrors
+    }
+  }
+  ... on FuelySettingPrivateReply {
+    privateReplyHowToReply
+    exactTextReply
+    messagePrompt
+  }
+  ... on FuelySettingPublicReply {
+    publicReplyHowToReply
+    exactTextReply
+    messagePrompt
+    likeContactComment
+  }
+  ... on FuelySettingKeywords {
+    reactTo
+    keywords
+  }
+  ... on FuelySettingListOfPosts {
+    posts {
+      postID
+      contactScopeID
+    }
+  }
+  ... on FuelySettingListOfStories {
+    stories {
+      storyID
+      contactScopeID
+    }
+  }
+  ... on FuelySettingListOfAds {
+    adIDs
+  }
+  ... on FuelySettingRefLinks {
+    refs
+  }
+}
+
+fragment FuelyAutomationParts on FuelyAutomation {
+  __typename
+  id
+  isBase
+  name
+  enabled
+  scope
+  updatedAt
+  settings {
+    ...FuelySettingParts
+  }
+}
+
+# ============================================================
+# Queries
+# ============================================================
+
+# Omit $scope to get every automation of the bot. Within one scope the result is
+# the base automation (isBase: true) plus its custom ones.
+query FuelyAutomationList($botID: BotID!, $scope: FuelyAutomationScope) {
+  bot(id: $botID) {
+    id
+    fuelyAutomations(scope: $scope) {
+      ...FuelyAutomationParts
+    }
+  }
+}
+
+query FuelyAutomationGet($botID: BotID!, $automationID: FuelyAutomationID!) {
+  bot(id: $botID) {
+    id
+    fuelyAutomation(id: $automationID) {
+      ...FuelyAutomationParts
+    }
+  }
+}
+
+# Overview grid: one aliased call per scope, meta only. Cheaper than fetching every
+# automation's settings just to render on/off state.
+query FuelyAutomationsOverview($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    All: fuelyAutomations(scope: All) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramDirectMessages: fuelyAutomations(scope: InstagramDirectMessages) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramPostComments: fuelyAutomations(scope: InstagramPostComments) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramAdComments: fuelyAutomations(scope: InstagramAdComments) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramStoryReplies: fuelyAutomations(scope: InstagramStoryReplies) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramIgMeLinks: fuelyAutomations(scope: InstagramIgMeLinks) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    InstagramClickFromAds: fuelyAutomations(scope: InstagramClickFromAds) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    WhatsAppDirectMessages: fuelyAutomations(scope: WhatsAppDirectMessages) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    WhatsAppClickFromAds: fuelyAutomations(scope: WhatsAppClickFromAds) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    WhatsAppClickFromPosts: fuelyAutomations(scope: WhatsAppClickFromPosts) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    FacebookDirectMessages: fuelyAutomations(scope: FacebookDirectMessages) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    FacebookMMeLinks: fuelyAutomations(scope: FacebookMMeLinks) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    FacebookPostComments: fuelyAutomations(scope: FacebookPostComments) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    FacebookClickFromAds: fuelyAutomations(scope: FacebookClickFromAds) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    TikTokDirectMessages: fuelyAutomations(scope: TikTokDirectMessages) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    TikTokPostComments: fuelyAutomations(scope: TikTokPostComments) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    TikTokClickFromAds: fuelyAutomations(scope: TikTokClickFromAds) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+    WebWidgetDirectMessage: fuelyAutomations(scope: WebWidgetDirectMessage) {
+      ...FuelyAutomationRef
+      updatedAt
+    }
+  }
+}
+
+# Picker for the ListOfPosts / ListOfStories filter settings. The ids come back as
+# InstagramMediaID and are passed to the settings as PostID / StoryID — same
+# string, different scalar.
+query InstagramMediaPicker($botID: BotID!, $first: Int!, $after: InstagramMediasCursor) {
+  bot(id: $botID) {
+    id
+    instagramMediasConnection(first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          __typename
+          ... on InstagramPost {
+            id
+            isUnknown
+            caption
+            url
+            thumbnailPreview {
+              ...AutomationFile
+            }
+          }
+          ... on InstagramReel {
+            id
+            isUnknown
+            caption
+            url
+            thumbnailPreview {
+              ...AutomationFile
+            }
+          }
+          ... on InstagramAd {
+            id
+            isUnknown
+            caption
+            url
+            thumbnailPreview {
+              ...AutomationFile
+            }
+          }
+          ... on InstagramStory {
+            id
+            isUnknown
+            caption
+            url
+            thumbnailPreview {
+              ...AutomationFile
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+}
+
+# ============================================================
+# Subscription
+# ============================================================
+
+# One edit can emit SEVERAL events: every automation that inherits the changed
+# setting is republished. Merge by automation id; do not assume one event per edit.
+subscription FuelyAutomationUpdated($botID: BotID!) {
+  fuelyAutomationUpdated(botID: $botID) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ============================================================
+# Mutations — automation lifecycle
+# ============================================================
+
+# Only scopes that own a filter setting accept custom automations, max 30 each.
+mutation FuelyAutomationCreate($botID: BotID!, $scope: FuelyAutomationScope!, $name: String!) {
+  fuelyAutomationCreate(botID: $botID, scope: $scope, name: $name) {
+    ...FuelyAutomationParts
+  }
+}
+
+# Base automations cannot be deleted (FuelyAutomationNotDeletable). Returns the Bot,
+# so re-read the scope's list from the same response.
+mutation FuelyAutomationDelete(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $scope: FuelyAutomationScope
+) {
+  fuelyAutomationDelete(botID: $botID, id: $automationID) {
+    id
+    fuelyAutomations(scope: $scope) {
+      ...FuelyAutomationParts
+    }
+  }
+}
+
+# Base automations have no name and cannot be renamed (FuelyAutomationNotRenamable).
+mutation FuelyAutomationSetName(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $name: String!
+) {
+  fuelyAutomationSetName(botID: $botID, id: $automationID, name: $name) {
+    id
+    name
+    updatedAt
+  }
+}
+
+# "Turn the bot's AI on/off" = this mutation on the All-scope BASE automation.
+mutation FuelyAutomationSetEnabled(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $enabled: Boolean!
+) {
+  fuelyAutomationSetEnabled(botID: $botID, id: $automationID, enabled: $enabled) {
+    id
+    enabled
+    updatedAt
+  }
+}
+
+# ============================================================
+# Mutations — settings
+# ============================================================
+# One mutation field for all 16 settings. The outer FuelySettingUpdateInput picks
+# the setting; the inner input picks setInheritFrom OR update. Both are @oneOf.
+
+# Point a setting at a parent instead of owning a value. Allowed parents come from
+# the setting's own canInheritFrom; anything else is FuelyInheritFromInvalid.
+# One inherit document per inheritable setting type (the 8 common ones plus the two
+# comment-reply settings; the five filter settings exist only on custom automations
+# and never on a base, so they have nothing to inherit from).
+mutation FuelySettingInheritIncomingMessages(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { incomingMessages: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritWhenAIReplies(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { whenAIReplies: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritMessageDelays(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { messageDelays: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritCatalogImages(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { catalogImages: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritBookingRules(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { bookingRules: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritSwitchToHuman(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { switchToHuman: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritFollowUps(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { followUps: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritCollectContactInfo(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { collectContactInfo: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritPrivateReply(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { privateReply: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingInheritPublicReply(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $parentID: FuelyAutomationID!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { publicReply: { setInheritFrom: $parentID } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# --- common settings (every scope) ---
+
+# messagePrompt: required, ≤5000 chars, validated even when howToReply is DontReply.
+# howToReply must be UsingAI outside the four comment scopes.
+mutation FuelySettingSetIncomingMessages(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingIncomingMessagesUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { incomingMessages: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingSetWhenAIReplies(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingWhenAIRepliesUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { whenAIReplies: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingSetMessageDelays(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingMessageDelaysUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { messageDelays: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# imagesPerCatalogItem must be 0–10 whatever whenToShow says.
+mutation FuelySettingSetCatalogImages(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingCatalogImagesUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { catalogImages: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+mutation FuelySettingSetBookingRules(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingBookingRulesUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { bookingRules: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# Rules replace the whole list. ≤20 rules; each prompt required and ≤3000 chars.
+mutation FuelySettingSetSwitchToHuman(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingSwitchToHumanUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { switchToHuman: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# messagePrompt: required, ≤3000 chars, validated even when howToSend is DontSend.
+mutation FuelySettingSetFollowUps(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingFollowUpsUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { followUps: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# captures replace the whole list; ≤40 entries, description ≤450 chars. Each entry
+# names an existing bot attribute; per-entry problems come back read-only in
+# captures[].validationErrors rather than failing the mutation.
+mutation FuelySettingSetCollectContactInfo(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingCollectContactInfoUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { collectContactInfo: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# --- comment-scope settings ---
+
+mutation FuelySettingSetPrivateReply(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingPrivateReplyUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { privateReply: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# likeContactComment is Facebook-only — elsewhere it fails with
+# FuelyLikeContactCommentNotAllowed.
+mutation FuelySettingSetPublicReply(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingPublicReplyUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { publicReply: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# --- filter settings: CUSTOM automations only, never a base one ---
+
+# ≤50 keywords, ≤50 chars each; duplicates are dropped server-side.
+mutation FuelySettingSetKeywords(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingKeywordsUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { keywords: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ≤50 posts. Each id is resolved against Instagram; a story id is rejected with
+# FuelyPostMediaWrongType. The contact scope is derived server-side, which is why
+# the input carries ids only while the read shape has {postID, contactScopeID}.
+mutation FuelySettingSetListOfPosts(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingListOfPostsUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { listOfPosts: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ≤50 stories; a non-story id is rejected with FuelyStoryMediaWrongType.
+mutation FuelySettingSetListOfStories(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingListOfStoriesUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { listOfStories: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ≤50 ads, id ≤60 chars. Ad ids come from the Meta Ads surface, not from here.
+mutation FuelySettingSetListOfAds(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingListOfAdsUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { listOfAds: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ≤20 refs, ≤100 chars each; blanks and duplicates are dropped server-side.
+mutation FuelySettingSetRefLinks(
+  $botID: BotID!
+  $automationID: FuelyAutomationID!
+  $update: FuelySettingRefLinksUpdateInput!
+) {
+  fuelyAutomationUpdateSetting(
+    botID: $botID
+    id: $automationID
+    update: { refLinks: { update: $update } }
+  ) {
+    ...FuelyAutomationParts
+  }
+}
+
+# ============================================================
+# Workspace context
+# ============================================================
+
+# One bootstrap query for the workspace: is the bot on the per-scope model, which
+# channels are actually connected (a scope whose platform has no contact scope can
+# be "on" and never receive a message), the team roster for the switch-to-human
+# assignee picker, and the knowledge-base facts the AI answers with (business hours and
+# the company details). Tone, language and who to respond to are per-scope automation
+# settings, not knowledge-base fields. `contactScopes` order is not stable between
+# calls. Validated over HTTP and WS.
+query AutomationsBootstrap($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    title
+    timezone
+    isMigratedToNewFuelySettings
+    contactScopes {
+      __typename
+      id
+      ... on WhatsAppPhoneContactScope {
+        phone {
+          id
+          displayPhoneNumber
+          verifiedName
+        }
+      }
+      ... on InstagramAccountContactScope {
+        instagramAccount {
+          id
+          username
+          name
+          profilePicture {
+            ...AutomationFile
+          }
+        }
+      }
+      ... on TikTokAccountContactScope {
+        tiktokAccount {
+          id
+          username
+          name
+        }
+      }
+      ... on FacebookContactScope {
+        facebookPage {
+          id
+          name
+          picture {
+            ...AutomationFile
+          }
+        }
+      }
+      ... on WebWidgetContactScope {
+        webWidget {
+          id
+          name
+          isEnabled
+        }
+      }
+    }
+    members {
+      id
+      user {
+        id
+        name
+        isUnknown
+        profilePicture {
+          ...AutomationFile
+        }
+      }
+      role {
+        roleTypeV2
+        botPermissions {
+          object
+          action
+        }
+      }
+    }
+    fuelyConfig {
+      enabled
+      usage {
+        total
+        catalog
+      }
+      knowledgeBase {
+        companyName
+        businessHoursSchedule {
+          workingHours {
+            day
+            enabled
+            start
+            end
+          }
+        }
+      }
+    }
+  }
+}
+
+# Custom attributes for the lead-qualification capture picker. `platforms` is
+# required by the API and means nothing here — pass every platform.
+query AutomationsAttributes(
+  $botID: BotID!
+  $platforms: [Platform!]!
+  $inputSubstring: String
+  $first: Int
+  $after: BotAttributeCursor
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: En
+      platforms: $platforms
+      attributeTypes: [custom]
+      filters: []
+      orderBy: { orderBy: AttributeName, direction: Asc }
+      inputSubstring: $inputSubstring
+      first: $first
+      after: $after
+    ) {
+      edges {
+        node {
+          botAttribute {
+            name
+            type
+            dataType
+          }
+          usersCount
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# Resolve picked Instagram media ids to thumbnails / captions (a ListOfPosts entry
+# carries only the id). Same InstagramMediaID string as the picker. Unknown id →
+# null. Aliased ×N by the caller; validated over WS.
+query AutomationsInstagramMedia($botID: BotID!, $id: InstagramMediaID!) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      ... on InstagramAccountContactScope {
+        instagramAccount {
+          id
+          media(id: $id) {
+            __typename
+            ... on InstagramPost {
+              id
+              isUnknown
+              caption
+              url
+              thumbnailPreview {
+                ...AutomationFile
+              }
+            }
+            ... on InstagramReel {
+              id
+              isUnknown
+              caption
+              url
+              thumbnailPreview {
+                ...AutomationFile
+              }
+            }
+            ... on InstagramAd {
+              id
+              isUnknown
+              caption
+              url
+              thumbnailPreview {
+                ...AutomationFile
+              }
+            }
+            ... on InstagramStory {
+              id
+              isUnknown
+              caption
+              url
+              thumbnailPreview {
+                ...AutomationFile
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# "Refresh from Instagram" in the media picker: pulls the latest media into the
+# connection (the dashboard does this before listing; it lengthens the connection).
+mutation AutomationsInstagramRefetch($accountID: InstagramAccountID!, $count: Int!) {
+  instagramAccountRefetchLatestMedias(id: $accountID, count: $count) {
+    id
+    username
+  }
+}
+
+# Facebook page posts for the ListOfPosts filter on Facebook scopes. The setter
+# path needs a connected Facebook page; without one the drawer ships behind a
+# "paste an id" fallback.
+query AutomationsFacebookPosts($botID: BotID!, $first: Int!, $after: FbPagePostCursor) {
+  bot(id: $botID) {
+    id
+    contactScopes {
+      __typename
+      ... on FacebookContactScope {
+        facebookPage {
+          id
+          name
+          posts(first: $first, after: $after) {
+            edges {
+              cursor
+              node {
+                id
+                message
+                permalinkURL
+                image {
+                  ...AutomationFile
+                }
+                isPublished
+                isExpired
+                createdTime
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# Meta ads for the ListOfAds filter. One cursor per ad account; the drawer pages
+# per account. `metaAdId` is what the setter takes (any string ≤ limit is accepted;
+# a pasted Ads Manager URL is too long — parse `selected_ad_ids=` client-side).
+# Without Meta ad accounts on the signed-in user the query still validates, but
+# the picker path cannot be exercised.
+query AutomationsMetaAds($botID: BotID!, $platforms: [Platform!]!, $first: Int!, $after: MetaAdCursor) {
+  currentUser {
+    id
+    metaAdsSyncState {
+      id
+      requestedAt
+      finishedAt
+    }
+    metaAdAccounts {
+      id
+      metaAdAccountID
+      name
+      hasWhatsappAds
+      hasInstagramAds
+      ads(botID: $botID, platforms: $platforms, first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            id
+            name
+            metaAdId
+            effectiveStatus
+            thumbnailURL
+            adSetDestinationType
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Preview (test chat). Own copies of the preview surface: module code may
+# not import another module's generated documents. Text-only sends.
+# ============================================================
+
+fragment AutomationsPvMessage on Message {
+  __typename
+  id
+  clientId
+  sentTime
+  updatedAt
+  sender {
+    __typename
+    id
+    name
+  }
+  errors {
+    code
+    date
+  }
+  ... on WhatsAppInTextMessage {
+    text
+  }
+  ... on WhatsAppOutTextMessage {
+    text
+  }
+  ... on WebWidgetTextMessage {
+    text
+  }
+  ... on InstagramInTextMessage {
+    text
+  }
+  ... on InstagramOutTextMessage {
+    text
+  }
+  ... on TikTokInTextMessage {
+    text
+  }
+  ... on TikTokOutTextMessage {
+    text
+  }
+  ... on FacebookInTextMessage {
+    text
+  }
+  ... on FacebookOutTextMessage {
+    text
+  }
+  ... on SystemTypingMessage {
+    until
+  }
+  ... on SystemConversationSummaryMessage {
+    summary
+  }
+  ... on SystemLivechatOpenedByComponentMessage {
+    originallyDecidedByAI
+  }
+}
+
+# Pins a preview session to ONE automation (base or custom, enabled or not — the
+# direct call bypasses `enabled` and every filter). The platform is the scope's,
+# returned on the session. The All base is not previewable:
+# PreviewResponsesFuelyAutomationScopeNotPreviewable.
+mutation AutomationsPreviewStartForAutomation($botID: BotID!, $automationID: FuelyAutomationID!) {
+  previewResponsesStartForFuelyAutomation(botID: $botID, fuelyAutomationID: $automationID) {
+    __typename
+    id
+    conversationID
+    startedAt
+    platform
+    fuelyAutomationID
+  }
+}
+
+query AutomationsPreviewMessages($botID: BotID!, $conversationID: ConversationID!, $first: Int, $after: MessagesCursor) {
+  bot(id: $botID) {
+    id
+    conversation(conversationID: $conversationID) {
+      id
+      platform
+      messages(first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            ...AutomationsPvMessage
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+# The subscription takes ~1–3 s to become active; subscribe before sending.
+subscription AutomationsPreviewMessageAdded($botID: BotID!, $conversationID: ConversationID!) {
+  messageAdded(botID: $botID, conversationID: $conversationID) {
+    ...AutomationsPvMessage
+  }
+}
+
+subscription AutomationsPreviewMessageUpdated($botID: BotID!, $conversationID: ConversationID!) {
+  messageUpdated(botID: $botID, conversationID: $conversationID) {
+    ...AutomationsPvMessage
+  }
+}
+
+mutation AutomationsPreviewWhatsAppTextSend($botID: BotID!, $conversationID: ConversationID!, $message: WhatsAppTextMessageSendInput!) {
+  previewResponsesWhatsappTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}
+
+mutation AutomationsPreviewWidgetTextSend($botID: BotID!, $conversationID: ConversationID!, $message: WidgetTextMessageSendInput!) {
+  previewResponsesWidgetTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}
+
+mutation AutomationsPreviewInstagramTextSend($botID: BotID!, $conversationID: ConversationID!, $message: InstagramTextMessageSendInput!) {
+  previewResponsesInstagramTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}
+
+mutation AutomationsPreviewTikTokTextSend($botID: BotID!, $conversationID: ConversationID!, $message: TikTokTextMessageSendInput!) {
+  previewResponsesTikTokTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}
+
+mutation AutomationsPreviewFacebookTextSend($botID: BotID!, $conversationID: ConversationID!, $message: FacebookTextMessageSendInput!) {
+  previewResponsesFacebookTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}

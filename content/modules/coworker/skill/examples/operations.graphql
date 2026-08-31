@@ -1,0 +1,351 @@
+# Coworker — the operator-facing AI assistant chat (chatfuel-coworker skill).
+# See references/guide.md for the protocol, streaming semantics and traps.
+# Validate against ../chatfuel-core/references/schema.graphql
+# (node ../chatfuel-core/scripts/validate-operations.mjs).
+#
+# Key facts encoded here:
+# - Conversations are per-(user account, bot); the list lives on currentUser.
+# - Send mutations return the conversation IMMEDIATELY — the actual reply
+#   arrives asynchronously (subscription events, or poll CoworkerState).
+# - messagesConnection is NEWEST-first; `after` pages backwards into history.
+# - clientID (a fresh UUID) is required on every send/click mutation and is
+#   echoed back on CoworkerMessage.clientID for optimistic-UI reconciliation.
+
+# ============================================================
+# Fragments
+# ============================================================
+
+fragment CoworkerFile on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+# One level of nesting for button-wrapped tool calls is enough in practice.
+fragment CoworkerMsg on CoworkerMessage {
+  __typename
+  id
+  clientID
+  role
+  content
+  clientActionType
+  time
+  attachments {
+    ...CoworkerFile
+  }
+  toolCalls {
+    __typename
+    ... on CoworkerToolOther {
+      toolID
+    }
+    ... on CoworkerFrontendAction {
+      actionType
+      parameters
+    }
+    ... on CoworkerToolButtons {
+      buttons {
+        id
+        title
+        toolCall {
+          __typename
+          ... on CoworkerToolOther {
+            toolID
+          }
+          ... on CoworkerFrontendAction {
+            actionType
+            parameters
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment CoworkerPendingAction on CoworkerConversationPendingAction {
+  __typename
+  ... on CoworkerToolApprovalRequest {
+    requestedInMsgID
+    tools {
+      toolID
+      arguments
+      needsManualApprove
+    }
+  }
+  ... on CoworkerUserMessageRejected {
+    reason
+    rejectedMessage {
+      ...CoworkerMsg
+    }
+  }
+}
+
+# Conversation state WITHOUT messages — reused by list rows, mutation
+# results and the CoworkerConversationUpdated subscription payload.
+fragment CoworkerConvState on CoworkerConversation {
+  __typename
+  id
+  title
+  updatedAt
+  isAgentLoopActive
+  unreadMessagesCountFromAssistant
+  latestReadMessageIDFromAssistant
+  frontendStateStorage
+  pendingAction {
+    ...CoworkerPendingAction
+  }
+}
+
+# ============================================================
+# Reads
+# ============================================================
+
+# Sidebar chat list. The dashboard hides conversations whose
+# messagesConnection(first: 1) is empty (freshly created, never used).
+query CoworkerChatList($botID: BotID!, $first: Int!, $after: CoworkerConversationsCursor) {
+  currentUser {
+    id
+    coworkerConversationsConnection(botID: $botID, first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          ...CoworkerConvState
+          messagesConnection(first: 1) {
+            edges {
+              node {
+                id
+                content
+              }
+            }
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The polling read: full conversation state + a page of newest messages.
+# Poll this (2-3s while isAgentLoopActive) if you don't hold a WebSocket.
+# Returns null (not an error) for a missing or non-owned conversation.
+query CoworkerState($conversationID: CoworkerConversationID!, $first: Int!, $after: CoworkerMessagesCursor) {
+  currentUser {
+    id
+    coworkerGetConversation(id: $conversationID) {
+      ...CoworkerConvState
+      messagesConnection(first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            ...CoworkerMsg
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Conversation lifecycle
+# ============================================================
+
+# Requires Bot: View. Returns an empty conversation; it shows up in the
+# list immediately (filter empty ones out like the dashboard does).
+mutation CoworkerCreate($botID: BotID!) {
+  coworkerConversationCreate(botID: $botID) {
+    ...CoworkerConvState
+  }
+}
+
+# Skill-scoped variants exist (coworkerConversationCreateInSkill /
+# ...InUserDefinedSkill) but skill IDs cannot be listed through this API — use
+# them only with an ID you already have.
+
+# There is no rename, delete or archive.
+
+# ============================================================
+# Sending (operator side)
+# ============================================================
+
+# clientActionType marks WHERE the text came from. `QuickReply` is the one
+# value: the assistant offers options as `suggest_quick_reply` frontend actions
+# (see CoworkerUpdates below), and a click sends the chip's own text back.
+mutation CoworkerSendText(
+  $conversationID: CoworkerConversationID!
+  $clientID: String!
+  $text: String!
+  $clientActionType: CoworkerMessageClientActionType
+) {
+  coworkerConversationSendMessage(
+    id: $conversationID
+    clientID: $clientID
+    text: $text
+    clientActionType: $clientActionType
+  ) {
+    ...CoworkerConvState
+  }
+}
+
+# fileIDs come from the REST upload: POST /api/filestorage/upload/bot?fileType=…&botID=…
+# (max 15 files, images/documents only — video/audio rejected).
+# DefinedErrorCode: AttachmentInvalid, CoworkerConversationDoesNotExist
+mutation CoworkerSendWithAttachments(
+  $conversationID: CoworkerConversationID!
+  $clientID: String!
+  $text: String
+  $fileIDs: [FileID!]!
+) {
+  coworkerConversationSendMessageWithAttachments(
+    id: $conversationID
+    clientID: $clientID
+    text: $text
+    fileIDs: $fileIDs
+  ) {
+    ...CoworkerConvState
+  }
+}
+
+mutation CoworkerSendAudio($conversationID: CoworkerConversationID!, $clientID: String!, $fileID: FileID!) {
+  coworkerConversationSendAudioMessage(id: $conversationID, clientID: $clientID, fileID: $fileID) {
+    ...CoworkerConvState
+  }
+}
+
+# Click a button from a CoworkerToolButtons tool call.
+mutation CoworkerClickButton(
+  $conversationID: CoworkerConversationID!
+  $clientID: String!
+  $messageID: CoworkerConversationMessageID!
+  $buttonID: String!
+) {
+  coworkerConversationClickButton(
+    id: $conversationID
+    clientID: $clientID
+    msgID: $messageID
+    buttonID: $buttonID
+  ) {
+    ...CoworkerConvState
+  }
+}
+
+# ============================================================
+# Tool approval & pending actions
+# ============================================================
+
+# messageID MUST be pendingAction.requestedInMsgID. approved applies to the
+# WHOLE tools[] batch. Returns true immediately (async resume).
+mutation CoworkerRespondToolApproval(
+  $conversationID: CoworkerConversationID!
+  $clientID: String!
+  $messageID: CoworkerConversationMessageID!
+  $approved: Boolean!
+  $denialMessage: String
+) {
+  coworkerConversationRespondToolApproval(
+    conversationID: $conversationID
+    clientID: $clientID
+    messageID: $messageID
+    approved: $approved
+    denialMessage: $denialMessage
+  )
+}
+
+# Drop a rejected user message (pendingAction: CoworkerUserMessageRejected)
+# without starting a new agent loop. Errors if nothing is pending.
+mutation CoworkerAbortRejectedMessage($conversationID: CoworkerConversationID!) {
+  coworkerConversationAbortRejectedUserMessage(id: $conversationID)
+}
+
+# Reply to a CoworkerFrontendStateRequested event. Must land promptly or
+# the agent's tool call fails. DefinedErrorCode: FrontendStateRequestNotFound
+mutation CoworkerFrontendStateReply(
+  $conversationID: CoworkerConversationID!
+  $requestID: String!
+  $data: Map!
+) {
+  coworkerConversationFrontendStateSubmitReply(
+    conversationID: $conversationID
+    requestID: $requestID
+    data: $data
+  )
+}
+
+# ============================================================
+# Control
+# ============================================================
+
+# Cancels the running agent loop; partial streamed content is persisted.
+mutation CoworkerStopStreaming($conversationID: CoworkerConversationID!) {
+  coworkerConversationStopStreaming(id: $conversationID) {
+    ...CoworkerConvState
+  }
+}
+
+# All-or-nothing read marker (no per-message variant exists).
+mutation CoworkerMarkAllRead($conversationID: CoworkerConversationID!) {
+  coworkerConversationMarkAllAssistantMessagesAsRead(id: $conversationID) {
+    ...CoworkerConvState
+  }
+}
+
+# Per-conversation client scratchpad the agent can read.
+# An empty value is rejected — send the key's absence, not an empty string.
+mutation CoworkerSetStorageItem($conversationID: CoworkerConversationID!, $key: String!, $value: String!) {
+  coworkerConversationSetFrontendStorageItem(id: $conversationID, key: $key, value: $value) {
+    ...CoworkerConvState
+  }
+}
+
+mutation CoworkerUnsetStorageItem($conversationID: CoworkerConversationID!, $key: String!) {
+  coworkerConversationUnsetFrontendStorageItem(id: $conversationID, key: $key) {
+    ...CoworkerConvState
+  }
+}
+
+# ============================================================
+# Subscriptions (the proper realtime channel)
+# ============================================================
+
+# Bot-scoped: ONE subscription covers all of this user's conversations on
+# the bot. Demultiplex by conversationID (CoworkerConversationUpdated has
+# none — read conversation.id).
+subscription CoworkerUpdates($botID: BotID!) {
+  coworkerAnyConversationUpdated(botID: $botID) {
+    __typename
+    ... on CoworkerMessageStreamingChunk {
+      conversationID
+      messageID
+      chunk
+    }
+    ... on CoworkerMessageAdded {
+      conversationID
+      message {
+        ...CoworkerMsg
+      }
+    }
+    ... on CoworkerConversationUpdated {
+      conversation {
+        ...CoworkerConvState
+      }
+    }
+    ... on CoworkerFrontendStateRequested {
+      conversationID
+      requestID
+      query
+    }
+  }
+}
+
+subscription CoworkerConversationCreated($botID: BotID!) {
+  coworkerConversationCreated(botID: $botID) {
+    ...CoworkerConvState
+  }
+}

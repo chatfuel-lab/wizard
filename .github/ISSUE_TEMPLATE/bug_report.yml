@@ -1,0 +1,78 @@
+name: Bug report
+description: Something the wizard, a scaffolded app, or a module skill did wrong
+labels: ['bug']
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-you-expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        npx @chatfuel/wizard --modules livechat,contacts
+        # answered the prompts with …
+        # then …
+    validations:
+      required: true
+
+  - type: input
+    id: wizard-version
+    attributes:
+      label: Wizard version
+      placeholder: npx @chatfuel/wizard --version
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      placeholder: node --version
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it broke
+      options:
+        - the wizard run itself
+        - the scaffolded app
+        - the dev proxy
+        - deploy
+        - a module skill
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Remove your Chatfuel token and any keys before pasting — anything shaped like a token will be treated as compromised. The wizard masks what it prints itself, but not what `npm`, `vercel` or the Supabase CLI print through it, so read a terminal transcript before pasting it.
+      render: shell
+    validations:
+      required: false

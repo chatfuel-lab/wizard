@@ -1,0 +1,49 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  merge_group:
+  # So the first run does not have to be the publication itself. Once the
+  # repository is public, this can be started by hand and read before anyone is
+  # told the repository exists; on a private one it still refuses, because the
+  # upload it ends with needs code scanning the repository does not have.
+  workflow_dispatch:
+  schedule:
+    - cron: '27 4 * * 1'
+
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze
+    # Code scanning is free on a public repository and a paid add-on on a private
+    # one, so the job is written to arm itself on the repositories where it runs
+    # for free rather than to be enabled by hand. `merge_group` carries no
+    # repository object, and the queue only exists on the repository this is
+    # about, so that trigger is let through on its own name.
+    if: github.event_name == 'merge_group' || github.event.repository.visibility == 'public'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8
+        with:
+          languages: javascript-typescript
+          # The generated GraphQL client and build output are not written here and
+          # would only add findings nobody can act on.
+          config: |
+            paths-ignore:
+              - content/api-client/src/generated
+              - '**/dist'
+
+      - uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28 # v4.37.8

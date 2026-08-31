@@ -1,0 +1,70 @@
+/*
+ * The base layer — the rules that paint the DOCUMENT rather than a component.
+ *
+ * It is a separate file, and that is the whole point of it. `tokens.css` is
+ * imported by embed hosts into their own global CSS (see the core skill's
+ * embed playbook), and these rules are not scopable to a wrapper the way the
+ * `[data-theme]` blocks are: they claim <body>, every h1-h6 on the page,
+ * ::selection and every scrollbar in the document. A standalone app wants
+ * exactly that; somebody else's app does not. So the app's CSS entry imports
+ * both files and an embed host imports one.
+ *
+ * There was none before: the app painted its ground with `bg-surface font-sans`
+ * on whatever container happened to be outermost, which left the real <body>
+ * white and the type at the browser default until React mounted.
+ *
+ * Deliberately NOT here: a global `:focus-visible` outline. This system focuses
+ * with the `focus-ring` utility instead, because a data-dense screen is full of
+ * overflow-hidden scroll containers and sticky cells, and pass 11(e) enforces
+ * how it is written.
+ */
+@layer base {
+  body {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    letter-spacing: var(--text-body--letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-semibold);
+    text-wrap: balance;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: var(--selection-bg);
+    color: var(--color-text);
+  }
+
+  /* Thin scrollbars, in tokens so they theme. A product this dense has a lot of
+     them, and the platform default is a 15px band of chrome per pane. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: var(--radius-pill);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-faint);
+  }
+}

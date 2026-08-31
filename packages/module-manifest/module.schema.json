@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "chatfuel-wizard/module.schema.json",
+  "title": "Chatfuel wizard module manifest",
+  "type": "object",
+  "required": ["id", "name", "description", "status", "skill"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["planned", "ready"],
+      "description": "The wizard only offers modules with status \"ready\"."
+    },
+    "hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "The module contributes no nav-rail item and no \"/<id>\" route — it wraps or extends the shell instead (auth: the sign-in gate, the user menu and /team). Its shell descriptor must carry the matching `hidden: true`.",
+      "$comment": "Kept in the manifest, not only in the descriptor, because the wizard writes the agent handoff from manifests alone and would otherwise print a dead deep link."
+    },
+    "selection": {
+      "enum": ["default", "opt-in"],
+      "default": "default",
+      "description": "\"opt-in\" modules are offered in the picker but never auto-included by --yes (they need credentials the wizard cannot invent, e.g. a Supabase project)."
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "description": "A module id, the same shape as `id`: it is joined to content/modules/ to reach a directory."
+      },
+      "default": [],
+      "description": "Module ids that must be co-installed (knowledge dependencies). \"core\" is implicit for every module and never listed."
+    },
+    "recommends": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$",
+        "description": "A module id, the same shape as `id`: it is joined to content/modules/ to reach a directory."
+      },
+      "default": [],
+      "description": "Module ids the wizard suggests; the user can decline."
+    },
+    "skill": {
+      "type": "object",
+      "required": ["installAs"],
+      "additionalProperties": false,
+      "properties": {
+        "installAs": {
+          "type": "string",
+          "pattern": "^chatfuel-[a-z0-9-]+$",
+          "description": "Directory name the skill is installed as, inside the agent's skills directory."
+        },
+        "dir": {
+          "type": "string",
+          "default": "skill",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "One directory name inside the module, copied whole into the agent's skills directory. One segment, so it cannot reach out of the module."
+        }
+      }
+    },
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "UI contribution to the shell app (content/shell). Dev serving, port and app kind are the shell's — modules only declare env needs and their embeddable root.",
+      "properties": {
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "What every reader of a .env accepts as a name. The wizard writes these into the app's .env one per line, and the file format has no escape."
+              },
+              "secret": { "type": "boolean", "default": false },
+              "default": {
+                "type": "string",
+                "pattern": "^[^\r\n]*$",
+                "description": "Written as-is into the .env. A line break there would declare a variable rather than fill one."
+              },
+              "optional": {
+                "type": "boolean",
+                "default": false,
+                "description": "May stay empty; the wizard writes it as a commented-out line when it has no value."
+              },
+              "resolve": {
+                "enum": ["authSetup", "workspacePick", "adminSetup"],
+                "description": "Which wizard step supplies the value: the auth setup step (Supabase project), the Chatfuel workspace picker, or the admin-password step."
+              },
+              "prompt": { "type": "string" }
+            }
+          }
+        },
+        "embed": {
+          "type": "object",
+          "required": ["roots", "entryComponent"],
+          "additionalProperties": false,
+          "properties": {
+            "roots": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^src/[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*$"
+              },
+              "description": "Shell-relative embeddable roots, e.g. \"src/modules/livechat\". No dots in any segment, so a root cannot climb out of the shell it is resolved against."
+            },
+            "entryComponent": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Za-z0-9_]*$",
+              "description": "The React component the embed renders. A JavaScript identifier, because it is written into generated source."
+            },
+            "npmDependencies": {
+              "type": "object",
+              "propertyNames": { "maxLength": 214, "pattern": "^(@[a-z0-9][a-z0-9._-]*/)?[a-z0-9][a-z0-9._-]*$" },
+              "additionalProperties": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "pattern": "^(?:[a-z][a-z0-9-]*|[~^<>=]{0,2}[0-9xX*][0-9A-Za-z.+-]*(?:\\s*(?:\\|\\|)?\\s*[~^<>=]{0,2}[0-9xX*][0-9A-Za-z.+-]*)*)$",
+                "description": "A semver range or a dist-tag, and nothing else. The wizard joins name and version into one npm install argument and runs it, with install scripts, inside the user's own project, so a value carrying \":\" or \"/\" — file:, link:, portal:, workspace:, npm:, git+ssh://, https://, or a bare user/repo — would name a source the manifest is not allowed to choose."
+              },
+              "description": "Package names the embed adds to the host's package.json, mapped to version ranges."
+            },
+            "playbook": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+(/[A-Za-z0-9_-]+)*\\.md$",
+              "description": "A skill-relative markdown file. No dots outside the extension, so it cannot climb out of the skill directory."
+            }
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "description": "Chatfuel role permissions the module needs; the wizard prints them verbatim in the agent handoff, so an empty one reads as a line about nothing.",
+      "items": {
+        "type": "object",
+        "required": ["object", "action"],
+        "additionalProperties": false,
+        "properties": {
+          "object": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "requiredFor": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

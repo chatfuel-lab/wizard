@@ -1,0 +1,34 @@
+name: Feature request
+description: Something the wizard or a module should do and does not
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and what stands in the way.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-behavior
+    attributes:
+      label: Proposed behavior
+      description: What the wizard or the app should do instead.
+    validations:
+      required: true
+
+  - type: input
+    id: module-or-area
+    attributes:
+      label: Which module or area
+      placeholder: e.g. contacts, the dev proxy, the wizard prompts
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

@@ -1,0 +1,60 @@
+{
+  "id": "publishing",
+  "name": "Publishing",
+  "description": "Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, composed against a live preview of what the post will look like, then published immediately or put in a queue. A calendar of what is going out and when, a queue where failures are read and retried, and a library of everything already on the account. Scheduling runs on the deployment's own database when there is one \u2014 the Chatfuel API publishes immediately and has no scheduled-publish of its own \u2014 and the module works without it, composing and publishing on the spot.",
+  "status": "ready",
+  "requires": [],
+  "recommends": [
+    "auth",
+    "admin",
+    "automations"
+  ],
+  "skill": {
+    "installAs": "chatfuel-publishing"
+  },
+  "app": {
+    "env": [
+      {
+        "name": "CHATFUEL_TOKEN",
+        "secret": true
+      },
+      {
+        "name": "VITE_CHATFUEL_WORKSPACE_ID",
+        "resolve": "workspacePick"
+      },
+      {
+        "name": "CHATFUEL_API_BASE",
+        "default": "https://panel.chatfuel.com"
+      },
+      {
+        "name": "PUBLISHING_MEDIA_BUCKET",
+        "default": "cf-pub-media"
+      },
+      {
+        "name": "PUBLISHING_SECRET",
+        "secret": true,
+        "optional": true,
+        "resolve": "authSetup"
+      }
+    ],
+    "embed": {
+      "roots": [
+        "src/modules/publishing"
+      ],
+      "entryComponent": "PublishingApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "Bot",
+      "action": "View",
+      "requiredFor": "reading the connected Instagram account and what it may do"
+    },
+    {
+      "object": "Bot",
+      "action": "Edit",
+      "requiredFor": "publishing, and reconnecting the account when its permissions are short"
+    }
+  ]
+}

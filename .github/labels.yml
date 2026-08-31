@@ -1,0 +1,89 @@
+# The label set, in one reviewable file. .github/workflows/labels.yml applies it.
+
+# --- What kind of thing it is ---------------------------------------------
+- name: bug
+  color: d73a4a
+  description: Something does not do what it says it does
+- name: enhancement
+  color: a2eeef
+  description: A new capability, or a better version of one
+- name: documentation
+  color: 0075ca
+  description: Wrong, missing or unclear docs
+- name: question
+  color: d876e3
+  description: A question rather than a change
+- name: security
+  color: b60205
+  description: Not for vulnerability reports - those go through private reporting
+
+# --- Where it lives --------------------------------------------------------
+- name: 'area: wizard'
+  color: 1d76db
+  description: The CLI itself
+- name: 'area: scaffold'
+  color: 1d76db
+  description: The app the wizard writes
+- name: 'area: proxy'
+  color: 1d76db
+  description: The token boundary, the auth gate, the WebSocket relay
+- name: 'area: ui'
+  color: 1d76db
+  description: The design system
+- name: 'area: api-client'
+  color: 1d76db
+  description: The GraphQL client and the schema snapshot
+- name: 'area: modules'
+  color: 1d76db
+  description: One of the thirteen modules
+- name: 'area: skills'
+  color: 1d76db
+  description: What the coding agent reads
+- name: 'area: deploy'
+  color: 1d76db
+  description: Vercel, Docker, running your own server
+- name: 'area: ci'
+  color: 1d76db
+  description: Workflows, gates, release
+
+# --- What has to happen next ----------------------------------------------
+- name: needs triage
+  color: fbca04
+  description: Nobody has looked at it yet
+- name: needs info
+  color: fbca04
+  description: Waiting on the reporter
+- name: needs repro
+  color: fbca04
+  description: Believable, not yet reproduced
+- name: blocked
+  color: 5319e7
+  description: Waiting on something outside this repository
+- name: upstream
+  color: 5319e7
+  description: The fix belongs to the Chatfuel API or another dependency
+
+# --- Who it is for ---------------------------------------------------------
+- name: good first issue
+  color: 7057ff
+  description: Small, self-contained, and someone will help
+- name: help wanted
+  color: 008672
+  description: Open to anyone who wants it
+
+# --- Housekeeping ----------------------------------------------------------
+- name: dependencies
+  color: 0366d6
+  description: Opened by Dependabot
+- name: pinned
+  color: ededed
+  description: Never marked stale
+- name: roadmap
+  color: c5def5
+  description: Planned, tracked, not stale
+- name: duplicate
+  color: cfd3d7
+  description: Already reported somewhere else
+- name: wontfix
+  color: ffffff
+  description: A decision, not an oversight

@@ -1,0 +1,33 @@
+{
+  "id": "contacts",
+  "name": "Contacts / CRM",
+  "description": "A CRM workspace over Chatfuel contacts: a record table with saved views, nested AND/OR attribute filters and inline editing, a full record page, a Fields surface over the bot's attribute catalog, an audience breakdown, and CSV import and export. Routes between the two list engines — the one that sees every contact and the live one that only sees contacts with a conversation — and says which one answered.",
+  "status": "ready",
+  "requires": [],
+  "recommends": [],
+  "skill": { "installAs": "chatfuel-contacts" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/contacts"],
+      "entryComponent": "ContactsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "People",
+      "action": "View",
+      "requiredFor": "reading the contacts table, the record page, the field catalog, the audience counts and any CSV export"
+    },
+    {
+      "object": "People",
+      "action": "Edit",
+      "requiredFor": "inline editing, name, note, sales stage and owner changes, bot-wide field defaults, and the CSV import"
+    }
+  ]
+}

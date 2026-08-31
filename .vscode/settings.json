@@ -1,0 +1,12 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["content/modules/*/module.json"],
+      "url": "./packages/module-manifest/module.schema.json"
+    },
+    {
+      "fileMatch": ["**/app.json"],
+      "url": "./packages/module-manifest/app.schema.json"
+    }
+  ]
+}

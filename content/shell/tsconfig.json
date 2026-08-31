@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "~ui": ["./src/vendor/ui/index.ts", "../ui/src/index.ts"],
+      "~ui/*": ["./src/vendor/ui/*", "../ui/src/*"],
+      "~api": ["./src/vendor/api/index.ts", "../api-client/src/index.ts"],
+      "~api/*": ["./src/vendor/api/*", "../api-client/src/*"]
+    }
+  },
+  "include": ["src", "server", "api", "vite.config.ts", "vite.server.config.ts"]
+}
