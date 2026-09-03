@@ -2573,7 +2573,7 @@ describe('auth gate', () => {
     // redacting or auditing logs has to be able to find every credential that
     // ever passed through them.
     const loggedLink = (): string | undefined =>
-      errorLog.mock.calls.map((c) => String(c[0])).find((line) => line.includes('RECOVERY-LINK'));
+      errorLog.mock.calls.map((c: unknown[]) => String(c[0])).find((line: string) => line.includes('RECOVERY-LINK'));
 
     it('refuses a body past the ceiling, and asks the database for nobody', async () => {
       const before = supabase.calls.length;

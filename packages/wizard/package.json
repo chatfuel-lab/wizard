@@ -54,11 +54,11 @@
     "@chatfuel/api-client": "workspace:*",
     "@chatfuel/module-manifest": "workspace:*",
     "@chatfuel/vite-plugin-proxy": "workspace:*",
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.4.0",
     "tsdown": "^0.22.14",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^3.2.0"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=22.19.0"
