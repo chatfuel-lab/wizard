@@ -45,7 +45,7 @@ vi.mock('@clack/prompts', () => ({
     message: () => undefined,
     step: () => undefined,
   },
-  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined }),
+  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined, error: () => undefined }),
 }));
 
 /** A subprocess that either got as far as running, or never did. */
@@ -54,14 +54,21 @@ const commands: string[] = [];
 vi.mock('execa', () => ({
   execa: (command: string) => {
     commands.push(command);
-    const result: Promise<unknown> & { once?: (event: string, fn: () => void) => unknown } = spawned
+    const result: Promise<unknown> & {
+      nodeChildProcess?: { once: (event: string, fn: () => void) => unknown };
+    } = spawned
       ? Promise.resolve({ exitCode: 0 })
       : Promise.reject(Object.assign(new Error('ENOENT'), { exitCode: undefined }));
-    result.once = (event: string, fn: () => void) => {
-      // The real one fires this only when the binary is actually running.
-      if (event === 'spawn' && spawned) fn();
-      return result;
+    // execa 10 stopped forwarding the child's events, so the subscription is on
+    // the ChildProcess itself and the mock has to carry one.
+    const child = {
+      once: (event: string, fn: () => void) => {
+        // The real one fires this only when the binary is actually running.
+        if (event === 'spawn' && spawned) fn();
+        return child;
+      },
     };
+    result.nodeChildProcess = child;
     return result;
   },
 }));

@@ -32,7 +32,7 @@ export async function materialiseContent(ctx: WizardContext): Promise<void> {
         : `App template ready (${result.fetched} files fetched, ${result.cached} already here)`,
     );
   } catch (err) {
-    spinner.stop('Could not fetch the app template', 1);
+    spinner.error('Could not fetch the app template');
     throw err;
   }
 }

@@ -34,15 +34,14 @@ vi.mock('@clack/prompts', () => ({
   /* Ctrl+C in the middle of the write window, from the one call the scaffold
      makes between the copy and the lock. A real spinner would be spinning here
      with nothing to interrupt it. */
-  spinner: () => ({
-    start: () => undefined,
-    message: () => undefined,
-    stop: () => {
+  spinner: () => {
+    const settle = () => {
       if (!interruptOnStop) return;
       interruptOnStop = false;
       process.emit('SIGINT', 'SIGINT');
-    },
-  }),
+    };
+    return { start: () => undefined, message: () => undefined, stop: settle, error: settle };
+  },
 }));
 
 /**

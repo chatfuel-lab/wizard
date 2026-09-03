@@ -33,7 +33,12 @@ vi.mock('@clack/prompts', () => {
       success: () => undefined,
       message: () => undefined,
     },
-    spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined }),
+    spinner: () => ({
+      start: () => undefined,
+      message: () => undefined,
+      stop: () => undefined,
+      error: () => undefined,
+    }),
   };
 });
 

@@ -100,7 +100,7 @@ export async function ensureGh(): Promise<GhCli | null> {
     try {
       await execa(route.manager, route.args, { timeout: 15 * 60_000 });
     } catch (err) {
-      spinner.stop(`${route.label} could not install it`, 1);
+      spinner.error(`${route.label} could not install it`);
       p.log.warn(briefly(err));
       continue;
     }
@@ -108,7 +108,7 @@ export async function ensureGh(): Promise<GhCli | null> {
       spinner.stop(`GitHub CLI installed with ${route.label}`);
       return { bin: 'gh', source: route.source };
     }
-    spinner.stop(`${route.label} finished, but \`gh\` is not on this shell's PATH`, 1);
+    spinner.error(`${route.label} finished, but \`gh\` is not on this shell's PATH`);
   }
 
   const spinner = p.spinner({ indicator: 'timer' });
@@ -116,16 +116,16 @@ export async function ensureGh(): Promise<GhCli | null> {
   try {
     const bin = await installGhFromRelease();
     if (!bin) {
-      spinner.stop(`The GitHub CLI publishes no build for ${process.platform}/${process.arch}`, 1);
+      spinner.error(`The GitHub CLI publishes no build for ${process.platform}/${process.arch}`);
       return null;
     }
     if (await answers(bin)) {
       spinner.stop('GitHub CLI ready');
       return { bin, source: 'release' };
     }
-    spinner.stop('The downloaded GitHub CLI did not run', 1);
+    spinner.error('The downloaded GitHub CLI did not run');
   } catch (err) {
-    spinner.stop('The GitHub CLI download did not finish', 1);
+    spinner.error('The GitHub CLI download did not finish');
     p.log.warn(briefly(err));
   }
   return null;
@@ -239,7 +239,7 @@ export async function ghCreateAndPush(
       .find((line) => /^https:\/\/\S+$/.test(line));
     return url ?? `https://github.com/${name}`;
   } catch (err) {
-    spinner.stop('gh could not create the repository', 1);
+    spinner.error('gh could not create the repository');
     p.log.warn(briefly(err));
     return undefined;
   }

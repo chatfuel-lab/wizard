@@ -88,7 +88,7 @@ export interface ChecklistOptions<T> {
   output?: Writable;
 }
 
-class ChecklistPrompt<T> extends Prompt {
+class ChecklistPrompt<T> extends Prompt<T[]> {
   readonly options: ChecklistOption<T>[];
   readonly message: string;
   readonly required: boolean;
@@ -115,9 +115,6 @@ class ChecklistPrompt<T> extends Prompt {
     this.message = opts.message;
     this.required = opts.required ?? true;
     this.maxItems = opts.maxItems;
-    // The base writes this back into readline when validation fails, and
-    // resolves the prompt with it; it stays a string until the run is over.
-    this.value = '';
 
     for (const initial of opts.initialValues ?? []) {
       const index = this.options.findIndex((o) => o.value === initial);
@@ -231,5 +228,5 @@ export async function checklist<T>(opts: ChecklistOptions<T>): Promise<T[] | nul
   // Cancel is matched by shape, not by symbol identity: nothing here should
   // depend on this package and the prompt library sharing one copy of it.
   if (typeof result === 'symbol') return null;
-  return result as unknown as T[];
+  return result ?? [];
 }

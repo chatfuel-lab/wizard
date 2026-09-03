@@ -141,7 +141,7 @@ export async function installAgent(spec: AgentSpec): Promise<AgentLauncher | nul
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (isPermissionError(message)) {
-      spinner.stop(`${spec.name} could not be installed globally`, 1);
+      spinner.error(`${spec.name} could not be installed globally`);
       p.log.warn(
         `npm has no write access to its global prefix, so ${spec.name} will run through npx this time.\n` +
           `One-time fix:  npm config set prefix ~/.npm-global  ` +
@@ -149,7 +149,7 @@ export async function installAgent(spec: AgentSpec): Promise<AgentLauncher | nul
       );
       return npxLauncher(spec);
     }
-    spinner.stop(`${spec.name} install failed`, 1);
+    spinner.error(`${spec.name} install failed`);
     p.log.warn(`${pc.dim(message.split('\n').slice(-3).join(' ').slice(0, 300))}`);
     return null;
   }

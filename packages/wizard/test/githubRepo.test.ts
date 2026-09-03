@@ -38,7 +38,7 @@ vi.mock('@clack/prompts', () => ({
     success: () => undefined,
     message: (m: string) => lines.push(m),
   },
-  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined }),
+  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined, error: () => undefined }),
 }));
 
 const TOKEN = 'f'.repeat(64);

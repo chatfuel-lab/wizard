@@ -28,7 +28,7 @@ vi.mock('@clack/prompts', () => ({
     success: (m: string) => lines.push(m),
     message: () => undefined,
   },
-  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined }),
+  spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined, error: () => undefined }),
 }));
 
 const lines: string[] = [];
