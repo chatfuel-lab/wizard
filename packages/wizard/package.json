@@ -40,15 +40,15 @@
     "prepublishOnly": "node ../../scripts/check-publishable.ts && npm test"
   },
   "dependencies": {
-    "@clack/core": "0.5.0",
-    "@clack/prompts": "^0.11.0",
+    "@clack/core": "1.4.3",
+    "@clack/prompts": "^1.7.0",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "commander": "^14.0.0",
-    "execa": "^9.0.0",
-    "graphql": "^16.9.0",
+    "commander": "^15.0.0",
+    "execa": "^10.0.1",
+    "graphql": "^17.0.2",
     "graphql-ws": "^6.2.1",
     "picocolors": "^1.1.0",
-    "undici": "^7.0.0"
+    "undici": "^8.10.0"
   },
   "devDependencies": {
     "@chatfuel/api-client": "workspace:*",

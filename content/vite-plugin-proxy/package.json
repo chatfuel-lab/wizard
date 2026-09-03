@@ -19,9 +19,9 @@
     "live-check": "node --env-file-if-exists=../../.env --import tsx scripts/live-check-proxy.ts"
   },
   "dependencies": {
-    "graphql": "^16.9.0",
+    "graphql": "^17.0.2",
     "https-proxy-agent": "^9.0.0",
-    "undici": "^7.0.0",
+    "undici": "^8.10.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
