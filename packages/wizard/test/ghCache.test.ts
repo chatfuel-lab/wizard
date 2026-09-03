@@ -21,7 +21,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  */
 let served: (url: string) => Promise<unknown>;
 
-vi.mock('../src/net', () => ({
+/* Only the socket is scripted. `readBytesCapped` is the real one, so the cap
+   and the stall timer are exercised by every download this file drives. */
+vi.mock('../src/net', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/net')>()),
   outboundFetch: (url: string) => served(url),
 }));
 
@@ -58,11 +61,19 @@ function buildArchive(): Buffer {
 
 const sha256 = (bytes: Buffer): string => createHash('sha256').update(bytes).digest('hex');
 
-/** Enough of a Response for the two things release.ts asks of one. */
+/**
+ * Enough of a Response for what release.ts asks of one.
+ *
+ * The headers are empty rather than absent: `readBytesCapped` asks for
+ * `content-length` before it reads anything, and a stub without them would
+ * fail on the shape instead of on what the test is about. No body stream, so
+ * the capped read takes the whole-buffer path - which is the one a mock like
+ * this exercises anyway.
+ */
 const answer = (body: Buffer | object): unknown =>
   Buffer.isBuffer(body)
-    ? { ok: true, status: 200, arrayBuffer: async () => body }
-    : { ok: true, status: 200, json: async () => body };
+    ? { ok: true, status: 200, headers: new Headers(), arrayBuffer: async () => body }
+    : { ok: true, status: 200, headers: new Headers(), json: async () => body };
 
 beforeEach(() => {
   cache = mkdtempSync(join(tmpdir(), 'gh-cache-'));

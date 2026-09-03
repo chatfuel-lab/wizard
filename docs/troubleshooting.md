@@ -77,7 +77,10 @@ lost. On your own server the socket is unbounded.
 
 **`/admin` says there is no panel here.** `ADMIN_PASSWORD` is unset, so the routes are not
 mounted. It must also be at least 16 characters, and it is never in the navigation rail — the
-URL is the whole way in.
+URL is the whole way in. Before you set it on anything the internet can reach, read
+[the admin panel's door](deployment.md#the-admin-panels-door-on-a-host-with-more-than-one-instance):
+that password is the only thing in front of your whole Chatfuel account, and protecting the
+panel is yours to do.
 
 ## Limits that are not bugs
 

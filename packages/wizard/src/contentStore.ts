@@ -5,7 +5,7 @@ import { digestOf } from './lockFormat';
 import { contentUrl, type ContentPin } from './contentOrigin';
 import type { ContentLock } from './contentLock';
 import { WizardError } from './errors';
-import { type FetchLike, outboundFetch } from './net';
+import { type FetchLike, outboundFetch, readBytesCapped } from './net';
 
 /**
  * The disk the fetched content lands on.
@@ -14,6 +14,18 @@ import { type FetchLike, outboundFetch } from './net';
  * share a directory and nothing has to be invalidated: a new pin is a new path,
  * and the old one stays valid for anyone still running it.
  */
+/**
+ * The most any one content file may weigh before it is refused.
+ *
+ * The digest is checked after the bytes are in memory, so the digest is not
+ * what bounds memory - this is, and it has to hold against an origin that is
+ * not the one this wizard was built for. The largest file in the trees today is
+ * a generated GraphQL module a little under 2 MB, so the cap is roughly eight
+ * times the real ceiling; multiplied by the worker count below it is the worst
+ * case for the whole run.
+ */
+export const CONTENT_FILE_MAX_BYTES = 16 * 1024 * 1024;
+
 export function cacheBase(env: NodeJS.ProcessEnv = process.env): string {
   return env.CHATFUEL_WIZARD_CACHE ?? join(env.XDG_CACHE_HOME ?? join(homedir(), '.cache'), 'chatfuel-wizard');
 }
@@ -161,7 +173,17 @@ export async function materialise(options: MaterialiseOptions): Promise<Material
           'Reinstall the wizard, and report this if it repeats — a published pin should always resolve.',
         );
       }
-      store(root, path, Buffer.from(await response.arrayBuffer()), lock.files[path]);
+      let bytes: Buffer;
+      try {
+        bytes = await readBytesCapped(response, CONTENT_FILE_MAX_BYTES, path);
+      } catch (err) {
+        throw new WizardError(
+          `${path} could not be read from ${url}`,
+          'The origin this wizard was pointed at is not answering with the file it names. Check CHATFUEL_CONTENT_ORIGIN, or unset it to use the default.',
+          err,
+        );
+      }
+      store(root, path, bytes, lock.files[path]);
       done += 1;
       onProgress?.(done, total);
     }

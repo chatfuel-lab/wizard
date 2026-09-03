@@ -54,8 +54,13 @@ const appsRepoUrl = (ctx: WizardContext): string =>
  * That is the case this exists for: the default is silent, anything else has
  * to be looked at.
  *
- * `--yes` cannot be asked, so it is told instead — including which of the two
- * places the URL came from, because that is the part a person cannot see.
+ * `--yes` cannot be asked, so where the URL came from decides for it, and the
+ * two sources are not equivalent. `--apps-repo` is on the command line that is
+ * running: whoever typed `--yes` typed the catalog beside it and meant both.
+ * CHATFUEL_APPS_REPO is not — it can predate this command by months, and under
+ * `--yes` there is no prompt left in which anyone would notice. So the flag
+ * proceeds and the variable refuses, naming itself, rather than warning into a
+ * log nobody is reading at the time.
  *
  * A path on this machine is named but not held up for a yes: it is code the
  * person already has, no fetch crosses the network to get it, and it is the
@@ -82,8 +87,14 @@ async function confirmAppsRepo(ctx: WizardContext, repo: string): Promise<void> 
     'Not the standard apps catalog',
   );
   if (ctx.flags.yes) {
-    p.log.warn(`--yes: fetching the app preset from ${repo} without asking.`);
-    return;
+    if (ctx.flags.appsRepo) {
+      p.log.warn(`--yes: fetching the app preset from ${repo} without asking, because --apps-repo named it.`);
+      return;
+    }
+    throw new WizardError(
+      `--yes will not fetch an app preset from a catalog named only by CHATFUEL_APPS_REPO (${repo})`,
+      'Pass --apps-repo <url> to say the catalog is meant, unset CHATFUEL_APPS_REPO to use the standard one, or drop --yes and answer the question.',
+    );
   }
   const go = await p.confirm({ message: `Fetch the app preset from ${repo}?`, initialValue: false });
   if (p.isCancel(go) || !go) throw new WizardError('Cancelled.');

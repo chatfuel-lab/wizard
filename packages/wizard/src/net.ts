@@ -59,8 +59,101 @@ function registerProxySecret(): void {
   }
 }
 
-/** `fetch`, through the proxy when the environment names one. */
-export const outboundFetch: typeof globalThis.fetch = (input, init) => {
+/**
+ * How long a request may take to produce a response, in milliseconds.
+ *
+ * Bounded on purpose at the head of the exchange only: the timer is cleared the
+ * moment headers arrive, so a large download is not killed halfway for being
+ * large. What the body is bounded by is size and stalling, in `readBytesCapped`
+ * below - three different failures that a single overall deadline would either
+ * conflate or, set generously enough to pass a slow download, stop catching.
+ */
+export const RESPONSE_TIMEOUT_MS = 30_000;
+
+/** How long the body may go without producing a chunk before it is abandoned. */
+export const STALL_TIMEOUT_MS = 30_000;
+
+/**
+ * `fetch`, through the proxy when the environment names one, and never without
+ * a deadline.
+ *
+ * A caller that brings its own `signal` is left alone: it has said what its
+ * budget is, and two abort sources on one request is a race nobody can read
+ * out of a stack trace afterwards.
+ */
+export const outboundFetch: typeof globalThis.fetch = async (input, init) => {
   registerProxySecret();
-  return egressFetch(input, init);
+  if (init?.signal) return egressFetch(input, init);
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(new Error(`No response after ${RESPONSE_TIMEOUT_MS}ms`)),
+    RESPONSE_TIMEOUT_MS,
+  );
+  try {
+    return await egressFetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 };
+
+/**
+ * Read a response body with a cap on how much of it may be believed, and a
+ * limit on how long it may say nothing.
+ *
+ * Everything this wizard downloads is checked against a digest - but the check
+ * happens after the bytes are in memory, so without a cap the check is reached
+ * only if the process survives long enough to reach it. A mirror named in
+ * `CHATFUEL_CONTENT_ORIGIN`, or an `HTTPS_PROXY` that answers everything, is
+ * the case this exists for: an endless body fills the heap, and one that arrives
+ * a byte at a time holds a worker forever without ever tripping a deadline.
+ *
+ * `content-length` is checked first when it is there, so an oversized answer
+ * costs nothing to refuse; a chunked one is counted as it arrives.
+ */
+export async function readBytesCapped(res: Response, maxBytes: number, what: string): Promise<Buffer> {
+  const declared = Number(res.headers.get('content-length') ?? Number.NaN);
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    throw new Error(`${what}: the response declares ${declared} bytes, over the ${maxBytes}-byte cap`);
+  }
+
+  const body = res.body;
+  /* No stream to read (a mock Response, a runtime without one): the whole body
+     is already in hand, so the cap can only be checked after the fact. */
+  if (!body) {
+    const buffer = Buffer.from(await res.arrayBuffer());
+    if (buffer.byteLength > maxBytes) {
+      throw new Error(`${what}: the response went over the ${maxBytes}-byte cap`);
+    }
+    return buffer;
+  }
+
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      /* One timer per chunk, cleared as soon as the chunk lands: a timer left
+         behind fires long after the read it was watching, and a download of
+         many chunks would leave one for each. */
+      let stall: NodeJS.Timeout | undefined;
+      const chunk = await Promise.race([
+        reader.read(),
+        new Promise<never>((_, reject) => {
+          stall = setTimeout(() => reject(new Error(`${what}: no data for ${STALL_TIMEOUT_MS}ms`)), STALL_TIMEOUT_MS);
+        }),
+      ]).finally(() => clearTimeout(stall));
+      if (chunk.done) break;
+      total += chunk.value.byteLength;
+      if (total > maxBytes) {
+        throw new Error(`${what}: the response went over the ${maxBytes}-byte cap`);
+      }
+      chunks.push(chunk.value);
+    }
+  } catch (err) {
+    await reader.cancel().catch(() => {
+      /* Already torn down by whatever we are reporting. */
+    });
+    throw err;
+  }
+  return Buffer.concat(chunks, total);
+}

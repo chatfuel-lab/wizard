@@ -108,8 +108,8 @@ That workspace can create bots — and every bot it creates is created in Chatfu
 Two ceilings bound that bill, both of them ordinary SQL functions
 ([`0001_auth.sql`](../content/modules/auth/supabase/migrations/0001_auth.sql)):
 `cf_bot_cap()` — 20 bots per workspace, the one a person meets — and `cf_bot_total_cap()` —
-200 bots across the whole deployment, the one that actually bounds the bill, because the cheap
-abuse is many accounts holding one bot each rather than one account holding many. Re-run the
+200 bots across the whole deployment, the one that actually bounds the bill, because a
+per-workspace ceiling says nothing about how many workspaces there are. Re-run the
 `create or replace` with a different number and the new ceiling is live. Raising them past
 what your Chatfuel plan holds only moves the refusal to Chatfuel.
 
@@ -143,16 +143,29 @@ Leaving both alone is a choice too, and it is the one that ends with 200 bots on
 
 ## The admin panel's door, on a host with more than one instance
 
-`ADMIN_PASSWORD` opens a panel that sees the whole Chatfuel account, so the door has a
-wrong-answer counter in front of it. Where the `auth` module is installed, that count is kept
-in your database (`cf_admin_attempts`), so every instance of the proxy shares one count and a
-run of guesses spread across them is counted as one.
+**Protecting `/admin` is yours to do, and nothing in this template does it for you.** The panel
+is one password in front of the whole Chatfuel account behind `CHATFUEL_TOKEN` — there is no
+second factor, no IP allowlist, no lockout that outlives a process, and no owner to appeal to
+if it is guessed. Everything below is the material you have to work with; choosing to run the
+panel on a public host is a decision, and it is yours.
+
+`ADMIN_PASSWORD` opens that panel, so the door has a wrong-answer counter in front of it. Where
+the `auth` module is installed, that count is kept in your database (`cf_admin_attempts`), so
+every instance of the proxy shares one count and a run of guesses spread across them is counted
+as one.
 
 Install `auth` if you run the panel anywhere with more than one instance — Vercel, or any host
 that answers a request from whichever instance happens to be warm. Without it the counter is
 best-effort, and **the password itself is what the door rests on**: sixteen characters is the
 floor the proxy refuses to start below, and the floor is not the recommendation. Use what a
 password manager generates, not what a person types.
+
+Installing `auth` is not enough on its own: the shared counter is written with
+`SUPABASE_SERVICE_ROLE_KEY`, which the proxy treats as optional. With the module on and that key
+unset there is still nowhere to keep a shared count, so a stateless host is back to a
+best-effort counter in one process's memory. If you run the panel on such a host, set the key.
+If you cannot, keep the panel off it — leave `ADMIN_PASSWORD` unset there and run the panel
+somewhere you control, or put your own authentication in front of it.
 
 Two other things about that door are worth knowing before it matters. A session expires on its
 own, and signing out revokes the cookie on the instance that served it. **Rotating

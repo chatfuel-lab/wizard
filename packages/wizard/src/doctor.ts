@@ -2,11 +2,12 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pc from 'picocolors';
 import { detectAgents } from './agents';
-import { outboundFetch, describeProxy } from './net';
+import { outboundFetch, describeProxy, readBytesCapped } from './net';
 import { createContentSource, type ContentSource } from './content';
 import { contentUrl } from './contentOrigin';
 import { lockForRun, refFrom } from './contentRef';
 import { CONTENT_TREE, type ContentLock } from './contentLock';
+import { CONTENT_FILE_MAX_BYTES } from './contentStore';
 import { digestOf } from './lockFormat';
 import { MIN_NODE, nodeIsSupported } from './node';
 import { loadRegistry } from './registry';
@@ -92,7 +93,7 @@ async function pinCheck(lock: ContentLock | undefined): Promise<Check> {
   try {
     const response = await outboundFetch(url);
     if (!response.ok) return { label: 'content pin', ok: false, detail: `${url} — HTTP ${response.status}` };
-    const digest = digestOf(Buffer.from(await response.arrayBuffer()));
+    const digest = digestOf(await readBytesCapped(response, CONTENT_FILE_MAX_BYTES, path));
     return digest === lock.files[path]
       ? { label: 'content pin', ok: true, detail: `${lock.repo}@${lock.commit.slice(0, 12)}` }
       : { label: 'content pin', ok: false, detail: `${path} does not match the digest in the lock` };

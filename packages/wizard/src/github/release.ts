@@ -16,7 +16,7 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execa } from 'execa';
 import { onInterrupt } from '../interrupt';
-import { outboundFetch } from '../net';
+import { outboundFetch, readBytesCapped } from '../net';
 
 /**
  * The GitHub CLI without a package manager.
@@ -166,10 +166,18 @@ function writeAtomic(target: string, write: (temp: string) => void): void {
   }
 }
 
+/**
+ * Room for the largest published `gh` archive and then some, which is what
+ * stops a redirect to somewhere else from being read into memory unbounded.
+ * The checksum below is what says the bytes are the right ones; this only says
+ * how many of them are worth keeping long enough to ask.
+ */
+const ASSET_MAX_BYTES = 128 * 1024 * 1024;
+
 async function download(url: string): Promise<Buffer> {
   const response = await outboundFetch(url);
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
-  return Buffer.from(await response.arrayBuffer());
+  return readBytesCapped(response, ASSET_MAX_BYTES, url);
 }
 
 /**

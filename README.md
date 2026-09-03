@@ -128,6 +128,37 @@ there is no backend behind it; the `capture(...)` calls scattered through the ru
 the event vocabulary is settled if one is ever added. Nothing about a run leaves your machine
 except the content fetch from GitHub and the calls you asked for.
 
+### What you are trusting when you run it
+
+The wizard ships as a small CLI and fetches the content it installs from this repository at run
+time, so it is worth being exact about what stands behind those bytes.
+
+**`content.lock` is a floor, not a pin.** The name invites the npm-lockfile reading, and that
+reading is wrong. The file records a commit that the content must descend from, and the wizard
+then follows a branch — `main` unless `CHATFUEL_CONTENT_REF` says otherwise. It refuses a commit
+that is not a descendant of the floor, which is what stops a downgrade, but it does not pin you
+to the bytes the tarball was published against.
+
+**On that path the digests travel with the bytes.** Every file is checked against a SHA-256 in
+`content.index.json` — but that index is fetched from the same commit, over the same connection,
+at the same moment. It proves the download was not corrupted or tampered with in transit; it
+cannot prove the commit itself is one you would have chosen. So the trust root for a default run
+is TLS to `raw.githubusercontent.com` and `api.github.com`, **plus whoever can push to `main`
+of this repository** — the same shape as any dependency you install from a registry. The
+tarball's own floor digests are enforced end-to-end only on the offline and mirror paths, where
+nothing newer is being followed.
+
+**The content is code twice over.** It becomes your app's source, which is the obvious half. The
+less obvious half: a module's `handoff.md`, and a catalog's `playbook.md` when you pass `--app`,
+are written verbatim into `CLAUDE.md` / `AGENTS.md` and then handed to a coding agent that runs
+with shell access. Treat a non-default content origin or apps catalog exactly as you would treat
+a dependency you are about to install — which is why `--apps-repo` asks before it fetches, and
+why `--yes` refuses a catalog that only an environment variable named.
+
+Pinning harder is supported: `CHATFUEL_CONTENT_REF` takes a full 40-character commit SHA, and a
+run given one follows nothing. [docs/configuration.md](docs/configuration.md) has that and the
+mirror settings beside it.
+
 ## Documentation
 
 Everything is under [docs/](docs/README.md), which starts with the two READMEs that come before

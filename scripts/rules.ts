@@ -93,11 +93,8 @@ export const TRACKED_BANNED: readonly Rule[] = [
     /\b(?:dashboard|admin|internal|private)(?:'s)? (?:own )?(?:schema|SDL|graph|exporter|introspection)\b/gi,
     'a source only we can read',
   ],
-  // An instruction sourced to the people who run the service. A parenthetical
-  // like "(backend guidance)" tells the reader the limit is a spoken
-  // arrangement rather than something the API enforces - which invites them to
-  // test it - and cites a conversation nobody outside the vendor could have
-  // had. The reason survives, the attribution does not.
+  // An instruction attributed to a conversation rather than to the API. The
+  // rule survives, the attribution does not.
   [
     /\b(?:backend|platform|infra(?:structure)?|api)\s+(?:team|guidance)\b|\b(?:internal|team)\s+guidance\b|\bper\s+the\s+(?:backend|platform|api)\b/gi,
     'an instruction sourced to the people who run the service',
@@ -124,20 +121,18 @@ export const TRACKED_BANNED: readonly Rule[] = [
     /\b(?:found by bisecting|bisected (?:it|the limit)|measured on (?:a|our|the) (?:live|real|production)|read off (?:a|our|the) (?:live|production)|live finding|confirmed in practice|measured in practice|on the live bot)\b/gi,
     'a measurement taken against a live account',
   ],
-  // The upstream's internal decomposition, which arrives in error envelopes and
-  // gets copied into fixtures and docs. `upstream` is the name that says as much
-  // as a caller can act on; the real one names a team's service.
+  // A service name a caller cannot address, choose or check. `upstream` says
+  // everything a caller can act on, and is the only spelling worth keeping.
   [
     /\bSubgraph\s+'(?!upstream')[A-Za-z][\w-]*'|\bservice(?:Name)?\s*:\s*'(?!upstream')[a-z][\w-]{2,}'/g,
     'an upstream service by its internal name',
   ],
-  // The upstream's own infrastructure. A caller cannot address it, cannot choose
-  // it and cannot check it; naming it says only which runbook the author has
-  // read. What a client can act on is the behaviour - "not kept forever", "goes
-  // quiet" - and that survives the cut.
+  // Storage and queue technology named as if a caller could address it. What a
+  // client can act on is the behaviour - "not kept forever", "goes quiet" - and
+  // that survives the cut. A generic list, matched wherever it is written.
   [
     /\b(?:Redis|Memcached|RabbitMQ|Kafka|ClickHouse|MongoDB|DynamoDB|Elasticsearch|Cassandra|Sidekiq|Celery)\b/g,
-    "the upstream's own infrastructure by name",
+    'storage or queue technology by name',
   ],
   // A 24-hex literal is the shape of a Chatfuel object id (bot, workspace,
   // contact, deal). The one allowed form is the synthetic all-zeros-but-last
@@ -317,28 +312,20 @@ export const SHIPPED_BANNED: readonly Rule[] = [...UNIVERSAL_BANNED, ...SHIPPED_
  * Banned only inside a .graphql file, and added to whichever set above already
  * applies. Neither of these files is written here: the SDL arrives already
  * exported, thousands of lines at a time, and the operations documents beside
- * it are written against it. Nobody reads either line by line on the way
- * in. So the words that would be ordinary English anywhere else - a README
- * saying a thing is broken, a SUPPORT page on what to do when it does not
- * work - are, in a schema the API publishes, a fact about our internals: a
- * surface only employees reach, or one that ships broken.
+ * it are written against it. Nobody reads either line by line on the way in,
+ * so words that are ordinary English in prose need a rule of their own here.
  *
- * The export strips every description, so today an SDL hit could only be a type
- * or field NAME saying it. That is the reason to keep the rules rather than to
- * retire them: the strip is a decision taken in another repository, and a name
- * is the half of the schema no strip can clean up.
- *
- * Scoped to .graphql rather than added to TRACKED_BANNED for exactly that
- * reason: repo-wide, these two patterns match dozens of lines of ordinary prose.
+ * Scoped to .graphql rather than added to TRACKED_BANNED for that reason:
+ * repo-wide, these two patterns match dozens of lines of ordinary prose.
  */
 export const SCHEMA_ONLY_BANNED: readonly Rule[] = [
   [
     /\b(?:does not work(?: yet)?|doesn't work(?: yet)?|not implemented(?: yet)?|not yet supported|is broken|always (?:errors|fails))\b/gi,
-    'a field the schema itself says is unfinished or broken',
+    'a schema member described as unfinished',
   ],
   [
     /\b(?:employees only|for support|internal[- ]only|staff only|impersonat\w*)\b/gi,
-    'a surface only we are meant to reach',
+    'a schema member described as restricted-audience',
   ],
 ];
 
