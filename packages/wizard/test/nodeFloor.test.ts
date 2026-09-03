@@ -7,20 +7,20 @@ import { MIN_NODE, nodeIsSupported, nodeUpgradeHint } from '../src/node';
  * The floor is stated twice — once in the bundle, once in the launcher that
  * runs when the bundle cannot be parsed — and npm treats the `engines` field as
  * a warning. So all three have to agree, and the comparison has to look past
- * the major: the HTTP stack the wizard uses is not in every 20.x.
+ * the major: the dependencies the wizard ships are not in every 22.x.
  */
 describe('nodeIsSupported', () => {
   it('accepts the floor itself and anything above it', () => {
-    expect(nodeIsSupported('20.18.1')).toBe(true);
-    expect(nodeIsSupported('20.19.0')).toBe(true);
-    expect(nodeIsSupported('22.14.0')).toBe(true);
+    expect(nodeIsSupported('22.19.0')).toBe(true);
+    expect(nodeIsSupported('22.20.0')).toBe(true);
     expect(nodeIsSupported('24.0.0')).toBe(true);
+    expect(nodeIsSupported('26.0.0')).toBe(true);
   });
 
   it('rejects an older patch of the same major, not just an older major', () => {
-    expect(nodeIsSupported('20.5.0')).toBe(false);
-    expect(nodeIsSupported('20.18.0')).toBe(false);
-    expect(nodeIsSupported('18.20.4')).toBe(false);
+    expect(nodeIsSupported('22.5.0')).toBe(false);
+    expect(nodeIsSupported('22.18.1')).toBe(false);
+    expect(nodeIsSupported('20.18.1')).toBe(false);
   });
 });
 

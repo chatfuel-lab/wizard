@@ -6,7 +6,7 @@
  * would be a stack trace instead of an instruction. Keep the floor in step
  * with MIN_NODE in src/node.ts.
  */
-var MIN_NODE = '20.18.1';
+var MIN_NODE = '22.19.0';
 
 function parts(version) {
   var out = [0, 0, 0];
