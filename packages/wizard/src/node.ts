@@ -4,7 +4,7 @@
  * form of this: that launcher is the only code that runs when the bundle
  * itself is too new for the installed Node to parse.
  */
-export const MIN_NODE = '20.18.1';
+export const MIN_NODE = '22.19.0';
 
 /** [major, minor, patch] of a version string; missing parts read as 0. */
 function parts(version: string): [number, number, number] {
@@ -12,7 +12,7 @@ function parts(version: string): [number, number, number] {
   return [major, minor, patch];
 }
 
-/** Is this Node new enough? A plain major comparison used to be enough; the HTTP stack the wizard now uses is not in every 20.x. */
+/** Is this Node new enough? A plain major comparison used to be enough; the dependencies the wizard now ships are not in every 22.x. */
 export function nodeIsSupported(version: string = process.versions.node): boolean {
   const [have, wantAtLeast] = [parts(version), parts(MIN_NODE)];
   for (let i = 0; i < 3; i += 1) {

@@ -14,7 +14,7 @@
   "homepage": "https://github.com/chatfuel-lab/wizard#readme",
   "packageManager": "pnpm@10.30.2",
   "engines": {
-    "node": ">=22.18.1"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "validate": "node scripts/validate.ts",

@@ -6,8 +6,7 @@ Before it is a pull request, it can be a question. Ask in the Discord:
 ## Setup
 
 - pnpm 10.x
-- Node 22.18.1 or newer (the published CLI itself runs on 20.18.1 — the higher floor here is
-  the bundler's, not the wizard's)
+- Node 22.19.0 or newer (the same floor the published CLI itself runs on)
 
 ```bash
 pnpm install

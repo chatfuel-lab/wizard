@@ -120,7 +120,7 @@ npx @chatfuel/wizard update     # bring an app it made up to this wizard's conte
 ```
 
 You do not need this repository to use the wizard — `npx @chatfuel/wizard` is the whole
-install, and Node 20.18.1 or newer is the only prerequisite. The full user guide is
+install, and Node 22.19.0 or newer is the only prerequisite. The full user guide is
 [`packages/wizard/README.md`](packages/wizard/README.md), which is also the npm page.
 
 **The wizard sends no telemetry.** `capture()` in `src/telemetry.ts` is an empty function and
@@ -156,8 +156,7 @@ that split, and [docs/architecture.md](docs/architecture.md) has what each tree 
 pnpm install
 ```
 
-Node 22.18.1 or newer and pnpm 10.x. (The published CLI runs on Node 20.18.1 — the higher floor
-here is the bundler's, not the wizard's.) Then [the seven
+Node 22.19.0 or newer and pnpm 10.x — the same floor the published CLI runs on. Then [the seven
 gates](CONTRIBUTING.md#the-seven-gates), which CI runs exactly.
 [CONTRIBUTING.md](CONTRIBUTING.md) has the rest, including the one rule that is easy to trip:
 everything the wizard packs is copied onto somebody else's disk.

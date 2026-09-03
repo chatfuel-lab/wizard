@@ -49,7 +49,7 @@ export async function installDependencies(target: string, preferred: PackageMana
     } catch (err) {
       const e = err as { stderr?: string; shortMessage?: string; message?: string };
       lastFailure = tail(e.stderr || e.shortMessage || e.message || 'unknown error');
-      spinner.stop(`${pm} install failed`, 1);
+      spinner.error(`${pm} install failed`);
       if (i < attempts.length - 1) {
         p.log.warn(`${pm} could not install the dependencies — retrying with npm.`);
       }

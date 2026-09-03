@@ -196,7 +196,7 @@ export async function scaffold(ctx: WizardContext): Promise<void> {
 
     writeAppLock(target, buildAppLock(ctx, target, built.draft));
   } catch (err) {
-    if (copying) spinner.stop('The app was not written', 1);
+    if (copying) spinner.error('The app was not written');
     undoPartialScaffold(target, createdHere);
     throw err;
   } finally {

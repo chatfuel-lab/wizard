@@ -2,7 +2,7 @@
 
 ## The wizard
 
-**`npx @chatfuel/wizard` prints a Node version message and stops.** The floor is Node 20.18.1.
+**`npx @chatfuel/wizard` prints a Node version message and stops.** The floor is Node 22.19.0.
 The launcher is deliberately old-style JavaScript so that it parses on a version too old to run
 the rest, and can say so instead of throwing a syntax error.
 

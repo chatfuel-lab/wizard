@@ -40,7 +40,7 @@ Two things you can build with it:
   and there is no billing in the box — see
   [what `auth` on a public URL still lets a stranger do](https://github.com/chatfuel-lab/wizard/blob/main/docs/deployment.md#what-auth-on-a-public-url-still-lets-a-stranger-do).
 
-The only prerequisite is **Node 20.18.1 or newer**. The wizard installs the app's
+The only prerequisite is **Node 22.19.0 or newer**. The wizard installs the app's
 dependencies itself, and offers to install a coding agent (Claude Code or Codex
 CLI) if you do not have one.
 

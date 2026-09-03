@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const execa = vi.hoisted(() => vi.fn());
 vi.mock('execa', () => ({ execa }));
 vi.mock('@clack/prompts', () => ({
-  spinner: () => ({ start: () => {}, stop: () => {}, message: () => {} }),
+  spinner: () => ({ start: () => {}, stop: () => {}, message: () => {}, error: () => {} }),
   log: { warn: () => {}, info: () => {}, success: () => {}, error: () => {} },
 }));
 

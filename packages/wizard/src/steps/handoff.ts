@@ -555,7 +555,9 @@ export async function launchAgent(ctx: WizardContext): Promise<void> {
      execute — the wrong architecture, a broken shim, a permission bit — end the
      run with a warning, no agent and no dev server, having reported a handoff
      that never happened. */
-  session.once('spawn', () => {
+  // execa 10 no longer forwards the child's events, so the flag is set from the
+  // underlying ChildProcess, which is the escape hatch the package documents.
+  session.nodeChildProcess.once('spawn', () => {
     ctx.answers.handedOffToAgent = true;
   });
   await session.catch((error: unknown) => {

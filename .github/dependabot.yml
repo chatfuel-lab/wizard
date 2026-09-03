@@ -10,6 +10,11 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 5
+    ignore:
+      # graphql 17 needs @graphql-codegen 7, whose output the hoist pass in
+      # content/codegen does not understand yet. Both move together, by hand.
+      - dependency-name: graphql
+        update-types: ['version-update:semver-major']
     groups:
       production:
         dependency-type: production

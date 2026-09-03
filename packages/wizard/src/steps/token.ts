@@ -67,7 +67,8 @@ export async function token(ctx: WizardContext): Promise<void> {
       }
       const entered = await p.password({
         message: 'Paste your Chatfuel token:',
-        validate: (value) => (isPlausibleToken(value.trim()) ? undefined : 'Paste the token from the page — no spaces'),
+        validate: (value) =>
+          isPlausibleToken((value ?? '').trim()) ? undefined : 'Paste the token from the page — no spaces',
       });
       if (p.isCancel(entered)) throw new WizardError('Cancelled.');
       ctx.answers.token = entered.trim();

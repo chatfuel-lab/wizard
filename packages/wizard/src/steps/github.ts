@@ -238,7 +238,7 @@ async function plainPush(appDir: string): Promise<boolean> {
     spinner.stop('Pushed');
     return true;
   } catch {
-    spinner.stop('That did not go through — trying with a token.', 1);
+    spinner.error('That did not go through — trying with a token.');
     return false;
   }
 }

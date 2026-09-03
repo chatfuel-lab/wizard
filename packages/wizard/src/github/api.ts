@@ -74,7 +74,7 @@ export async function askForGithubToken(): Promise<GithubAccount | null> {
 
   const entered = await p.password({
     message: 'Paste your GitHub token:',
-    validate: (value) => (value.trim().length >= 20 ? undefined : 'That is shorter than any GitHub token'),
+    validate: (value) => ((value ?? '').trim().length >= 20 ? undefined : 'That is shorter than any GitHub token'),
   });
   if (p.isCancel(entered)) return null;
   const token = entered.trim();
@@ -86,26 +86,26 @@ export async function askForGithubToken(): Promise<GithubAccount | null> {
   try {
     response = await outboundFetch('https://api.github.com/user', { headers: headers(token) });
   } catch (err) {
-    spinner.stop('Could not reach the GitHub API', 1);
+    spinner.error('Could not reach the GitHub API');
     p.log.warn(err instanceof Error ? err.message : String(err));
     return null;
   }
   if (!response.ok) {
-    spinner.stop('GitHub rejected the token', 1);
+    spinner.error('GitHub rejected the token');
     p.log.warn(await apiMessage(response));
     return null;
   }
 
   const scopes = response.headers.get('x-oauth-scopes') ?? '';
   if (scopes.trim() && !scopes.split(',').some((scope) => scope.trim() === 'repo')) {
-    spinner.stop('That token cannot create repositories', 1);
+    spinner.error('That token cannot create repositories');
     p.log.warn(`It is missing the \`repo\` scope. Make one with it at ${TOKEN_PAGE}`);
     return null;
   }
 
   const body = (await response.json()) as { login?: string };
   if (!body.login) {
-    spinner.stop('GitHub did not say who that token belongs to', 1);
+    spinner.error('GitHub did not say who that token belongs to');
     return null;
   }
   spinner.stop(`Authenticated as ${body.login}`);
@@ -129,12 +129,12 @@ export async function createRepo(
       body: JSON.stringify({ name, private: isPrivate, description }),
     });
   } catch (err) {
-    spinner.stop('Could not reach the GitHub API', 1);
+    spinner.error('Could not reach the GitHub API');
     p.log.warn(err instanceof Error ? err.message : String(err));
     return undefined;
   }
   if (!response.ok) {
-    spinner.stop('GitHub would not create the repository', 1);
+    spinner.error('GitHub would not create the repository');
     p.log.warn(await apiMessage(response));
     return undefined;
   }
@@ -198,7 +198,7 @@ export async function pushToOrigin(appDir: string, account: GithubAccount): Prom
     spinner.stop('Pushed');
     return true;
   } catch (err) {
-    spinner.stop('The push failed', 1);
+    spinner.error('The push failed');
     p.log.warn(err instanceof Error ? err.message.split('\n').slice(-3).join(' ').slice(0, 300) : String(err));
     return false;
   } finally {

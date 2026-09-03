@@ -376,14 +376,14 @@ async function ensureIdentity(appDir: string): Promise<boolean> {
     message: 'Your name, for the commit:',
     placeholder: name || 'Jane Doe',
     defaultValue: name,
-    validate: (value) => (value.trim() ? undefined : 'git will not commit without a name'),
+    validate: (value) => (value?.trim() ? undefined : 'git will not commit without a name'),
   });
   if (p.isCancel(askedName)) return false;
   const askedEmail = await p.text({
     message: 'Your email, for the commit:',
     placeholder: email || 'jane@example.com',
     defaultValue: email,
-    validate: (value) => (value.includes('@') ? undefined : 'git will not commit without an email'),
+    validate: (value) => (value?.includes('@') ? undefined : 'git will not commit without an email'),
   });
   if (p.isCancel(askedEmail)) return false;
 

@@ -109,7 +109,7 @@ async function offerHostInstall(ctx: WizardContext, host: string, deps: string[]
     spinner.stop(`Dependencies installed with ${pm}`);
     return true;
   } catch (err) {
-    spinner.stop(`${pm} could not install them`, 1);
+    spinner.error(`${pm} could not install them`);
     p.log.warn(err instanceof Error ? err.message.split('\n').slice(-3).join(' ').slice(0, 300) : String(err));
     return false;
   }
@@ -296,7 +296,7 @@ export async function embedScaffold(ctx: WizardContext): Promise<void> {
       if (sql.rendered) rewrote(draft, `supabase/chatfuel/${sql.name}`, 'publishingSecret');
     }
   } catch (err) {
-    spinner?.stop('The Chatfuel footprint was not written', 1);
+    spinner?.error('The Chatfuel footprint was not written');
     undoEmbed();
     throw err;
   } finally {
