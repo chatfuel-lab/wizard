@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react';
-import { IconInbox, IconLayoutGrid, IconMegaphone, IconSparkles, IconUsers, type SideNavGroup } from '~ui';
+import {
+  IconInbox,
+  IconLayoutGrid,
+  IconMegaphone,
+  IconSettings,
+  IconSparkles,
+  IconUsers,
+  type SideNavGroup,
+} from '~ui';
 import type { ModuleDescriptor } from './types';
 
 /**
@@ -53,6 +61,12 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
     title: 'Growth',
     icon: <IconMegaphone />,
     items: ['coworker', 'publishing', 'ads-optimization'],
+  },
+  {
+    id: 'settings',
+    title: 'Settings',
+    icon: <IconSettings />,
+    items: ['channels'],
   },
 ];
 /* @chatfuel:end-nav-groups */

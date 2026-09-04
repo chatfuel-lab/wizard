@@ -1,6 +1,6 @@
 ---
 name: chatfuel-core
-description: Foundation for building anything on the Chatfuel GraphQL API — auth tokens and their lifecycle, the mandatory CORS proxy, HTTP + WebSocket transport (GraphQL subscriptions over graphql-transport-ws), cursor pagination semantics, cross-domain gotchas, the full bundled schema SDL, shared operations (CurrentUser, BotsList, MyBotRole, file readback) and the operation validator. Use whenever working with the Chatfuel API: read this before writing any operation, and alongside every domain skill (chatfuel-livechat, chatfuel-contacts, chatfuel-flow-builder, …). Required by all chatfuel-* skills.
+description: Foundation for building anything on the Chatfuel GraphQL API — auth tokens and their lifecycle, the mandatory CORS proxy, HTTP + WebSocket transport (GraphQL subscriptions over graphql-transport-ws), cursor pagination semantics, cross-domain gotchas, the full bundled schema SDL, shared operations (CurrentUser, BotsList, MyBotRole, file readback, channels and platform links — one-shot connection URLs for people without dashboard access) and the operation validator. Use whenever working with the Chatfuel API: read this before writing any operation, and alongside every domain skill (chatfuel-livechat, chatfuel-contacts, chatfuel-flow-builder, …). Required by all chatfuel-* skills.
 ---
 
 # Chatfuel GraphQL API — core
@@ -45,8 +45,9 @@ One consequence is worth stating on its own, because every fence in this codebas
 | `references/pagination.md` | Cursor pagination semantics (typed cursors, direction quirks) |
 | `references/files-tasks.md` | REST file uploads, File entity, async Task tracking patterns |
 | `references/misc.md` | Uncovered surfaces map: widget config, WhatsApp templates, keywords, broadcasts, platform connections, Meta Ads, IG publishing |
+| `references/platform-links.md` | Platform links: one-shot connection / access-refresh URLs for WhatsApp, Instagram, TikTok — lifecycle, replace-on-create, the URL as credential, redirects, disconnecting a channel, the public side that is not for you |
 | `references/gotchas.md` | **Read this before writing any operation** — cross-domain sharp edges |
-| `examples/operations.graphql` | Shared operations every module needs: `CurrentUser`, `BotsList` (bot discovery), `MyBotRole` (permissions), `FileGet`/`FileStartDownload` |
+| `examples/operations.graphql` | Shared operations every module needs: `CurrentUser`, `BotsList` (bot discovery), `MyBotRole` (permissions), `FileGet`/`FileStartDownload`, `BotChannels`, `BotDisconnectContactScope`, `BotPlatformLinks` + the platform-link create/revoke mutations |
 | `scripts/validate-operations.mjs` | Validates this skill's and every sibling chatfuel-* skill's examples against the schema — extend it to validate your own operations before shipping |
 
 ## Working rules

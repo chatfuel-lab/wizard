@@ -52,6 +52,7 @@ export {
   IconImage,
   IconLock,
   IconPaperclip,
+  IconSettings,
   IconTag,
 } from './objects';
 

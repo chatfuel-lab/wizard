@@ -35,7 +35,7 @@
   description: The GraphQL client and the schema snapshot
 - name: 'area: modules'
   color: 1d76db
-  description: One of the thirteen modules
+  description: One of the fourteen modules
 - name: 'area: skills'
   color: 1d76db
   description: What the coding agent reads

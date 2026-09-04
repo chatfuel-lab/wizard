@@ -2366,6 +2366,72 @@ export type PreviewWidgetTextSendMutationVariables = Exact<{
 
 export type PreviewWidgetTextSendMutation = { __typename?: 'Mutation', previewResponsesWidgetTextSend?: { __typename?: 'WebWidgetTextMessage', id?: string | null, clientId: string } | null };
 
+export type BotChannelsPartsFragment = { __typename?: 'Bot', id: string, contactScopes: Array<{ __typename: 'FacebookContactScope', id: string, facebookPage: { __typename?: 'FbPage', id: string, name: string } } | { __typename: 'InstagramAccountContactScope', id: string, instagramAccount: { __typename?: 'InstagramAccount', id: string, username: string, name?: string | null } } | { __typename: 'TikTokAccountContactScope', id: string, tiktokAccount: { __typename?: 'TikTokAccount', id: string, username?: string | null, name?: string | null } } | { __typename: 'WebWidgetContactScope', id: string, webWidget: { __typename?: 'WebWidget', id: string, name: string } } | { __typename: 'WhatsAppPhoneContactScope', id: string, phone: { __typename?: 'WhatsAppBusinessPhoneNumber', id: string, displayPhoneNumber: string, verifiedName?: string | null } }> };
+
+export type BotChannelsQueryVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+}>;
+
+
+export type BotChannelsQuery = { __typename?: 'Query', bot: { __typename?: 'Bot', id: string, contactScopes: Array<{ __typename: 'FacebookContactScope', id: string, facebookPage: { __typename?: 'FbPage', id: string, name: string } } | { __typename: 'InstagramAccountContactScope', id: string, instagramAccount: { __typename?: 'InstagramAccount', id: string, username: string, name?: string | null } } | { __typename: 'TikTokAccountContactScope', id: string, tiktokAccount: { __typename?: 'TikTokAccount', id: string, username?: string | null, name?: string | null } } | { __typename: 'WebWidgetContactScope', id: string, webWidget: { __typename?: 'WebWidget', id: string, name: string } } | { __typename: 'WhatsAppPhoneContactScope', id: string, phone: { __typename?: 'WhatsAppBusinessPhoneNumber', id: string, displayPhoneNumber: string, verifiedName?: string | null } }> } };
+
+export type PlatformConnectionLinkPartsFragment = { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } };
+
+export type PlatformAccessRefreshLinkPartsFragment = { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } };
+
+export type ActivePlatformLinksFragment = { __typename?: 'Bot', id: string, activePlatformConnectionLinks: { __typename?: 'ActivePlatformConnectionLinks', whatsapp?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, instagram?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, tiktok?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null }, activePlatformAccessRefreshLinks: { __typename?: 'ActivePlatformAccessRefreshLinks', whatsapp?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, instagram?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, tiktok?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null } };
+
+export type BotPlatformLinksQueryVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+}>;
+
+
+export type BotPlatformLinksQuery = { __typename?: 'Query', bot: { __typename?: 'Bot', id: string, activePlatformConnectionLinks: { __typename?: 'ActivePlatformConnectionLinks', whatsapp?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, instagram?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, tiktok?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null }, activePlatformAccessRefreshLinks: { __typename?: 'ActivePlatformAccessRefreshLinks', whatsapp?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, instagram?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, tiktok?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null } } };
+
+export type BotDisconnectContactScopeMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  contactScopeID: Scalars['ContactScopeID']['input'];
+}>;
+
+
+export type BotDisconnectContactScopeMutation = { __typename?: 'Mutation', botDisconnectContactScope: { __typename?: 'Bot', id: string, contactScopes: Array<{ __typename: 'FacebookContactScope', id: string, facebookPage: { __typename?: 'FbPage', id: string, name: string } } | { __typename: 'InstagramAccountContactScope', id: string, instagramAccount: { __typename?: 'InstagramAccount', id: string, username: string, name?: string | null } } | { __typename: 'TikTokAccountContactScope', id: string, tiktokAccount: { __typename?: 'TikTokAccount', id: string, username?: string | null, name?: string | null } } | { __typename: 'WebWidgetContactScope', id: string, webWidget: { __typename?: 'WebWidget', id: string, name: string } } | { __typename: 'WhatsAppPhoneContactScope', id: string, phone: { __typename?: 'WhatsAppBusinessPhoneNumber', id: string, displayPhoneNumber: string, verifiedName?: string | null } }>, activePlatformConnectionLinks: { __typename?: 'ActivePlatformConnectionLinks', whatsapp?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, instagram?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, tiktok?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null }, activePlatformAccessRefreshLinks: { __typename?: 'ActivePlatformAccessRefreshLinks', whatsapp?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, instagram?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, tiktok?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null } } };
+
+export type BotPlatformConnectionLinkCreateMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  platform: PlatformOperationLinkPlatform;
+  onSuccessRedirectURL?: InputMaybe<Scalars['String']['input']>;
+  onFailureRedirectURL?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type BotPlatformConnectionLinkCreateMutation = { __typename?: 'Mutation', botPlatformConnectionLinkCreate: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } };
+
+export type BotPlatformConnectionLinkRevokeMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  linkID: Scalars['PlatformOperationLinkID']['input'];
+}>;
+
+
+export type BotPlatformConnectionLinkRevokeMutation = { __typename?: 'Mutation', botPlatformConnectionLinkRevoke: { __typename?: 'Bot', id: string, activePlatformConnectionLinks: { __typename?: 'ActivePlatformConnectionLinks', whatsapp?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, instagram?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, tiktok?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null }, activePlatformAccessRefreshLinks: { __typename?: 'ActivePlatformAccessRefreshLinks', whatsapp?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, instagram?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, tiktok?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null } } };
+
+export type BotPlatformAccessRefreshLinkCreateMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  platform: PlatformOperationLinkPlatform;
+  onSuccessRedirectURL?: InputMaybe<Scalars['String']['input']>;
+  onFailureRedirectURL?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type BotPlatformAccessRefreshLinkCreateMutation = { __typename?: 'Mutation', botPlatformAccessRefreshLinkCreate: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } };
+
+export type BotPlatformAccessRefreshLinkRevokeMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  linkID: Scalars['PlatformOperationLinkID']['input'];
+}>;
+
+
+export type BotPlatformAccessRefreshLinkRevokeMutation = { __typename?: 'Mutation', botPlatformAccessRefreshLinkRevoke: { __typename?: 'Bot', id: string, activePlatformConnectionLinks: { __typename?: 'ActivePlatformConnectionLinks', whatsapp?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, instagram?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null, tiktok?: { __typename?: 'PlatformConnectionLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string } } | null }, activePlatformAccessRefreshLinks: { __typename?: 'ActivePlatformAccessRefreshLinks', whatsapp?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, instagram?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null, tiktok?: { __typename?: 'PlatformAccessRefreshLink', linkID: string, url: string, platform: PlatformOperationLinkPlatform, createdAt: string, expiresAt: string, onSuccessRedirectURL?: string | null, onFailureRedirectURL?: string | null, creator: { __typename?: 'PublicUserAccount', id: string, name: string }, connectedContactScope: { __typename: 'PublicFacebookContactScope' } | { __typename: 'PublicInstagramAccountContactScope', instagramAccount: { __typename?: 'PublicInstagramAccount', username: string, name?: string | null } } | { __typename: 'PublicTikTokAccountContactScope', tiktokAccount: { __typename?: 'PublicTikTokAccount', username?: string | null, name?: string | null } } | { __typename: 'PublicWebWidgetContactScope' } | { __typename: 'PublicWhatsAppPhoneContactScope', phone: { __typename?: 'PublicWhatsAppBusinessPhoneNumber', displayPhoneNumber: string, verifiedName?: string | null } } } | null } } };
+
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -2410,6 +2476,122 @@ fragment PreviewBotSessionParts on PreviewResponsesBotSession {
   startedAt
   platform
 }`, {"fragmentName":"PreviewBotSessionParts"}) as unknown as TypedDocumentString<PreviewBotSessionPartsFragment, unknown>;
+export const BotChannelsPartsFragmentDoc = new TypedDocumentString(`
+fragment BotChannelsParts on Bot {
+  id
+  contactScopes {
+    __typename
+    id
+    ... on WhatsAppPhoneContactScope {
+      phone {
+        id
+        displayPhoneNumber
+        verifiedName
+      }
+    }
+    ... on InstagramAccountContactScope {
+      instagramAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on TikTokAccountContactScope {
+      tiktokAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on FacebookContactScope {
+      facebookPage {
+        id
+        name
+      }
+    }
+    ... on WebWidgetContactScope {
+      webWidget {
+        id
+        name
+      }
+    }
+  }
+}`, {"fragmentName":"BotChannelsParts"}) as unknown as TypedDocumentString<BotChannelsPartsFragment, unknown>;
+export const PlatformConnectionLinkPartsFragmentDoc = new TypedDocumentString(`
+fragment PlatformConnectionLinkParts on PlatformConnectionLink {
+  linkID
+  url
+  platform
+  createdAt
+  expiresAt
+  onSuccessRedirectURL
+  onFailureRedirectURL
+  creator {
+    id
+    name
+  }
+}`, {"fragmentName":"PlatformConnectionLinkParts"}) as unknown as TypedDocumentString<PlatformConnectionLinkPartsFragment, unknown>;
+export const PlatformAccessRefreshLinkPartsFragmentDoc = new TypedDocumentString(`
+fragment PlatformAccessRefreshLinkParts on PlatformAccessRefreshLink {
+  linkID
+  url
+  platform
+  createdAt
+  expiresAt
+  onSuccessRedirectURL
+  onFailureRedirectURL
+  creator {
+    id
+    name
+  }
+  connectedContactScope {
+    __typename
+    ... on PublicWhatsAppPhoneContactScope {
+      phone {
+        displayPhoneNumber
+        verifiedName
+      }
+    }
+    ... on PublicInstagramAccountContactScope {
+      instagramAccount {
+        username
+        name
+      }
+    }
+    ... on PublicTikTokAccountContactScope {
+      tiktokAccount {
+        username
+        name
+      }
+    }
+  }
+}`, {"fragmentName":"PlatformAccessRefreshLinkParts"}) as unknown as TypedDocumentString<PlatformAccessRefreshLinkPartsFragment, unknown>;
+export const ActivePlatformLinksFragmentDoc = new TypedDocumentString(`
+fragment ActivePlatformLinks on Bot {
+  id
+  activePlatformConnectionLinks {
+    whatsapp {
+      ...PlatformConnectionLinkParts
+    }
+    instagram {
+      ...PlatformConnectionLinkParts
+    }
+    tiktok {
+      ...PlatformConnectionLinkParts
+    }
+  }
+  activePlatformAccessRefreshLinks {
+    whatsapp {
+      ...PlatformAccessRefreshLinkParts
+    }
+    instagram {
+      ...PlatformAccessRefreshLinkParts
+    }
+    tiktok {
+      ...PlatformAccessRefreshLinkParts
+    }
+  }
+}`, {"fragmentName":"ActivePlatformLinks"}) as unknown as TypedDocumentString<ActivePlatformLinksFragment, unknown>;
 export const CurrentUserDocument = new TypedDocumentString(`
 query CurrentUser {
   currentUser {
@@ -2532,3 +2714,72 @@ mutation PreviewWidgetTextSend($botID: BotID!, $conversationID: ConversationID!,
     clientId
   }
 }`) as unknown as TypedDocumentString<PreviewWidgetTextSendMutation, PreviewWidgetTextSendMutationVariables>;
+export const BotChannelsDocument = new TypedDocumentString(`
+query BotChannels($botID: BotID!) {
+  bot(id: $botID) {
+    ...BotChannelsParts
+  }
+}
+${BotChannelsPartsFragmentDoc}`) as unknown as TypedDocumentString<BotChannelsQuery, BotChannelsQueryVariables>;
+export const BotPlatformLinksDocument = new TypedDocumentString(`
+query BotPlatformLinks($botID: BotID!) {
+  bot(id: $botID) {
+    ...ActivePlatformLinks
+  }
+}
+${PlatformConnectionLinkPartsFragmentDoc}
+${PlatformAccessRefreshLinkPartsFragmentDoc}
+${ActivePlatformLinksFragmentDoc}`) as unknown as TypedDocumentString<BotPlatformLinksQuery, BotPlatformLinksQueryVariables>;
+export const BotDisconnectContactScopeDocument = new TypedDocumentString(`
+mutation BotDisconnectContactScope($botID: BotID!, $contactScopeID: ContactScopeID!) {
+  botDisconnectContactScope(botID: $botID, contactScopeID: $contactScopeID) {
+    ...BotChannelsParts
+    ...ActivePlatformLinks
+  }
+}
+${BotChannelsPartsFragmentDoc}
+${PlatformConnectionLinkPartsFragmentDoc}
+${PlatformAccessRefreshLinkPartsFragmentDoc}
+${ActivePlatformLinksFragmentDoc}`) as unknown as TypedDocumentString<BotDisconnectContactScopeMutation, BotDisconnectContactScopeMutationVariables>;
+export const BotPlatformConnectionLinkCreateDocument = new TypedDocumentString(`
+mutation BotPlatformConnectionLinkCreate($botID: BotID!, $platform: PlatformOperationLinkPlatform!, $onSuccessRedirectURL: String, $onFailureRedirectURL: String) {
+  botPlatformConnectionLinkCreate(
+    botID: $botID
+    platform: $platform
+    onSuccessRedirectURL: $onSuccessRedirectURL
+    onFailureRedirectURL: $onFailureRedirectURL
+  ) {
+    ...PlatformConnectionLinkParts
+  }
+}
+${PlatformConnectionLinkPartsFragmentDoc}`) as unknown as TypedDocumentString<BotPlatformConnectionLinkCreateMutation, BotPlatformConnectionLinkCreateMutationVariables>;
+export const BotPlatformConnectionLinkRevokeDocument = new TypedDocumentString(`
+mutation BotPlatformConnectionLinkRevoke($botID: BotID!, $linkID: PlatformOperationLinkID!) {
+  botPlatformConnectionLinkRevoke(botID: $botID, linkID: $linkID) {
+    ...ActivePlatformLinks
+  }
+}
+${PlatformConnectionLinkPartsFragmentDoc}
+${PlatformAccessRefreshLinkPartsFragmentDoc}
+${ActivePlatformLinksFragmentDoc}`) as unknown as TypedDocumentString<BotPlatformConnectionLinkRevokeMutation, BotPlatformConnectionLinkRevokeMutationVariables>;
+export const BotPlatformAccessRefreshLinkCreateDocument = new TypedDocumentString(`
+mutation BotPlatformAccessRefreshLinkCreate($botID: BotID!, $platform: PlatformOperationLinkPlatform!, $onSuccessRedirectURL: String, $onFailureRedirectURL: String) {
+  botPlatformAccessRefreshLinkCreate(
+    botID: $botID
+    platform: $platform
+    onSuccessRedirectURL: $onSuccessRedirectURL
+    onFailureRedirectURL: $onFailureRedirectURL
+  ) {
+    ...PlatformAccessRefreshLinkParts
+  }
+}
+${PlatformAccessRefreshLinkPartsFragmentDoc}`) as unknown as TypedDocumentString<BotPlatformAccessRefreshLinkCreateMutation, BotPlatformAccessRefreshLinkCreateMutationVariables>;
+export const BotPlatformAccessRefreshLinkRevokeDocument = new TypedDocumentString(`
+mutation BotPlatformAccessRefreshLinkRevoke($botID: BotID!, $linkID: PlatformOperationLinkID!) {
+  botPlatformAccessRefreshLinkRevoke(botID: $botID, linkID: $linkID) {
+    ...ActivePlatformLinks
+  }
+}
+${PlatformConnectionLinkPartsFragmentDoc}
+${PlatformAccessRefreshLinkPartsFragmentDoc}
+${ActivePlatformLinksFragmentDoc}`) as unknown as TypedDocumentString<BotPlatformAccessRefreshLinkRevokeMutation, BotPlatformAccessRefreshLinkRevokeMutationVariables>;

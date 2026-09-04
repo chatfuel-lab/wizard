@@ -35,6 +35,17 @@ export interface InstallOutcome {
  * no handoff, and no closing summary, which is the only place the admin
  * password this run invented is ever printed. One npm timeout cost all of that.
  */
+/**
+ * npm's audit and funding round trips are POSTs to the registry, and a network
+ * that only lets GETs through does not refuse them — it hangs, and npm retries
+ * until it gives up. Four minutes of a five-second install were that wait.
+ * Neither answer is worth a second of a first run, so npm is told to skip both.
+ */
+const INSTALL_ARGS: Record<PackageManager, string[]> = {
+  npm: ['install', '--no-audit', '--no-fund'],
+  pnpm: ['install'],
+};
+
 export async function installDependencies(target: string, preferred: PackageManager): Promise<InstallOutcome> {
   const attempts: PackageManager[] = preferred === 'npm' ? ['npm'] : [preferred, 'npm'];
   let lastFailure = '';
@@ -43,7 +54,7 @@ export async function installDependencies(target: string, preferred: PackageMana
     const spinner = p.spinner({ indicator: 'timer' });
     spinner.start(`Installing dependencies with ${pm} — this takes a minute…`);
     try {
-      await execa(pm, ['install'], { cwd: target, timeout: 15 * 60_000 });
+      await execa(pm, INSTALL_ARGS[pm], { cwd: target, timeout: 15 * 60_000 });
       spinner.stop(`Dependencies installed with ${pm}`);
       return { packageManager: pm };
     } catch (err) {
@@ -58,6 +69,8 @@ export async function installDependencies(target: string, preferred: PackageMana
 
   return {
     packageManager: 'npm',
-    failure: `${lastFailure}\n\nFix the error above, then finish with:  cd ${target} && npm install`,
+    failure:
+      `${lastFailure}\n\nFix the error above, then finish with:  ` +
+      `cd ${target} && npm ${INSTALL_ARGS.npm.join(' ')}`,
   };
 }

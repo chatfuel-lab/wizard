@@ -28,7 +28,7 @@ vi.mock('execa', () => ({ execa: () => Promise.resolve({ stdout: '' }) }));
 
 const repoRoot = resolve(import.meta.dirname, '..', '..', '..');
 
-/** The eleven of the thirteen modules that call an API of their own. */
+/** The eleven of the fourteen modules that call an API of their own. */
 const MODULES_WITH_OPERATIONS = readdirSync(join(repoRoot, 'content/modules'))
   .filter((id) => existsSync(join(repoRoot, 'content/modules', id, 'skill/examples/operations.graphql')))
   .sort();

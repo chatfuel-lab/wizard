@@ -11,6 +11,7 @@ import { moduleDescriptor as flowBuilder } from './flow-builder';
 import { moduleDescriptor as automations } from './automations';
 import { moduleDescriptor as adsOptimization } from './ads-optimization';
 import { moduleDescriptor as publishing } from './publishing';
+import { moduleDescriptor as channels } from './channels';
 import { moduleDescriptor as admin } from './admin';
 import { moduleDescriptor as auth } from './auth';
 
@@ -25,6 +26,7 @@ export const MODULES: ModuleDescriptor[] = [
   automations,
   adsOptimization,
   publishing,
+  channels,
   admin,
   auth,
 ];

@@ -1,6 +1,6 @@
 # Modules
 
-Thirteen. `core` is installed with everything and has no interface of its own; the rest each
+Fourteen. `core` is installed with everything and has no interface of its own; the rest each
 add a surface to the app. Pick them at scaffold time, or add them later by re-running the
 wizard with `--embed`.
 
@@ -17,6 +17,7 @@ wizard with `--embed`.
 | `flow-builder` | yes | Visual flow editor: canvas, inspector, block and connection editing, a Test panel. |
 | `ads-optimization` | yes | Conversion reporting for click-to-WhatsApp ads: event sets over the ad automations, and the conversions each reports back to Meta. |
 | `publishing` | yes | Instagram feed photos, Reels, Stories and carousels against a live preview, published now or queued. Posting on the spot needs nothing else; **scheduling** needs the `auth` module and `ADMIN_PASSWORD`, because the schedule is one row belonging to the deployment rather than to any workspace in it. |
+| `channels` | yes | Every channel connected to the bot — WhatsApp, Instagram, TikTok, Facebook pages, the web widget — with Disconnect, and the one-shot links that let somebody without dashboard access connect a new WhatsApp, Instagram or TikTok channel or refresh an existing one's permissions. |
 | `auth` | opt-in | Sign-in for the people who use the app: Supabase email and password, one tenant per deployed bot, owner/admin/member, invite links, a Team page. Turns the proxy into a gate. |
 | `admin` | opt-in | The account behind the deployment's own token: every workspace and bot, channels, a health page. Opened by a password in the server environment, never by a Chatfuel identity, and never in the navigation rail. |
 
