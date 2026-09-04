@@ -162,7 +162,7 @@ function packagedRoot(): string | null {
  * The manifests are re-seeded and then topped up from the resolved commit,
  * because the picker is the first thing that reads them and a module added on
  * the branch since this wizard was published has a manifest the tarball cannot
- * hold. Thirteen small files, fetched before the first list is drawn.
+ * hold. Fourteen small files, fetched before the first list is drawn.
  */
 export async function resolveContentSource(
   source: ContentSource,

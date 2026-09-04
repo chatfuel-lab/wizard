@@ -32,7 +32,7 @@ Scheduled/one-time template sends are flow-builder blocks: `whatsAppScheduledMes
 
 ## Platform connections (channel onboarding)
 
-OAuth make-URL/finish pairs + connect mutations per channel: Facebook pages (`facebookMessagingOauth*`, `botConnectFacebookPage`), Instagram (`instagramOAuth*`, `botConnectInstagramAccount`), TikTok (`tiktokOAuth*`, `botConnectTikTokAccount`), WhatsApp embedded signup (`waEmbeddedSignUp*`, `botConnectWhatsAppPhone`, auto-connect flow with `Bot.whatsAppPhoneAutoConnectionProcess`). Progress arrives via subscriptions (`whatsAppBusinessPhoneNumberUpdated`, `fbPagesSyncStatusUpdated`) or timestamp polling (`whatsAppEntitiesStartRefetch` + `whatsAppEntitiesLastUpdatedAt`). Disconnect any channel with `botDisconnectContactScope`.
+OAuth make-URL/finish pairs + connect mutations per channel: Facebook pages (`facebookMessagingOauth*`, `botConnectFacebookPage`), Instagram (`instagramOAuth*`, `botConnectInstagramAccount`), TikTok (`tiktokOAuth*`, `botConnectTikTokAccount`), WhatsApp embedded signup (`waEmbeddedSignUp*`, `botConnectWhatsAppPhone`, auto-connect flow with `Bot.whatsAppPhoneAutoConnectionProcess`). Progress arrives via subscriptions (`whatsAppBusinessPhoneNumberUpdated`, `fbPagesSyncStatusUpdated`) or timestamp polling (`whatsAppEntitiesStartRefetch` + `whatsAppEntitiesLastUpdatedAt`). Disconnect any channel with `botDisconnectContactScope`. Every one of those runs as the signed-in token holder. To let somebody **without** dashboard access connect a new WhatsApp / Instagram / TikTok asset, or re-authorize the one already connected, mint a platform link instead — `references/platform-links.md`. Facebook pages have no link form.
 
 ## Meta Ads & content
 

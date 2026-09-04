@@ -23,8 +23,8 @@ const MODULES = '../modules';
 /**
  * The modules with operations, read off the disk rather than listed.
  *
- * Two of the thirteen modules ship no `operations.graphql` — they call no API
- * of their own — and which two that is has changed. A list here would be a
+ * Three of the fourteen modules ship no `operations.graphql` — they call no API
+ * of their own — and which ones those are has changed. A list here would be a
  * fourth copy of the fact, next to the manifests, the package exports and the
  * generated directory; the directory that already answers it is used instead.
  */

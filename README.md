@@ -63,7 +63,7 @@ Two things people build with it:
 
 ## Modules
 
-Thirteen. `core` is installed with everything; the rest each add a surface. Pick them in the
+Fourteen. `core` is installed with everything; the rest each add a surface. Pick them in the
 wizard, or add them later with `--embed`.
 
 <table>
@@ -94,6 +94,7 @@ wizard, or add them later with `--embed`.
 - `automations` — per-scope AI rules
 - `flow-builder` — visual flow editor
 - `ads-optimization` — click-to-WhatsApp
+- `channels` — connected channels, connection links
 - `auth` — sign-in, teams, tenants
 - `admin` — the account behind it all
 
@@ -163,7 +164,7 @@ mirror settings beside it.
 
 Everything is under [docs/](docs/README.md), which starts with the two READMEs that come before
 it — the CLI's user guide and the one that ships inside the app you get — and then covers the
-architecture, every flag and variable, deployment, the thirteen modules, the `--app` presets,
+architecture, every flag and variable, deployment, the fourteen modules, the `--app` presets,
 and the errors this stack actually produces.
 
 ## Repository map

@@ -1,0 +1,29 @@
+{
+  "id": "channels",
+  "name": "Channels",
+  "description": "The channels connected to the bot — the WhatsApp number, the Instagram account, the TikTok account, the Facebook pages and the web widget — with Disconnect, and one-press connecting for WhatsApp, Instagram and TikTok: the app mints a one-shot platform link, hands the browser to the page Chatfuel serves for the platform's OAuth, and is brought back here with the channel connected. Refresh access re-grants the permissions on a channel already connected. A role without Configure: Edit sees the connection state and nothing to change.",
+  "status": "ready",
+  "requires": [],
+  "recommends": [],
+  "skill": { "installAs": "chatfuel-channels" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/channels"],
+      "entryComponent": "ChannelsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    { "object": "Bot", "action": "View", "requiredFor": "reading which channels are connected to the bot" },
+    {
+      "object": "Configure",
+      "action": "Edit",
+      "requiredFor": "disconnecting a channel, and minting the connection and access refresh links the Connect and Refresh access buttons spend"
+    }
+  ]
+}

@@ -10,7 +10,7 @@ ships inside the app you get. What follows is the material that did not fit in e
 - [Deployment](deployment.md) — who is allowed to reach the app, picking a host, and the
   rules that hold whichever you pick. Docker and sub-path serving are in
   [the app's own README](../content/shell/README.md#production).
-- [Modules](modules.md) — what each of the thirteen modules gives you, and what a module is
+- [Modules](modules.md) — what each of the fourteen modules gives you, and what a module is
   made of.
 - [Apps](apps.md) — the `--app` presets: what an app preset is, the overlay trust model, and
   where the catalog lives.

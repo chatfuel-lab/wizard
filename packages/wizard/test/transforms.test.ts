@@ -193,6 +193,7 @@ describe('pruneNavGroups against the real template', () => {
     'bookings',
     'ads-optimization',
     'publishing',
+    'channels',
   ];
   const navGroups = join(shellDir, 'src', 'modules', 'navGroups.tsx');
 
@@ -209,7 +210,16 @@ describe('pruneNavGroups against the real template', () => {
     const target = copy();
     const removed = pruneNavGroups(target, ['livechat', 'contacts', 'knowledge-base']);
     expect(removed.sort()).toEqual(
-      ['ads-optimization', 'automations', 'bookings', 'coworker', 'deals', 'flow-builder', 'publishing'].sort(),
+      [
+        'ads-optimization',
+        'automations',
+        'bookings',
+        'channels',
+        'coworker',
+        'deals',
+        'flow-builder',
+        'publishing',
+      ].sort(),
     );
     const after = readFileSync(target, 'utf8');
     expect(table(after)).toEqual([['knowledge-base'], ['livechat'], ['contacts']]);

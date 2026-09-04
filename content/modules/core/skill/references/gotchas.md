@@ -39,6 +39,7 @@ examples; this is what they map to here.
 13. Datetime attribute values travel as **millisecond-timestamp strings** (`"1720456863000"`), not RFC3339 — only the `Time` scalar uses RFC3339.
 14. `Task.statuses` is a history (current = latest `startedAt`); past `deadline` = failed. See `references/files-tasks.md`.
 15. `contactsCount` respects the caller's visibility restrictions; `contactsTotalCount` doesn't. Pick deliberately.
+15a. **Creating a platform link silently replaces the active one for that (bot, platform, kind), and the API keeps no used/expired/revoked state** — read `bot.activePlatformConnectionLinks` / `activePlatformAccessRefreshLinks` before minting; a link gone from the map is gone. See `references/platform-links.md`.
 
 ## Transport recap (details in `references/transport-auth.md`)
 

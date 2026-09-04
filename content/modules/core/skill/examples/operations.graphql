@@ -1,5 +1,5 @@
 # Chatfuel GraphQL — core operations every module needs (chatfuel-core skill):
-# identity, bot discovery, permission check, file readback.
+# identity, bot discovery, permission check, file readback, channels and platform links.
 # Validate against references/schema.graphql (node scripts/validate-operations.mjs).
 # Transport & auth: references/transport-auth.md. Files & tasks: references/files-tasks.md.
 
@@ -203,5 +203,226 @@ mutation PreviewWidgetTextSend(
   previewResponsesWidgetTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
     id
     clientId
+  }
+}
+
+# ============================================================
+# Channels & platform links
+# ============================================================
+# A platform link is a one-shot URL on Chatfuel's own page, valid for 24 hours
+# from creation, that lets somebody who is NOT a member of the bot either
+# connect a new WhatsApp phone / Instagram account / TikTok account to it
+# (connection link) or re-grant the permissions on the asset already connected
+# (access-refresh link). The page, the OAuth round trip and the provider
+# redirect URIs are all Chatfuel's, so an app never hosts the consume side: it
+# mints the link, hands over `url`, and reads the active map back. Full rules:
+# references/platform-links.md.
+#
+# One active link per (bot, platform, kind): a second create silently replaces
+# the first, whose URL then stops working. `PlatformOperationLinkPlatform` has
+# no facebook member — a Facebook page is connected through the signed-in
+# OAuth route instead.
+#
+# Error codes: PlatformNotSupportedForOperationLink,
+# PlatformOperationLinkInvalidRedirectURL (redirect URLs must be https:// with
+# a host), NoConnectedContactScopeForPlatform (access-refresh only: nothing of
+# that platform is connected yet), PlatformOperationLinkNotFound (revoking a
+# link that is no longer active), NotEnoughPermissions (Configure / Edit).
+
+# Which channels the bot has. `contactScopes` needs access to the bot only; the
+# link maps further down need Configure / Edit and are non-null, which is why
+# they are a separate document — one that asked for both would answer nothing
+# at all to a role that may read but not manage.
+fragment BotChannelsParts on Bot {
+  id
+  contactScopes {
+    __typename
+    id
+    ... on WhatsAppPhoneContactScope {
+      phone {
+        id
+        displayPhoneNumber
+        verifiedName
+      }
+    }
+    ... on InstagramAccountContactScope {
+      instagramAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on TikTokAccountContactScope {
+      tiktokAccount {
+        id
+        username
+        name
+      }
+    }
+    ... on FacebookContactScope {
+      facebookPage {
+        id
+        name
+      }
+    }
+    ... on WebWidgetContactScope {
+      webWidget {
+        id
+        name
+      }
+    }
+  }
+}
+
+query BotChannels($botID: BotID!) {
+  bot(id: $botID) {
+    ...BotChannelsParts
+  }
+}
+
+fragment PlatformConnectionLinkParts on PlatformConnectionLink {
+  linkID
+  url
+  platform
+  createdAt
+  expiresAt
+  onSuccessRedirectURL
+  onFailureRedirectURL
+  creator {
+    id
+    name
+  }
+}
+
+# `connectedContactScope` is an interface; the three concrete types the enum
+# allows are selected, and `__typename` tells them apart. TikTok's `username`
+# is nullable, Instagram's is not.
+fragment PlatformAccessRefreshLinkParts on PlatformAccessRefreshLink {
+  linkID
+  url
+  platform
+  createdAt
+  expiresAt
+  onSuccessRedirectURL
+  onFailureRedirectURL
+  creator {
+    id
+    name
+  }
+  connectedContactScope {
+    __typename
+    ... on PublicWhatsAppPhoneContactScope {
+      phone {
+        displayPhoneNumber
+        verifiedName
+      }
+    }
+    ... on PublicInstagramAccountContactScope {
+      instagramAccount {
+        username
+        name
+      }
+    }
+    ... on PublicTikTokAccountContactScope {
+      tiktokAccount {
+        username
+        name
+      }
+    }
+  }
+}
+
+# The whole active map, one slot per platform, null where nothing is active.
+# Spread on the `Bot!` the revoke and disconnect mutations return, so none of
+# them needs a refetch.
+fragment ActivePlatformLinks on Bot {
+  id
+  activePlatformConnectionLinks {
+    whatsapp {
+      ...PlatformConnectionLinkParts
+    }
+    instagram {
+      ...PlatformConnectionLinkParts
+    }
+    tiktok {
+      ...PlatformConnectionLinkParts
+    }
+  }
+  activePlatformAccessRefreshLinks {
+    whatsapp {
+      ...PlatformAccessRefreshLinkParts
+    }
+    instagram {
+      ...PlatformAccessRefreshLinkParts
+    }
+    tiktok {
+      ...PlatformAccessRefreshLinkParts
+    }
+  }
+}
+
+query BotPlatformLinks($botID: BotID!) {
+  bot(id: $botID) {
+    ...ActivePlatformLinks
+  }
+}
+
+# Configure / Edit. The web widget is refused (CannotDisconnectWidgetScope); a
+# scope that is already gone answers ContactScopeDoesNotExist. Disconnecting
+# revokes the access-refresh link bound to that scope, so the payload carries
+# both the scopes and the link maps.
+mutation BotDisconnectContactScope($botID: BotID!, $contactScopeID: ContactScopeID!) {
+  botDisconnectContactScope(botID: $botID, contactScopeID: $contactScopeID) {
+    ...BotChannelsParts
+    ...ActivePlatformLinks
+  }
+}
+
+# Answers the new link with `url` — hand that string to the person who will
+# open it. `linkID` is the same secret in another form: treat both as
+# credentials. Replaces any active connection link for that platform.
+mutation BotPlatformConnectionLinkCreate(
+  $botID: BotID!
+  $platform: PlatformOperationLinkPlatform!
+  $onSuccessRedirectURL: String
+  $onFailureRedirectURL: String
+) {
+  botPlatformConnectionLinkCreate(
+    botID: $botID
+    platform: $platform
+    onSuccessRedirectURL: $onSuccessRedirectURL
+    onFailureRedirectURL: $onFailureRedirectURL
+  ) {
+    ...PlatformConnectionLinkParts
+  }
+}
+
+mutation BotPlatformConnectionLinkRevoke($botID: BotID!, $linkID: PlatformOperationLinkID!) {
+  botPlatformConnectionLinkRevoke(botID: $botID, linkID: $linkID) {
+    ...ActivePlatformLinks
+  }
+}
+
+# Needs a connected scope of that platform, or NoConnectedContactScopeForPlatform.
+# The link is bound to that scope: disconnecting it revokes the link.
+mutation BotPlatformAccessRefreshLinkCreate(
+  $botID: BotID!
+  $platform: PlatformOperationLinkPlatform!
+  $onSuccessRedirectURL: String
+  $onFailureRedirectURL: String
+) {
+  botPlatformAccessRefreshLinkCreate(
+    botID: $botID
+    platform: $platform
+    onSuccessRedirectURL: $onSuccessRedirectURL
+    onFailureRedirectURL: $onFailureRedirectURL
+  ) {
+    ...PlatformAccessRefreshLinkParts
+  }
+}
+
+mutation BotPlatformAccessRefreshLinkRevoke($botID: BotID!, $linkID: PlatformOperationLinkID!) {
+  botPlatformAccessRefreshLinkRevoke(botID: $botID, linkID: $linkID) {
+    ...ActivePlatformLinks
   }
 }
