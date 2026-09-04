@@ -1,2 +1,2 @@
-# Every change is reviewed by a maintainer.
-*       @OlegKrasikov
+# Every change is reviewed by a maintainer, and `main` takes a push from nobody else.
+*       @OlegKrasikov @ifedyukin

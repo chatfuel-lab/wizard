@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 — 2026-09-02
+## 0.3.0 — 2026-09-04
 
 ### Changed
 
@@ -21,7 +21,9 @@
   reset or force-pushed says so — and everything else that can go wrong (offline,
   rate-limited, a proxy in the way) falls back to the packaged commit, which is a
   working install. `CHATFUEL_CONTENT_REF` takes a full sha to pin a run to one
-  commit, or a branch name to follow a different one.
+  commit, or a branch name to follow a different one. An app made by 0.2.0 or
+  0.1.0 follows nothing — it holds the files it was handed. This is the first
+  version whose apps get a fix as it lands, so it is the one to start from.
 
 - **The wizard loads its own code lazily.** `bin.ts` resolves the argument parser,
   the run and the subcommands through dynamic `import()`, so `--help`, `--version`
@@ -35,6 +37,15 @@
   resolves outside the app directory).
 
 ### Added
+
+- **A `channels` module: connect WhatsApp, Instagram and TikTok from the app.**
+  Connecting an account is a hand-off, not a link to copy around: the app mints a
+  one-shot link, sends the person to Chatfuel's connect page with both redirects
+  pointing back at `/channels`, and says how it went when they land. The same
+  screen re-grants permissions on an account already connected, and disconnects a
+  contact scope. The platform links and the operations behind them live in
+  `core`, so every scaffold has them; `channels` is the screen over them, in a
+  new `settings` navigation group.
 
 - **A typed GraphQL client, generated in the app.** The scaffold carries the schema
   and one operation document per module under `src/vendor/`, and `npm run codegen`
@@ -96,6 +107,16 @@
   any account assets" and had come to mean "write nothing at all", which left no
   way to ask for a scaffold without a bot. The two meanings are now two flags:
   `--dry-run` keeps the account side, `--plan` keeps the disk.
+
+- **`npm install` failed in every app the wizard writes.** vitest 4's optional
+  peer `@vitest/browser-playwright` began resolving to 5.0.0, whose own peer
+  points back at vitest 5, and npm's resolver died on the cycle — `Cannot read
+  properties of null (reading 'edgesOut')`. The scaffold runs vitest 5 now.
+
+- **An install could take four minutes instead of five seconds.** `npm audit`
+  and `npm fund` are POSTs, and a network that lets only GETs through hangs them
+  rather than failing them. Every install the wizard runs passes `--no-audit
+  --no-fund`, and so does the command it prints when an install fails.
 
 ## 0.2.0 — 2026-08-21
 

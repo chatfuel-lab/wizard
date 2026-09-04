@@ -100,8 +100,8 @@ write, the merges, and the report.
      "from": "<commit the app is on>",
      "to": "<commit it would move to>",
      "fromVersion": "0.2.0",
-     "toVersion": "0.4.0",
-     "notes": "## 0.4.0 — …\n\n### Fixed\n- …",   // the changelog for that range
+     "toVersion": "0.3.0",
+     "notes": "## 0.3.0 — …\n\n### Fixed\n- …",   // the changelog for that range
      "update": [{ "at": "…", "from": "…" }],
      "conflicts": [
        {
