@@ -47,6 +47,28 @@
   `core`, so every scaffold has them; `channels` is the screen over them, in a
   new `settings` navigation group.
 
+- **`update` moves an app the wizard made onto newer content.** It overwrites
+  what is still the wizard's, leaves what you edited alone, and names every file
+  it could not decide for you rather than guessing at it. It adds no file the app
+  has never had — the lock maps the app's files to their origins, not the trees
+  they were copied from — and it does not run the code generator, because most
+  apps do not have that toolchain installed and a build nobody asked for is not
+  an update. `update --dry-run --json` is the plan an agent reads, and
+  `--resolved <paths>` records a conflict as settled so the next run stops asking.
+
+- **An admin panel for the account behind the token.** It lists every workspace
+  and bot `CHATFUEL_TOKEN` can reach, creates, renames and deletes them, and
+  reports whether the token still works. It opens at `/admin` behind
+  `ADMIN_PASSWORD` and never appears in the app's own navigation: the person who
+  runs the deployment is not the person the app is for.
+
+- **The new app goes to GitHub, and a push becomes a deploy.** After the deploy
+  the wizard offers to create the repository, commit and push — private by
+  default. It reads the staged index back before it does and stops if a `.env`, a
+  key file or a token is in it. `npm run connect-git` wires that repository to
+  the Vercel project, so from then on `git push` is the deploy; the wizard offers
+  to run it right after the push when a Vercel project already exists.
+
 - **A typed GraphQL client, generated in the app.** The scaffold carries the schema
   and one operation document per module under `src/vendor/`, and `npm run codegen`
   turns them into typed hooks under `src/vendor/api/generated/`. The generator is
@@ -117,6 +139,25 @@
   and `npm fund` are POSTs, and a network that lets only GETs through hangs them
   rather than failing them. Every install the wizard runs passes `--no-audit
   --no-fund`, and so does the command it prints when an install fails.
+
+- **A deploy that stops can be tried again.** It repeats the reason it stopped
+  for and offers Try again or Skip for now, and a skipped one is remembered —
+  the closing summary and the agent handoff both say it was tried and stopped,
+  rather than leaving it looking like it was never reached.
+
+- **A deploy died with `command not found` and blamed the sign-in.**
+  `npx --package=` exports its own configuration to every child process, so the
+  Vercel CLI the wizard had just installed was resolved against the wrong
+  package. Those two variables are dropped before any nested command is called.
+
+- **An account with no bot it could open held an empty state for ever.** Signing
+  in now provisions the bot that was never created, two concurrent sign-ups make
+  one bot rather than two, and a refusal says which limit it hit.
+
+- **An outside security pass over the request proxy, the auth gate and what a
+  deployed app exposes to the network.** What it found is fixed and what it
+  confirmed is written down beside the code it is about; the body ceiling on the
+  admin routes above is one of its results.
 
 ## 0.2.0 — 2026-08-21
 
