@@ -25,7 +25,7 @@ describe('installDependencies', () => {
     execa.mockResolvedValue({});
     await expect(installDependencies('/tmp/app', 'npm')).resolves.toEqual({ packageManager: 'npm' });
     expect(execa).toHaveBeenCalledTimes(1);
-    expect(execa.mock.calls[0].slice(0, 2)).toEqual(['npm', ['install']]);
+    expect(execa.mock.calls[0].slice(0, 2)).toEqual(['npm', ['install', '--no-audit', '--no-fund']]);
   });
 
   it('falls back to npm — the one package manager Node guarantees', async () => {
@@ -42,6 +42,7 @@ describe('installDependencies', () => {
        closing summary — where the admin password this run invented is printed. */
     expect(outcome.packageManager).toBe('npm');
     expect(outcome.failure).toContain('npm ERR! network timeout');
-    expect(outcome.failure).toContain('cd /tmp/app && npm install');
+    // Flags and all: the command handed over must not stall the way the run did.
+    expect(outcome.failure).toContain('cd /tmp/app && npm install --no-audit --no-fund');
   });
 });

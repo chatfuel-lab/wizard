@@ -75,6 +75,19 @@ const ADD: Record<HostPm, { add: string[]; dev: string[] }> = {
 };
 
 /**
+ * Skipped when the wizard runs the install itself: npm's audit and funding
+ * round trips are POSTs, and a network that lets only GETs through hangs on
+ * them for minutes instead of refusing. They stay out of the printed commands,
+ * which are somebody else's project to run as they like.
+ */
+const QUIET: Record<HostPm, string[]> = {
+  npm: ['--no-audit', '--no-fund'],
+  pnpm: [],
+  yarn: [],
+  bun: [],
+};
+
+/**
  * The host's lockfile decides — installing with the wrong package manager
  * would leave a second lockfile behind in someone else's project.
  */
@@ -104,8 +117,8 @@ async function offerHostInstall(ctx: WizardContext, host: string, deps: string[]
   const spinner = p.spinner({ indicator: 'timer' });
   spinner.start(`Installing with ${pm}…`);
   try {
-    await execa(pm, [...ADD[pm].add, ...deps], { cwd: host, timeout: 15 * 60_000 });
-    await execa(pm, [...ADD[pm].dev, ...devDeps], { cwd: host, timeout: 15 * 60_000 });
+    await execa(pm, [...ADD[pm].add, ...deps, ...QUIET[pm]], { cwd: host, timeout: 15 * 60_000 });
+    await execa(pm, [...ADD[pm].dev, ...devDeps, ...QUIET[pm]], { cwd: host, timeout: 15 * 60_000 });
     spinner.stop(`Dependencies installed with ${pm}`);
     return true;
   } catch (err) {

@@ -137,7 +137,7 @@ export async function installAgent(spec: AgentSpec): Promise<AgentLauncher | nul
   const spinner = p.spinner({ indicator: 'timer' });
   spinner.start(`Installing ${spec.name} (npm i -g ${spec.npmPackage})…`);
   try {
-    await execa('npm', ['install', '-g', spec.npmPackage], { timeout: 10 * 60_000 });
+    await execa('npm', ['install', '-g', spec.npmPackage, '--no-audit', '--no-fund'], { timeout: 10 * 60_000 });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (isPermissionError(message)) {
