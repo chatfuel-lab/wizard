@@ -60,7 +60,7 @@ export const NAV_GROUPS: readonly NavGroupDef[] = [
     id: 'growth',
     title: 'Growth',
     icon: <IconMegaphone />,
-    items: ['coworker', 'publishing', 'ads-optimization'],
+    items: ['coworker', 'publishing', 'broadcasts', 'ads-optimization'],
   },
   {
     id: 'settings',

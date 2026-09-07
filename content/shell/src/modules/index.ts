@@ -12,6 +12,7 @@ import { moduleDescriptor as automations } from './automations';
 import { moduleDescriptor as adsOptimization } from './ads-optimization';
 import { moduleDescriptor as publishing } from './publishing';
 import { moduleDescriptor as channels } from './channels';
+import { moduleDescriptor as broadcasts } from './broadcasts';
 import { moduleDescriptor as admin } from './admin';
 import { moduleDescriptor as auth } from './auth';
 
@@ -26,6 +27,7 @@ export const MODULES: ModuleDescriptor[] = [
   automations,
   adsOptimization,
   publishing,
+  broadcasts,
   channels,
   admin,
   auth,

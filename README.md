@@ -63,7 +63,7 @@ Two things people build with it:
 
 ## Modules
 
-Fourteen. `core` is installed with everything; the rest each add a surface. Pick them in the
+Fifteen. `core` is installed with everything; the rest each add a surface. Pick them in the
 wizard, or add them later with `--embed`.
 
 <table>
@@ -75,6 +75,7 @@ wizard, or add them later with `--embed`.
 - `livechat` — operator inbox
 - `coworker` — the operator's AI assistant
 - `publishing` — Instagram posts and Reels
+- `broadcasts` — WhatsApp campaigns
 
 </td>
 <td width="33%" valign="top">
@@ -164,7 +165,7 @@ mirror settings beside it.
 
 Everything is under [docs/](docs/README.md), which starts with the two READMEs that come before
 it — the CLI's user guide and the one that ships inside the app you get — and then covers the
-architecture, every flag and variable, deployment, the fourteen modules, the `--app` presets,
+architecture, every flag and variable, deployment, the fifteen modules, the `--app` presets,
 and the errors this stack actually produces.
 
 ## Repository map

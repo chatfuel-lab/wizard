@@ -18,6 +18,7 @@
     "./generated/flow-builder": "./src/generated/flow-builder/graphql.ts",
     "./generated/ads-optimization": "./src/generated/ads-optimization/graphql.ts",
     "./generated/publishing": "./src/generated/publishing/graphql.ts",
+    "./generated/broadcasts": "./src/generated/broadcasts/graphql.ts",
     "./domain/livechat": "./src/domain/livechat.ts"
   },
   "scripts": {

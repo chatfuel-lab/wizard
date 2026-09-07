@@ -1,0 +1,822 @@
+# Broadcasts — WhatsApp campaigns over the flow API.
+#
+# There is no Broadcast entity. A campaign is a flow holding two blocks: an
+# entry point that carries the audience and the schedule
+# (WhatsAppOneTimeNotificationBlock = send now, WhatsAppScheduledMessageBlock =
+# later or recurring), connected to a WhatsAppTemplateBlock that carries the
+# message — an approved template with its parameters filled in. One mutation
+# creates the pair; every setter after that is keyed by a block element id.
+#
+# Read `references/campaign-model.md` for how a flow becomes a campaign row and
+# `references/schedule.md` before touching any time setter.
+#
+# Every name here is prefixed `Broadcast` because the flow-builder skill owns
+# the plain ones (`FlowParts`, `BlockParts`, `SetOneTimeNotificationSegment`…)
+# and two skills may not disagree on a name.
+
+# ============================================================
+# Fragments — templates
+# ============================================================
+
+fragment BroadcastFileRef on File {
+  id
+  url
+  type
+  status
+  size
+}
+
+fragment BroadcastAttrRef on BotAttribute {
+  name
+  type
+  dataType
+}
+
+# A parameter value: literal text and attribute references. `errCode` on a
+# reference is the server's verdict on it — `AttributeIsNotAllowedForPlatform`
+# when the attribute is one WhatsApp contacts never carry.
+fragment BroadcastTplStr on TemplateStr {
+  parts {
+    __typename
+    ... on TemplateStrText {
+      text
+      errCode
+    }
+    ... on TemplateStrAttribute {
+      attribute {
+        ...BroadcastAttrRef
+      }
+      errCode
+    }
+  }
+}
+
+fragment BroadcastTplText on WhatsAppTemplateComponentText {
+  text {
+    __typename
+    ... on WhatsAppTemplateComponentTextPartText {
+      text
+    }
+    ... on WhatsAppTemplateComponentTextPartParam {
+      name
+      value {
+        ...BroadcastTplStr
+      }
+    }
+  }
+}
+
+# The catalog row's header and the filled copy's header are two unions with the
+# same four members, so the same selection is written twice.
+fragment BroadcastTplHeader on WhatsAppTemplateHeader {
+  __typename
+  ... on WhatsAppTemplateComponentText {
+    ...BroadcastTplText
+  }
+  ... on WhatsAppTemplateComponentImage {
+    image {
+      ...BroadcastFileRef
+    }
+  }
+  ... on WhatsAppTemplateComponentVideo {
+    video {
+      ...BroadcastFileRef
+    }
+  }
+  ... on WhatsAppTemplateComponentDocument {
+    document {
+      ...BroadcastFileRef
+    }
+    fileName
+  }
+}
+
+fragment BroadcastTplConfigHeader on WhatsAppTemplateComponentHeader {
+  __typename
+  ... on WhatsAppTemplateComponentText {
+    ...BroadcastTplText
+  }
+  ... on WhatsAppTemplateComponentImage {
+    image {
+      ...BroadcastFileRef
+    }
+  }
+  ... on WhatsAppTemplateComponentVideo {
+    video {
+      ...BroadcastFileRef
+    }
+  }
+  ... on WhatsAppTemplateComponentDocument {
+    document {
+      ...BroadcastFileRef
+    }
+    fileName
+  }
+}
+
+fragment BroadcastTplButton on WhatsAppTemplateButton {
+  __typename
+  ... on WhatsAppTemplateURLButton {
+    id
+    text
+    url {
+      __typename
+      ... on WhatsAppTemplateComponentTextPartText {
+        text
+      }
+      ... on WhatsAppTemplateComponentTextPartParam {
+        name
+        value {
+          ...BroadcastTplStr
+        }
+      }
+    }
+  }
+  ... on WhatsAppTemplateQuickReplyButton {
+    id
+    text
+  }
+  ... on WhatsAppTemplateCallPhoneButton {
+    text
+    phoneNumber
+  }
+  ... on WhatsAppTemplateWhatsAppCallButton {
+    text
+  }
+  ... on WhatsAppTemplateCopyCodeButton {
+    id
+    text
+    code {
+      ...BroadcastTplStr
+    }
+  }
+}
+
+# One row of the catalog, with enough of the message to preview it before it
+# is picked. `IsSupportedInFlowbuilder` is the filter that matters here: a
+# campaign is a flow, and a template the flow builder cannot send cannot be
+# broadcast either. Only `Approved` templates go out.
+fragment BroadcastCatalogTemplate on WhatsAppTemplate {
+  id
+  name
+  status
+  language
+  category
+  IsSupportedInFlowbuilder
+  header {
+    ...BroadcastTplHeader
+  }
+  body {
+    ... on WhatsAppTemplateComponentText {
+      ...BroadcastTplText
+    }
+  }
+  footer {
+    ... on WhatsAppTemplateComponentText {
+      ...BroadcastTplText
+    }
+  }
+  buttons {
+    ...BroadcastTplButton
+  }
+}
+
+# The template as the payload block holds it: the catalog row's shape, with
+# every parameter carrying the value that was set on it.
+fragment BroadcastTemplateConfig on WhatsAppTemplateConfig {
+  templateID
+  name
+  status
+  header {
+    ...BroadcastTplConfigHeader
+  }
+  body {
+    ... on WhatsAppTemplateComponentText {
+      ...BroadcastTplText
+    }
+  }
+  footer {
+    ... on WhatsAppTemplateComponentText {
+      ...BroadcastTplText
+    }
+  }
+  buttons {
+    ...BroadcastTplButton
+  }
+}
+
+# ============================================================
+# Fragments — audience
+# ============================================================
+
+# A filter as the server holds it. The input side names an attribute by
+# `name`; the output side hands back the attribute object, so the two shapes
+# do not round-trip on their own — `lib/audienceSegment.ts` does the mapping.
+# `byTag` and `byStoredSegment` are read so a segment built elsewhere survives
+# a re-save untouched; this app never builds them.
+fragment BroadcastSegmentFilter on Filter {
+  id
+  byAttribute {
+    attribute {
+      ...BroadcastAttrRef
+    }
+    defaultStrategy {
+      operator
+      comparableValues
+    }
+    dateStrategy {
+      operator
+      comparableDate
+    }
+  }
+  byTag {
+    operator
+    tagNames
+  }
+  byStoredSegment {
+    operator
+    segmentIDs
+  }
+}
+
+# Two levels are what the builder writes: the segment's own filters, and one
+# nested segment per filter slot through `byInFlightSegment`. A third level is
+# read as well, so a segment the dashboard wrote deeper than this app builds
+# survives a re-save here untouched.
+fragment BroadcastSegment on Segment {
+  id
+  name
+  resultOperator
+  filters {
+    ...BroadcastSegmentFilter
+    byInFlightSegment {
+      id
+      name
+      resultOperator
+      filters {
+        ...BroadcastSegmentFilter
+        byInFlightSegment {
+          id
+          name
+          resultOperator
+          filters {
+            ...BroadcastSegmentFilter
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Fragments — the flow
+# ============================================================
+
+# A block element's server verdicts. These are DATA, recomputed on every
+# write: snake_case codes such as `template_required`,
+# `body_text_param_value_required`, `start_time_cannot_be_in_past`,
+# `weekdays_are_empty`, `segment_set_is_invalid`. A campaign cannot go live
+# while any is present, and the composer prints each beside its step.
+fragment BroadcastElementErrors on BlockElement {
+  errors {
+    __typename
+    code
+    message
+    ... on WhatsAppTemplateParamValueRequiredError {
+      paramName
+    }
+    ... on WhatsAppTemplateURLButtonParamValueRequiredError {
+      buttonID
+      paramName
+    }
+  }
+}
+
+fragment BroadcastElement on BlockElement {
+  __typename
+  id
+  ...BroadcastElementErrors
+  ... on WhatsAppOneTimeNotificationBlockElement {
+    status
+    sentToContactsCount
+    segment {
+      ...BroadcastSegment
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+  }
+  ... on WhatsAppScheduledMessageBlockElement {
+    status
+    firstSendTime
+    repeatType
+    repeatOnWeekdays
+    repeatEveryNDays
+    repeatOnCertainDates
+    segment {
+      ...BroadcastSegment
+    }
+    segmentErrors {
+      filterID
+      code
+    }
+  }
+  ... on WhatsAppTemplateBlockElement {
+    waitForReplies
+    saveContactReply
+    whatsAppTemplate {
+      ...BroadcastTemplateConfig
+    }
+  }
+}
+
+# `isEntryPointEnabled` is read on the two entry-point blocks only; the
+# template block is a content block and has no such bit.
+fragment BroadcastBlock on Block {
+  __typename
+  id
+  name
+  ... on WhatsAppOneTimeNotificationBlock {
+    isEntryPointEnabled
+  }
+  ... on WhatsAppScheduledMessageBlock {
+    isEntryPointEnabled
+  }
+  blockElements {
+    ...BroadcastElement
+  }
+}
+
+fragment BroadcastConnection on Connection {
+  __typename
+  ... on BlockToBlockConnection {
+    id
+    sourceBlockID
+    targetBlockID
+  }
+  ... on ComponentToBlockConnection {
+    id
+    sourceBlockID
+    sourceBlockElementID
+    sourceHandleID
+    targetBlockID
+  }
+}
+
+# The whole flow — what every flow-returning mutation answers with, and what
+# `campaignOf` reads.
+fragment BroadcastFlow on Flow {
+  __typename
+  id
+  name
+  platform
+  createdAt
+  entryPoints {
+    __typename
+    id
+    isEntryPointEnabled
+  }
+  blocks {
+    ...BroadcastBlock
+  }
+  connections {
+    ...BroadcastConnection
+  }
+}
+
+# ============================================================
+# Reads
+# ============================================================
+
+# Every flow on the bot, grouped as the dashboard groups them. There is no
+# query for campaigns alone: a flow is a campaign when one of its entry
+# points is a one-time notification or a scheduled message, and the list keeps
+# only those. The whole flow comes along because the payload block — the
+# message — is what a row names.
+query BroadcastFlowsList($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    flowGroups {
+      id
+      name
+      flows {
+        ...BroadcastFlow
+      }
+    }
+    flowsWithoutGroup {
+      ...BroadcastFlow
+    }
+  }
+}
+
+query BroadcastFlowGet($botID: BotID!, $flowID: FlowID!) {
+  bot(id: $botID) {
+    id
+    flow(flowID: $flowID) {
+      ...BroadcastFlow
+    }
+  }
+}
+
+# The paging arguments are accepted and ignored: the server answers with every
+# template the bot has, `hasNextPage: false`, `endCursor: null`. The walk in
+# `hooks/useWhatsAppTemplates.ts` stops on the first page for that reason and
+# is bounded in case a backend ever starts paging.
+query BroadcastTemplates($botID: BotID!, $first: Int, $after: WhatsAppTemplateCursor) {
+  bot(id: $botID) {
+    id
+    whatsAppTemplates(first: $first, after: $after) {
+      edges {
+        node {
+          ...BroadcastCatalogTemplate
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The recipient count. `contactsTotalCount` ignores the current user's
+# assignee restrictions — the SDL says it is the one for broadcast estimates;
+# `contactsCount` would under-report for a role that sees only its own
+# contacts. `segment: null` counts every WhatsApp contact.
+query BroadcastAudienceCount($botID: BotID!, $segment: SegmentInput) {
+  bot(id: $botID) {
+    id
+    contactsTotalCount(platforms: [whatsapp], segment: $segment)
+  }
+}
+
+# The attribute catalog — what the audience builder filters on and what a
+# parameter may be personalised with. WhatsApp contacts only: an attribute
+# another platform carries is refused on a WhatsApp send
+# (`AttributeIsNotAllowedForPlatform`), so it is never offered.
+query BroadcastAttributes(
+  $botID: BotID!
+  $first: Int
+  $after: BotAttributeCursor
+  $inputSubstring: String
+) {
+  bot(id: $botID) {
+    id
+    botAttributes(
+      locale: En
+      platforms: [whatsapp]
+      attributeTypes: [system, custom]
+      filters: []
+      orderBy: { orderBy: ContactsCount, direction: Desc }
+      first: $first
+      after: $after
+      inputSubstring: $inputSubstring
+    ) {
+      edges {
+        node {
+          botAttribute {
+            ...BroadcastAttrRef
+          }
+          usersCount
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+# The facts the module needs about the bot itself: its zone (times are shown
+# in it), whether a WhatsApp number is connected (nothing sends without one),
+# and the WhatsApp Business Account behind it — the two ids the WhatsApp
+# Manager link is built from.
+query BroadcastBot($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    timezone
+    contactScopes {
+      __typename
+      id
+      ... on WhatsAppPhoneContactScope {
+        phone {
+          id
+          displayPhoneNumber
+          status
+          whatsAppBusinessAccount {
+            id
+            name
+            facebookBusiness {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Writes — the flow and its group
+# ============================================================
+
+# `createFlow` answers the Bot, not the flow: the new one is the id that was not
+# in `flowsWithoutGroup` before, named "Flow N" by the server.
+mutation BroadcastCreateFlow($botID: BotID!) {
+  createFlow(botID: $botID, platform: whatsapp) {
+    id
+    flowsWithoutGroup {
+      id
+      name
+    }
+  }
+}
+
+mutation BroadcastRenameFlow($flowID: FlowID!, $name: String!) {
+  updateFlowName(flowID: $flowID, name: $name) {
+    ...BroadcastFlow
+  }
+}
+
+# The only way to cancel a campaign: there is no cancel or archive mutation.
+# A one-time campaign that has started cannot be stopped this way either — the
+# send is already with the platform.
+mutation BroadcastDeleteFlow($flowID: FlowID!) {
+  deleteFlow(flowID: $flowID) {
+    id
+    flowGroups {
+      id
+      name
+      flows {
+        id
+      }
+    }
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+# Campaigns live in one flow group so the dashboard shows them together. The
+# group is found by name and created once; `deleteFlowGroup` is deliberately
+# absent from this document — it deletes every flow inside the group with it.
+mutation BroadcastCreateGroup($botID: BotID!) {
+  createFlowGroup(botID: $botID) {
+    id
+    flowGroups {
+      id
+      name
+    }
+  }
+}
+
+mutation BroadcastRenameGroup($groupID: FlowGroupID!, $name: String!) {
+  updateFlowGroupName(id: $groupID, name: $name) {
+    id
+    name
+  }
+}
+
+mutation BroadcastMoveToGroup($flowID: FlowID!, $groupID: FlowGroupID!) {
+  moveFlowToGroup(flowID: $flowID, groupID: $groupID) {
+    id
+    flowGroups {
+      id
+      name
+      flows {
+        id
+      }
+    }
+    flowsWithoutGroup {
+      id
+    }
+  }
+}
+
+# ============================================================
+# Writes — the block pair
+# ============================================================
+
+# Both create the entry point AND the template block, connected. The one-time
+# block is born with `isEntryPointEnabled: true` and refuses to be disabled;
+# for it the bit means nothing and `status` is the truth. The scheduled block
+# is born disabled with `firstSendTime` an hour ahead.
+mutation BroadcastCreateOneTime($flowID: FlowID!) {
+  whatsAppOneTimeNotificationCreateWithBlockAndWATemplate(flowID: $flowID, positionX: 0, positionY: 0) {
+    ...BroadcastFlow
+  }
+}
+
+mutation BroadcastCreateScheduled($flowID: FlowID!) {
+  whatsAppScheduledMessageCreateWithBlockAndWATemplate(flowID: $flowID, positionX: 0, positionY: 0) {
+    ...BroadcastFlow
+  }
+}
+
+# One block out of a flow. The composer sends this once: when a draft's kind
+# changes, the other pair is created on the same flow and the OLD entry point
+# is deleted, so the flow keeps one entry point and the list keeps one row.
+# The old template block cannot follow it — `deleteBlock` on a
+# `WhatsAppTemplateBlock` (and `blockElementDelete` on its element) answer a
+# bare server error — so it stays in the flow, orphaned; the list reads the
+# template block through the entry point's connection and never sees it.
+mutation BroadcastDeleteBlock($flowID: FlowID!, $blockID: BlockID!) {
+  deleteBlock(flowID: $flowID, blockID: $blockID) {
+    ...BroadcastFlow
+  }
+}
+
+# ============================================================
+# Writes — the message
+# ============================================================
+
+# Every setter answers the whole template block, and its element's `errors`
+# is what says which blanks are still empty. The composer only ever offers an
+# Approved template; the module itself flags one that is not.
+mutation BroadcastSetTemplate($elementID: BlockElementID!, $templateID: WhatsAppTemplateID!) {
+  whatsAppTemplateSetTemplate(blockElementID: $elementID, templateID: $templateID) {
+    ...BroadcastBlock
+  }
+}
+
+# Not sent by the shipped composer, which replaces a template rather than
+# clearing it; kept for a host that adds a "remove message" action.
+mutation BroadcastClearTemplate($elementID: BlockElementID!) {
+  whatsAppTemplateDeleteTemplate(blockElementID: $elementID) {
+    ...BroadcastBlock
+  }
+}
+
+# A parameter value is a string; `{{Attribute name}}` inside it becomes an
+# attribute reference on the server. Only names from `BroadcastAttributes` may
+# be written: an unknown name is accepted, and CREATES a custom attribute of
+# that name on the bot as a side effect.
+mutation BroadcastSetHeaderText($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetHeaderTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetBodyText($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetBodyTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetFooterText($elementID: BlockElementID!, $name: WhatsAppTemplateTextParamName!, $value: String!) {
+  whatsAppTemplateSetFooterTextParamValue(blockElementID: $elementID, name: $name, value: $value) {
+    ...BroadcastBlock
+  }
+}
+
+# Header media is two steps: upload the file (the core skill's file upload),
+# then attach it by id. Refusals arrive thrown: FileContentTypeNotSupported,
+# FileTooBig, and for documents FileNameTooLong, FileNameFormatNotSupported.
+mutation BroadcastSetHeaderImage($elementID: BlockElementID!, $fileID: FileID!) {
+  whatsAppTemplateSetHeaderImageFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetHeaderVideo($elementID: BlockElementID!, $fileID: FileID!) {
+  whatsAppTemplateSetHeaderVideoFile(blockElementID: $elementID, fileID: $fileID) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetHeaderDocument($elementID: BlockElementID!, $fileID: FileID!, $fileName: String!) {
+  whatsAppTemplateSetHeaderDocumentFile(blockElementID: $elementID, fileID: $fileID, fileName: $fileName) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetUrlButtonParam(
+  $elementID: BlockElementID!
+  $buttonID: ComponentHandleID!
+  $name: WhatsAppTemplateTextParamName!
+  $value: String!
+) {
+  whatsAppTemplateSetURLButtonTextParamValue(
+    blockElementID: $elementID
+    buttonID: $buttonID
+    name: $name
+    value: $value
+  ) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetCopyCode($elementID: BlockElementID!, $buttonID: ComponentHandleID!, $codeValue: String!) {
+  whatsAppTemplateSetCopyCodeButtonCodeValue(blockElementID: $elementID, buttonID: $buttonID, codeValue: $codeValue) {
+    ...BroadcastBlock
+  }
+}
+
+# ============================================================
+# Writes — the audience
+# ============================================================
+
+# The segment is replaced wholesale. `filters: []` means every WhatsApp
+# contact and is valid as it stands. Ids must be client-minted UUIDs. A
+# one-time campaign refuses this once it has started
+# (WhatsAppOneTimeBroadcastAlreadyStarted); a scheduled one accepts it while
+# live, and the next run uses it.
+mutation BroadcastSetOneTimeSegment($elementID: BlockElementID!, $segment: SegmentInput!) {
+  whatsAppOneTimeNotificationUpdateSegment(blockElementID: $elementID, request: $segment) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetScheduledSegment($elementID: BlockElementID!, $segment: SegmentInput!) {
+  whatsAppScheduledMessageUpdateSegment(blockElementID: $elementID, request: $segment) {
+    ...BroadcastBlock
+  }
+}
+
+# ============================================================
+# Writes — sending and scheduling
+# ============================================================
+
+# LIVE FIRE. Starts the send to every contact the segment matches, right now.
+# Answers immediately with status Live; Finished follows within seconds. Only
+# from Draft: ScopeNotConnectedToBot, ComponentHasValidationErrors,
+# WhatsAppOneTimeBroadcastAlreadyStarted.
+mutation BroadcastSendNow($elementID: BlockElementID!) {
+  whatsAppOneTimeNotificationSend(blockElementID: $elementID) {
+    ...BroadcastBlock
+  }
+}
+
+# The five time setters refuse while the campaign is live — a bare server
+# error, not a named code — so the app disarms first (`BroadcastDisable`),
+# writes, and arms again. Every time is an instant; the server stores UTC and
+# answers with a `Z` string. `correctedWeekdays` must be sent with every
+# first-send-time change while the stored weekday list is non-empty, whatever
+# the repeat type — see `references/schedule.md`.
+mutation BroadcastSetRepeatType($elementID: BlockElementID!, $repeatType: BroadcastRepeatType!) {
+  whatsAppScheduledMessageSetRepeatType(blockElementID: $elementID, repeatType: $repeatType) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetWeekdays($elementID: BlockElementID!, $weekdays: [Weekday!]) {
+  whatsAppScheduledMessageSetWeekdays(blockElementID: $elementID, weekdays: $weekdays) {
+    ...BroadcastBlock
+  }
+}
+
+# Above 1000 the server answers a bare error rather than a code; the composer
+# caps the control at 365.
+mutation BroadcastSetEveryNDays($elementID: BlockElementID!, $everyNDays: Int!) {
+  whatsAppScheduledMessageSetRepeatEveryNDays(blockElementID: $elementID, everyNDays: $everyNDays) {
+    ...BroadcastBlock
+  }
+}
+
+# Up to 500 instants, each the picked day at the first send's time of day.
+mutation BroadcastSetDates($elementID: BlockElementID!, $dates: [Time!]!) {
+  whatsAppScheduledMessageSetOnCertainDates(blockElementID: $elementID, certainDates: $dates) {
+    ...BroadcastBlock
+  }
+}
+
+mutation BroadcastSetFirstSendTime($elementID: BlockElementID!, $firstSendTime: Time!, $correctedWeekdays: [Weekday!]!) {
+  whatsAppScheduledMessageSetFirstSendTime(
+    blockElementID: $elementID
+    firstSendTime: $firstSendTime
+    correctedWeekdays: $correctedWeekdays
+  ) {
+    ...BroadcastBlock
+  }
+}
+
+# Arming a scheduled campaign. The server re-validates first and, when
+# anything is wrong, answers with the flow unchanged and `isEntryPointEnabled`
+# still false — no error is thrown. Read the bit back; never assume.
+mutation BroadcastEnable($flowID: FlowID!, $blockID: BlockID!) {
+  blockEnableEntryPoint(flowID: $flowID, blockID: $blockID) {
+    ...BroadcastFlow
+  }
+}
+
+# Disarming. The element's status goes back to Draft: a campaign taken off the
+# schedule is a draft again, and the app treats it as one.
+mutation BroadcastDisable($flowID: FlowID!, $blockID: BlockID!) {
+  blockDisableEntryPoint(flowID: $flowID, blockID: $blockID) {
+    ...BroadcastFlow
+  }
+}
+
+# ============================================================
+# Writes — templates
+# ============================================================
+
+# Asks the server to re-read the WhatsApp entities from Meta — the way a
+# template approved in WhatsApp Manager reaches the catalog. Answers true
+# immediately; re-read the catalog a few seconds later.
+mutation BroadcastTemplatesRefetch {
+  whatsAppEntitiesStartRefetch
+}
