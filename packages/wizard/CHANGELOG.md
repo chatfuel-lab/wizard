@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.4.0 — 2026-09-08
+
+### Added
+
+- **A `broadcasts` module: WhatsApp campaigns, the way a mailing tool does them.**
+  A campaign list with a side panel, a five-step composer and the template
+  catalog. The composer picks an approved template from the number's catalog,
+  fills its blanks against a phone preview with contact attributes inserted from
+  the bot's own list, builds the audience from the contact attributes with a live
+  recipient count, and sends now, on a day, or on a repeat — weekdays, every N
+  days, or a list of dates — on the bot's own time zone. Duplicate copies a
+  campaign whole. The Templates tab reads the catalog with each template's Meta
+  status, asks Meta for the latest, and hands off to WhatsApp Manager, because
+  no public API writes a template. Every campaign is a flow on the bot, so the
+  dashboard shows it too. A bot with no WhatsApp number sees a connect state on
+  every screen. The module recommends `contacts` and `channels`, sits in the
+  `growth` navigation group beside `publishing`, and installs the
+  `chatfuel-broadcasts` skill — five references and two playbooks written from a
+  live pass against the API.
+
+### Changed
+
+- **`--yes` installs `broadcasts` too.** It is a default module, like every
+  module but the two opt-in ones. An app that should not carry it names its
+  modules with `--modules`, or deletes the directory afterwards — scaffolding
+  subtracts.
+
 ## 0.3.0 — 2026-09-04
 
 ### Changed
