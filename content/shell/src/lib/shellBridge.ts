@@ -62,6 +62,10 @@ const PATH_KEY_ALIASES: Readonly<Record<string, string>> = {
   channelsettings: 'automations',
   aisetup: 'automations',
   assistant: 'coworker',
+  broadcast: 'broadcasts',
+  campaigns: 'broadcasts',
+  campaign: 'broadcasts',
+  newsletter: 'broadcasts',
 };
 
 /**

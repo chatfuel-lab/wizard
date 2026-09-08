@@ -50,6 +50,7 @@ export function buildScalarMap(sdl: string): Record<string, string> {
  */
 const OVERRIDES: Record<string, CodegenTarget['config']> = {
   'flow-builder': { inlineFragmentTypes: 'combine' },
+  broadcasts: { inlineFragmentTypes: 'combine' },
 };
 
 /**

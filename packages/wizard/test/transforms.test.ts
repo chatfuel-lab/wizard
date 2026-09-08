@@ -193,6 +193,7 @@ describe('pruneNavGroups against the real template', () => {
     'bookings',
     'ads-optimization',
     'publishing',
+    'broadcasts',
     'channels',
   ];
   const navGroups = join(shellDir, 'src', 'modules', 'navGroups.tsx');
@@ -214,6 +215,7 @@ describe('pruneNavGroups against the real template', () => {
         'ads-optimization',
         'automations',
         'bookings',
+        'broadcasts',
         'channels',
         'coworker',
         'deals',

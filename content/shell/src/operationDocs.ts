@@ -21,6 +21,7 @@ import * as flowBuilder from '../../api-client/src/generated/flow-builder/graphq
 import * as knowledgeBase from '../../api-client/src/generated/knowledge-base/graphql.js';
 import * as livechat from '../../api-client/src/generated/livechat/graphql.js';
 import * as publishing from '../../api-client/src/generated/publishing/graphql.js';
+import * as broadcasts from '../../api-client/src/generated/broadcasts/graphql.js';
 
 export const operations = [
   adsOptimization,
@@ -34,4 +35,5 @@ export const operations = [
   knowledgeBase,
   livechat,
   publishing,
+  broadcasts,
 ];

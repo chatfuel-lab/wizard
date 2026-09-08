@@ -1,0 +1,39 @@
+{
+  "id": "broadcasts",
+  "name": "Broadcasts",
+  "description": "WhatsApp campaigns over the flow API, the way a mailing tool does them: a campaign list with a side panel, a composer that picks an approved template and fills its blanks against a live preview with contact-field personalisation, an audience builder with a live recipient count, send now / later / recurring in the bot's own timezone, and a read-only template catalog with a hand-off to WhatsApp Manager. Every campaign is a flow the dashboard shows too.",
+  "status": "ready",
+  "requires": [],
+  "recommends": ["contacts", "channels"],
+  "skill": { "installAs": "chatfuel-broadcasts" },
+  "app": {
+    "env": [
+      { "name": "CHATFUEL_TOKEN", "secret": true },
+      { "name": "VITE_CHATFUEL_WORKSPACE_ID", "resolve": "workspacePick" },
+      { "name": "CHATFUEL_API_BASE", "default": "https://panel.chatfuel.com" }
+    ],
+    "embed": {
+      "roots": ["src/modules/broadcasts"],
+      "entryComponent": "BroadcastsApp",
+      "playbook": "playbooks/embed.md"
+    }
+  },
+  "permissions": [
+    {
+      "object": "Flows",
+      "action": "View",
+      "requiredFor": "listing campaigns — every campaign is a flow, read through the bot's flow groups"
+    },
+    {
+      "object": "Flows",
+      "action": "Edit",
+      "requiredFor": "creating, filling, scheduling, sending, taking off the schedule and deleting a campaign — every broadcast write is a flow-builder block mutation, and the server checks Flows: Edit on each, not Broadcasting"
+    },
+    { "object": "Bot", "action": "View", "requiredFor": "the template catalog, the bot's timezone and the connected WhatsApp number" },
+    {
+      "object": "People",
+      "action": "View",
+      "requiredFor": "the attribute catalog behind the audience builder and the personalisation picker, and the recipient count"
+    }
+  ]
+}
