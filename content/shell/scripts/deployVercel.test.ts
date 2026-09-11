@@ -7,10 +7,13 @@ import { describe, expect, it, vi } from 'vitest';
 // The exports below are the script's tested surface.
 import {
   DEPLOY_ENV,
+  GIT_NAMESPACES_PATH,
+  NO_GITHUB_CONNECTION,
   checkEnv,
   childEnv,
   deployHosts,
   describeProxy,
+  githubLoginConnection,
   hostsInOutput,
   listProjectNames,
   looksLikeNetworkFailure,
@@ -21,11 +24,13 @@ import {
   parseAliases,
   parseDeployUrl,
   parseEnvFile,
+  parseNamespaces,
   parseProjectNames,
   projectNameArg,
   projectSlug,
   selectEnv,
   stepCli,
+  stepGitLogin,
   targetsFor,
   undeployedProxyVars,
 } from './deploy-vercel.mjs';
@@ -393,24 +398,24 @@ describe('childEnv', () => {
  * `Vercel login did not complete.` — with the real reason on screen and named
  * nowhere.
  */
+/** fail() ends the process; here it ends the call, so the message can be read. */
+const capturingFail = () => {
+  const lines: string[] = [];
+  const exit = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+    throw new Error(`exit:${code}`);
+  }) as never);
+  const error = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+    lines.push(args.join(' '));
+  });
+  const log = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+    lines.push(args.join(' '));
+  });
+  return { lines, restore: () => [exit, error, log].forEach((spy) => spy.mockRestore()) };
+};
+
 describe('stepCli', () => {
   const npx = { bin: 'npx', prefix: ['--yes', 'vercel@latest'], label: 'npx vercel@latest' };
   const answering = (result: { status: number; stdout: string; stderr: string }) => makeRunner(npx, () => result);
-
-  /** fail() ends the process; here it ends the call, so the message can be read. */
-  const capturingFail = () => {
-    const lines: string[] = [];
-    const exit = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
-      throw new Error(`exit:${code}`);
-    }) as never);
-    const error = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
-      lines.push(args.join(' '));
-    });
-    const log = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
-      lines.push(args.join(' '));
-    });
-    return { lines, restore: () => [exit, error, log].forEach((spy) => spy.mockRestore()) };
-  };
 
   it('says the version and moves on when the CLI runs', async () => {
     const { lines, restore } = capturingFail();
@@ -438,6 +443,93 @@ describe('stepCli', () => {
     expect(said).toContain('npm i -g vercel');
     // The failure this replaces: it must not be blamed on the sign-in.
     expect(said).not.toContain('login');
+  });
+});
+
+/**
+ * Whether a push will ever redeploy, asked before anything has been pushed.
+ *
+ * `vercel git connect` is the only thing that used to find out, and by then the
+ * repository exists on GitHub and the app is already live — so the one sentence
+ * that would have changed what somebody did arrived after every step it could
+ * have changed. The probe below asks the same question of the account, one HTTPS
+ * GET, at the point in the deploy where the CLI is known to be signed in.
+ */
+describe('parseNamespaces', () => {
+  it('reads an empty list as an account with nothing connected', () => {
+    expect(parseNamespaces({ status: 0, stdout: '[]', stderr: '' })).toBe('missing');
+  });
+
+  it('reads a namespace as a connection', () => {
+    const stdout = '[{"id":1,"provider":"github","name":"jane","slug":"jane"}]';
+    expect(parseNamespaces({ status: 0, stdout, stderr: '' })).toBe('connected');
+  });
+
+  it('tolerates anything the CLI prints ahead of the body', () => {
+    expect(parseNamespaces({ status: 0, stdout: 'Vercel CLI 59.5.0\n[]\n', stderr: '' })).toBe('missing');
+  });
+
+  /* Every one of these is the probe declining to have an opinion, and `unknown`
+     is what the whole design rests on: it behaves exactly as this script
+     behaved before the probe existed, so a probe that cannot read an answer
+     cannot cost anybody a deploy. */
+  it('is unknown for every answer it cannot read', () => {
+    const unreadable = [
+      { status: 1, stdout: '', stderr: 'Error: Invalid request: specifying `teamId` is not supported (400)' },
+      { status: 0, stdout: 'not json', stderr: '' },
+      { status: 0, stdout: '{"error":{"code":"forbidden"}}', stderr: '' },
+      { status: null, stdout: '', stderr: '' },
+    ];
+    for (const result of unreadable) expect(parseNamespaces(result)).toBe('unknown');
+  });
+});
+
+describe('githubLoginConnection', () => {
+  /* The empty `teamId=` is the one character in this file a tidy-up would take
+     out. Without the parameter the CLI appends the current team scope of its
+     own accord, and this endpoint refuses ANY team scope with a 400 — so the
+     probe would answer `unknown` for everybody on a team, which is to say it
+     would never fire. */
+  it('asks with an empty team scope, because a Login Connection is not a team thing', () => {
+    const calls: string[][] = [];
+    const run = (args: string[]) => {
+      calls.push(args);
+      return { status: 0, stdout: '[]', stderr: '' };
+    };
+    expect(githubLoginConnection(run)).toBe('missing');
+    expect(calls).toEqual([['api', '/v1/integrations/git-namespaces?provider=github&teamId=', '--raw']]);
+    expect(GIT_NAMESPACES_PATH).toBe('/v1/integrations/git-namespaces?provider=github&teamId=');
+  });
+});
+
+describe('stepGitLogin', () => {
+  const answering =
+    (stdout: string, status = 0) =>
+    () => ({ status, stdout, stderr: '' });
+
+  it('says so when the account has no GitHub connection', async () => {
+    const { lines, restore } = capturingFail();
+    try {
+      await stepGitLogin(answering('[]'));
+    } finally {
+      restore();
+    }
+    expect(lines.join('\n')).toContain(NO_GITHUB_CONNECTION);
+    // No URL on that line: the wizard reads this stream for the address of the
+    // deployment, and a link here would be one more thing that looks like one.
+    expect(lines.join('\n')).not.toMatch(/https?:\/\//);
+  });
+
+  it('says nothing when there is a connection, and nothing when it cannot tell', async () => {
+    for (const answer of [answering('[{"id":1}]'), answering('', 1)]) {
+      const { lines, restore } = capturingFail();
+      try {
+        await stepGitLogin(answer);
+      } finally {
+        restore();
+      }
+      expect(lines).toEqual([]);
+    }
   });
 });
 

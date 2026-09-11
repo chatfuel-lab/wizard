@@ -64,7 +64,7 @@ The catalog is shared with the knowledge base (`bot.goodsCatalog`, unpaginated, 
 
 ## Settings
 
-`bot.fuelyConfig.booking` (`FuelyBookingConfig`): notification channel, confirmation + text, the 2-hour and 24-hour appointment notices + texts (the only "reminders" the API has), locale, an `aiAutonomyLevel` the AI does not read, and a read-only `calendarLandingURL` (usually null). Five setters (`BookingConfigSet*`, `BookingTimezoneSet`) each answer with the whole config — the settings store reconciles from the response, nothing is optimistic. **AI autonomy is not set here**: the AI obeys the Default automation's `FuelySettingBookingRules`, and this schema publishes no setter for it. The Settings card reads the Default value (`BookingAiAutonomy`) and links to the AI Automations module.
+`bot.fuelyConfig.booking` (`FuelyBookingConfig`): notification channel, confirmation + text, the 2-hour and 24-hour appointment notices + texts (the only "reminders" the API has), locale, an `aiAutonomyLevel` the AI does not read, and a read-only `calendarLandingURL` (usually null). Five setters (`BookingConfigSet*`, `BookingTimezoneSet`) each answer with the whole config — the settings store reconciles from the response, nothing is optimistic. **AI autonomy is not set here**: the AI obeys the Default automation's `FuelySettingBookingRules`, and this schema publishes no setter for it. The Settings card reads the Default value (`BookingAiAutonomy`) and links to the AI Agent module.
 
 ## Live updates
 

@@ -1,9 +1,9 @@
 ---
 name: chatfuel-coworker
-description: Embed the Chatfuel Coworker AI-assistant chat (streaming, tool approval, an assistant that reads your screen and navigates your app) via the GraphQL API — per-(user, bot) conversations, the async send contract (mutations return immediately, replies arrive via subscription or polling), streaming chunks, the manual tool-approval gate, screen-context requests and frontend actions, quick replies, attachments and voice notes, unread counters. Use when embedding the Coworker assistant into another product or building an operator-facing AI chat UI on the Chatfuel API. Requires the chatfuel-core skill (auth, CORS proxy, schema).
+description: Embed the Chatfuel Copilot AI-assistant chat (streaming, tool approval, an assistant that reads your screen and navigates your app) via the GraphQL API — per-(user, bot) conversations, the async send contract (mutations return immediately, replies arrive via subscription or polling), streaming chunks, the manual tool-approval gate, screen-context requests and frontend actions, quick replies, attachments and voice notes, unread counters. Use when embedding the Copilot assistant into another product or building an operator-facing AI chat UI on the Chatfuel API. Requires the chatfuel-core skill (auth, CORS proxy, schema).
 ---
 
-# Chatfuel Coworker
+# Chatfuel Copilot
 
 The AI assistant the bot builder chats with in the dashboard: it answers questions and performs account actions via tools, with a manual-approval gate. Everything is asynchronous — every send returns immediately and results stream in.
 

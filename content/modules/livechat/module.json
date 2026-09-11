@@ -1,6 +1,6 @@
 {
   "id": "livechat",
-  "name": "Live Chat Inbox",
+  "name": "Inbox",
   "description": "Operator inbox: conversation list with live updates, message thread with per-platform rendering, composer, take-over and close-to-flow.",
   "status": "ready",
   "requires": [],

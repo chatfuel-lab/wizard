@@ -27,7 +27,7 @@ import { MessageContent } from './thread/MessageContent';
  * column, with nothing drawn around it.
  *
  * And no name above it. There is exactly one assistant in this thread and its
- * name is on the panel it lives in; labelling every answer "Coworker" is a
+ * name is on the page it lives on; labelling every answer "Copilot" is a
  * caption on the only photograph in the room.
  */
 

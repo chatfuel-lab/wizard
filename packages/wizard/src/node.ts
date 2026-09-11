@@ -1,3 +1,5 @@
+import { link } from './link';
+
 /**
  * The Node floor, and the one thing a non-developer can act on when they are
  * under it. Kept in step with `bin/chatfuel-wizard.cjs`, which repeats a short
@@ -46,7 +48,7 @@ export function nodeUpgradeHint(platform: NodeJS.Platform = process.platform): s
   return [
     `The wizard needs Node ${MIN_NODE} or newer (you have ${process.versions.node}).`,
     '',
-    `Download the LTS installer:  ${NODE_DOWNLOAD_URL}`,
+    `Download the LTS installer:  ${link(NODE_DOWNLOAD_URL)}`,
     ...(command ? [`Or from a terminal:          ${command}`] : []),
     '',
     'Then run the wizard again — nothing else needs to be installed by hand.',

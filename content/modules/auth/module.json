@@ -1,7 +1,7 @@
 {
   "id": "auth",
-  "name": "Auth & Team",
-  "description": "Sign-in for the people who use this app: Supabase Auth (email + password) on your own Supabase project, one tenant per deployed bot, owner/admin/member roles, invite links, a Team page \u2014 and the proxy lets only signed-in members reach the Chatfuel token. Opt-in: needs a Supabase project (the wizard can create one from an access token).",
+  "name": "Accounts",
+  "description": "Sign-in for the people who use this app: Supabase Auth (email + password) on your own Supabase project, one workspace per account with as many bots inside it as the plan allows, owner/admin/member roles, invite links, a Team page \u2014 and the proxy lets only signed-in members reach the Chatfuel token. Opt-in: needs a Supabase project (the wizard can create one from an access token).",
   "status": "ready",
   "hidden": true,
   "selection": "opt-in",

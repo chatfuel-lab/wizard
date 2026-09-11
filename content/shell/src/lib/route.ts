@@ -103,9 +103,9 @@ export function navigatePath(path: string, options: { replace?: boolean } = {}):
 /**
  * A link inside the app is a navigation, not a page load.
  *
- * Modules write plain anchors — "Open in Live Chat", "set this up in
- * Automations" — and a module may not touch the router, so the shell catches
- * the click instead: same-origin, unmodified, not a new tab, not a download.
+ * Modules write plain anchors — "Open in Inbox", "set this up in AI Agent" —
+ * and a module may not touch the router, so the shell catches the click
+ * instead: same-origin, unmodified, not a new tab, not a download.
  * An app-relative href is resolved against the mount point here, which is the
  * only place that knows it. Everything else is left to the browser.
  */

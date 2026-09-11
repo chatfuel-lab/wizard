@@ -5,6 +5,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { execa } from 'execa';
 import { onInterrupt } from '../interrupt';
+import { link } from '../link';
 import { registerSecret } from '../log';
 import { outboundFetch } from '../net';
 
@@ -65,7 +66,7 @@ export async function askForGithubToken(): Promise<GithubAccount | null> {
     [
       'Create a token on this page — the defaults are already set:',
       '',
-      `  ${pc.bold(pc.cyan(pc.underline(TOKEN_PAGE)))}`,
+      `  ${pc.bold(pc.cyan(pc.underline(link(TOKEN_PAGE))))}`,
       '',
       'It is used once, here, and never written to disk.',
     ].join('\n'),
@@ -99,7 +100,7 @@ export async function askForGithubToken(): Promise<GithubAccount | null> {
   const scopes = response.headers.get('x-oauth-scopes') ?? '';
   if (scopes.trim() && !scopes.split(',').some((scope) => scope.trim() === 'repo')) {
     spinner.error('That token cannot create repositories');
-    p.log.warn(`It is missing the \`repo\` scope. Make one with it at ${TOKEN_PAGE}`);
+    p.log.warn(`It is missing the \`repo\` scope. Make one with it at ${link(TOKEN_PAGE)}`);
     return null;
   }
 

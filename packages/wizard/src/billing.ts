@@ -98,8 +98,6 @@ export interface Product {
   id: string;
   name: string;
   featureSet: 'NoAI' | 'All';
-  isActive: boolean;
-  isSelectable: boolean;
   pricingList: Pricing[];
 }
 
@@ -123,8 +121,6 @@ query WizardBillingProducts {
         id
         name
         featureSet
-        isActive
-        isSelectable
         pricingList {
           id
           intervalUnit
@@ -197,14 +193,20 @@ mutation WizardStripeCreatePaymentLink(
 
 /**
  * The monthly plan out of the catalogue, or undefined when the catalogue holds
- * none. Archived and unsubscribable entries are dropped, and so is anything
- * without the AI feature set — a plan the AI cannot run on is not a plan worth
- * starting a trial of. Cheapest first, so a catalogue carrying several monthly
- * tiers offers the one somebody would actually try.
+ * none. Anything without the AI feature set is dropped — a plan the AI cannot
+ * run on is not a plan worth starting a trial of — and so is an archived price.
+ * Cheapest first, so a catalogue carrying several monthly tiers offers the one
+ * somebody would actually try.
+ *
+ * A product carries no availability flags of its own: `isActive` and
+ * `isSelectable` were on `Product` until the API dropped them, and asking for
+ * either now fails the whole query at validation, which is how a catalogue
+ * stopped loading at all. A price still says whether it is live, and that is
+ * the flag this reads.
  */
 export function pickMonthlyPricing(products: Product[]): Pricing | undefined {
   return products
-    .filter((product) => product.isActive && product.isSelectable && product.featureSet === 'All')
+    .filter((product) => product.featureSet === 'All')
     .flatMap((product) => product.pricingList)
     .filter((pricing) => pricing.isActive)
     .sort((a, b) => Number(a.intervalPrice) - Number(b.intervalPrice))

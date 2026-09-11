@@ -77,7 +77,7 @@ export function BookingsWorkspace({ rootRef, params, view: viewSeg, setLocation 
     step,
   } = useBookingsUrl({ params, viewSeg, setLocation, todayKey });
 
-  /* What the Coworker sees when it asks what is on screen. Write-only into a
+  /* What the Copilot sees when it asks what is on screen. Write-only into a
      sink the shell owns; a no-op when this module runs as an embed. */
   usePublishScreenContext({
     module: 'Bookings',

@@ -1,4 +1,4 @@
-### Contacts / CRM (contacts)
+### Contacts (contacts)
 
 A CRM workspace over the bot's people. Three surfaces behind one header —
 **Contacts** (the record table, with filters, saved views, inline editing and
@@ -11,7 +11,10 @@ Route: `/contacts` (the list), `/contacts/fields` and `/contacts/audience` are
 the other two surfaces;
 `?contact=<contactID>` opens a record page; the filter travels in the URL too (`q`, `assignee`, `stage`, `unread`,
 `since`, `until`, `platform`, `sort`, `density`), so a filtered list is a
-shareable link.
+shareable link. Every way out to the inbox is one of two links, chosen on
+whether the contact has a conversation: `/livechat?c=<conversationID>` opens
+the thread, and `/livechat?contact=<contactID>` asks the inbox to start one for
+a contact who has never messaged.
 
 The one thing to understand before changing anything: **two different server
 queries can list contacts, and they see different sets.**

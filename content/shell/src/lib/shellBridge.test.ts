@@ -1,11 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import { actionParams, createShellBridge, resolveDestination, type Destination } from './shellBridge';
 
+/**
+ * Ids and titles as the registry carries them — including the two modules
+ * whose titles moved away from their ids, which is the case the resolver's
+ * second hop exists for.
+ */
 const DESTINATIONS: Destination[] = [
   { id: 'livechat', title: 'Inbox' },
   { id: 'deals', title: 'Deals' },
   { id: 'flow-builder', title: 'Flows' },
   { id: 'knowledge-base', title: 'Knowledge base' },
+  { id: 'automations', title: 'AI Agent' },
+  { id: 'coworker', title: 'Copilot' },
 ];
 
 describe('resolveDestination', () => {
@@ -36,6 +43,20 @@ describe('resolveDestination', () => {
     expect(resolveDestination(DESTINATIONS, 'Flows')?.id).toBe('flow-builder');
     expect(resolveDestination(DESTINATIONS, 'catalog')?.id).toBe('knowledge-base');
     expect(resolveDestination(DESTINATIONS, 'FAQ')?.id).toBe('knowledge-base');
+  });
+
+  /**
+   * The two modules this app renamed. The model was trained on Chatfuel's page
+   * names and sends those — 'automations' among the list above — so a title
+   * that has moved on means the old phrase lands through the id rather than
+   * through the title. Both names have to work, and only one of each pair is
+   * the title today.
+   */
+  it('lands the names these modules used to carry, and the ones they carry now', () => {
+    expect(resolveDestination(DESTINATIONS, 'automations')?.id).toBe('automations');
+    expect(resolveDestination(DESTINATIONS, 'AI Agent')?.id).toBe('automations');
+    expect(resolveDestination(DESTINATIONS, 'Coworker')?.id).toBe('coworker');
+    expect(resolveDestination(DESTINATIONS, 'Copilot')?.id).toBe('coworker');
   });
 
   it('does not invent a page for the ones this shell does not have', () => {

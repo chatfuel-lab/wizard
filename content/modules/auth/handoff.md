@@ -1,4 +1,4 @@
-### Auth & Team (auth)
+### Accounts (auth)
 
 Sign-in for the people who use this app, on your own Supabase project. Email +
 password only. **Every account that signs up gets a Chatfuel bot of its own, and

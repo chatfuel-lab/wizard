@@ -185,8 +185,42 @@ export const viewSegment = (view: ContactsView): string => (view === DEFAULT_VIE
 /** The deep link the rest of the app uses to open one contact. */
 export const contactLink = (contactId: string): string => `/contacts?contact=${encodeURIComponent(contactId)}`;
 
-/** The Live Chat deep link for a contact — its conversation id IS its contact id. */
-export const livechatLink = (contactId: string): string => `/livechat?c=${encodeURIComponent(contactId)}`;
+/** Where the inbox link points, and which of the two sentences to put on it. */
+export interface ChatLink {
+  href: string;
+  /** True when the contact already has a conversation to open. */
+  started: boolean;
+}
+
+/**
+ * The inbox link for one contact, in the only two forms that work.
+ *
+ * `?c=` names a conversation, and the inbox's conversation field is non-null:
+ * asking for one a contact does not have is a field error, not an empty
+ * thread. A contact created through the API or by a CSV import has none, so
+ * that contact gets `?contact=`, which is the inbox's own "ensure a
+ * conversation exists" path — one mutation, then the thread.
+ *
+ * `?c=` stays the common form on purpose: it is a read, it costs no round
+ * trip, and it needs no permission beyond seeing the inbox.
+ *
+ * DELIBERATE TWIN of `contactChatLink` in the bookings module
+ * (`src/modules/bookings/components/panel/CustomerSection.tsx`), which links
+ * the same way from a booking's customer. Modules may not import each other,
+ * so the rule is written twice and tested on both sides; change one and change
+ * the other.
+ */
+export function chatLinkFor(contact: { id: string; conversation?: { id: string } | null }): ChatLink {
+  const conversation = contact.conversation;
+  return conversation
+    ? { href: `/livechat?c=${encodeURIComponent(conversation.id)}`, started: true }
+    : { href: `/livechat?contact=${encodeURIComponent(contact.id)}`, started: false };
+}
+
+/** Two words for one action, and every contacts surface uses these two. */
+export const CHAT_LABEL = { open: 'Open in Inbox', start: 'Start a chat' } as const;
+
+export const chatLabel = (started: boolean): string => (started ? CHAT_LABEL.open : CHAT_LABEL.start);
 
 /** Stage list round-trip helper shared with the toolbar: all six means "no filter". */
 export function toggleStage(stages: readonly SalesStageV2[], stage: SalesStageV2): SalesStageV2[] {

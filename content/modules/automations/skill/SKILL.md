@@ -3,7 +3,7 @@ name: chatfuel-automations
 description: Configure how a Chatfuel bot's AI behaves via the GraphQL API — the per-scope AI behaviour settings behind the dashboard's Automations tab. Base ("Default") and custom automations ("rules") per scope (18 channel + entry-point sources), the 16 FuelySetting types, inheritance from the All base, the single @oneOf write path, the fan-out subscription, and the preview chat pinned to one automation. Use when configuring a bot's AI replies, keyword/post/ad filters, follow-ups, switch-to-human rules or lead capture, when testing an automation, or when building an AI-automations workspace. Requires the chatfuel-core skill (auth, CORS proxy, schema).
 ---
 
-# Chatfuel Automations
+# Chatfuel AI Agent
 
 The dashboard's **Automations** tab: how the bot's AI behaves, configured per *scope* (a channel + entry point). Not to be confused with **Flows** (scripted canvas logic — the chatfuel-flow-builder skill).
 

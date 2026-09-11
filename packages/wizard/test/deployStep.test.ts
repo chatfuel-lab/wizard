@@ -1,10 +1,11 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { PassThrough } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createContext } from '../src/run';
-import { deploy, deploymentUrl } from '../src/steps/deploy';
+import { deploy, deploymentUrl, missingGithubConnection } from '../src/steps/deploy';
 import type { WizardContext } from '../src/context';
 
 /**
@@ -56,15 +57,25 @@ vi.mock('@clack/prompts', () => ({
  * One run of the app's deploy script. The step attaches its stream handlers
  * synchronously and awaits the child, so the fake writes on the next tick and
  * settles after — the order a real child would.
+ *
+ * `undrained` is the other order a real child has: execa rejects carrying its
+ * own copy of both streams, and it can do so before the last chunk has reached
+ * a handler. Then nothing was teed and everything is on the error.
  */
-function fakeRun(script: { stdout?: string; stderr?: string; fails?: boolean }) {
+function fakeRun(script: { stdout?: string; stderr?: string; fails?: boolean; undrained?: boolean }) {
   const stdout = new PassThrough();
   const stderr = new PassThrough();
   const child = new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (script.stdout) stdout.emit('data', Buffer.from(script.stdout));
-      if (script.stderr) stderr.emit('data', Buffer.from(script.stderr));
-      if (script.fails) reject(new Error('Command failed with exit code 1'));
+      if (script.stdout && !script.undrained) stdout.emit('data', Buffer.from(script.stdout));
+      if (script.stderr && !script.undrained) stderr.emit('data', Buffer.from(script.stderr));
+      if (script.fails)
+        reject(
+          Object.assign(new Error('Command failed with exit code 1'), {
+            stdout: script.undrained ? (script.stdout ?? '') : '',
+            stderr: script.undrained ? (script.stderr ?? '') : '',
+          }),
+        );
       else resolve(undefined);
     }, 0);
   });
@@ -246,6 +257,119 @@ describe('deploy step', () => {
     expect(infoLines.join('\n')).toContain('npm run deploy');
   });
 
+  /* The wizard holds no Vercel credential and is not going to gain one, so the
+     only place this can be found out is inside the deploy — and the only way
+     back out is the stdout this step already tees. */
+  it('remembers an account with no GitHub connection, so the repository step can offer the fix', async () => {
+    confirmAnswer = true;
+    runs = [
+      {
+        stdout: [
+          '  warn Vercel has no GitHub connection — a push to GitHub will not redeploy this app.',
+          '',
+          '  https://provision-test.vercel.app',
+          '',
+        ].join('\n'),
+      },
+    ];
+    const ctx = standaloneContext();
+    await deploy(ctx);
+    expect(ctx.answers.vercelGitLogin).toBe('missing');
+  });
+
+  /* The sentence has no URL in it for exactly this reason, and the guard is
+     here because the two readers share one stream: the address of the app must
+     survive anything else the script says. */
+  it('still reads the address off a deploy that also said the connection is missing', async () => {
+    confirmAnswer = true;
+    runs = [
+      {
+        stdout: [
+          '  warn Vercel has no GitHub connection — a push to GitHub will not redeploy this app.',
+          '',
+          '  https://provision-test.vercel.app',
+          '',
+        ].join('\n'),
+      },
+    ];
+    const ctx = standaloneContext();
+    await deploy(ctx);
+    expect(ctx.answers.deployUrl).toBe('https://provision-test.vercel.app');
+  });
+
+  /* The warning is fixed by doing exactly this: read it, add the connection in
+     a browser, pick "Try again". A second run says nothing about the connection
+     because there is nothing left to say, and a flag that could only ever be
+     set had the repository step going on about it anyway. */
+  it('forgets it when the retry that fixed it says nothing', async () => {
+    confirmAnswer = true;
+    selectAnswers = ['retry'];
+    runs = [
+      {
+        stdout: '  warn Vercel has no GitHub connection — a push to GitHub will not redeploy this app.\n',
+        stderr: 'STOPPED: Vercel login did not complete.\n',
+        fails: true,
+      },
+      { stdout: '\n  https://provision-test.vercel.app\n' },
+    ];
+    const ctx = standaloneContext();
+    await deploy(ctx);
+    expect(ctx.answers.deployUrl).toBe('https://provision-test.vercel.app');
+    expect(ctx.answers.vercelGitLogin).toBeUndefined();
+  });
+
+  /* Both sentences read off a failed run live on streams execa can stop
+     delivering the moment it rejects — and then its own copy is all there is. */
+  it('reads a failed deploy off the error when the streams did not drain', async () => {
+    confirmAnswer = true;
+    runs = [
+      {
+        stdout: '  warn Vercel has no GitHub connection — a push to GitHub will not redeploy this app.\n',
+        stderr: '\n  STOPPED: Vercel login did not complete.\n',
+        fails: true,
+        undrained: true,
+      },
+    ];
+    const ctx = standaloneContext();
+    await deploy(ctx);
+    expect(ctx.answers.vercelGitLogin).toBe('missing');
+    expect(infoLines.join('\n')).toContain('Vercel login did not complete');
+  });
+
+  it('leaves the field alone when the deploy said nothing about it', async () => {
+    confirmAnswer = true;
+    runs = [{ stdout: '\n  https://provision-test.vercel.app\n' }];
+    const ctx = standaloneContext();
+    await deploy(ctx);
+    expect(ctx.answers.vercelGitLogin).toBeUndefined();
+  });
+
+  /* Each of these returns before the script is ever run, so there is nothing to
+     read — and a flag set here would have the repository step asking a question
+     about a deploy that never happened. */
+  it('never sets it on a path that never deploys', async () => {
+    const said = { stdout: '  warn Vercel has no GitHub connection — a push will not redeploy this app.\n' };
+    confirmAnswer = true;
+
+    const embed = standaloneContext();
+    embed.answers.mode = 'embed';
+    runs = [said];
+    await deploy(embed);
+    expect(embed.answers.vercelGitLogin).toBeUndefined();
+
+    const yes = standaloneContext();
+    yes.flags.yes = true;
+    runs = [said];
+    await deploy(yes);
+    expect(yes.answers.vercelGitLogin).toBeUndefined();
+
+    Object.defineProperty(process.stdin, 'isTTY', { value: false, configurable: true });
+    const piped = standaloneContext();
+    runs = [said];
+    await deploy(piped);
+    expect(piped.answers.vercelGitLogin).toBeUndefined();
+  });
+
   it('never asks when the scaffold carries no vercel.json', async () => {
     rmSync(join(appDir, 'vercel.json'));
     confirmAnswer = true;
@@ -294,5 +418,55 @@ describe('deploymentUrl', () => {
   it('skips the service hosts and keeps looking for the real one', () => {
     const output = ['  https://provision-test.vercel.app', '', 'https://vercel.link/deployment-protection'].join('\n');
     expect(deploymentUrl(output)).toBe('https://provision-test.vercel.app');
+  });
+});
+
+const repoRoot = resolve(import.meta.dirname, '..', '..', '..');
+/** Where the sentence is defined, where it is printed, and where it is read. */
+const CONNECTION_SENTENCE_FILE = 'content/shell/scripts/deploy/gitConnection.mjs';
+const CONNECTION_PRINTER_FILE = 'content/shell/scripts/deploy/steps.mjs';
+const MATCHER_FILE = 'packages/wizard/src/steps/deploy.ts';
+
+/**
+ * The sentence the app's deploy script prints when the Vercel account has no
+ * GitHub connection. Pinned outside the harness because it is a contract
+ * between two files that are shipped separately: the script can reword the rest
+ * of the line, and this must keep matching the part it promised.
+ */
+describe('missingGithubConnection', () => {
+  it('reads the line the deploy script prints', () => {
+    expect(
+      missingGithubConnection('  warn Vercel has no GitHub connection — a push to GitHub will not redeploy this app.'),
+    ).toBe(true);
+  });
+
+  it('does not fire on an ordinary deploy', () => {
+    expect(missingGithubConnection('ok Deployed: https://app.vercel.app\n  ok Proxy is up\n')).toBe(false);
+    expect(missingGithubConnection('')).toBe(false);
+  });
+
+  /* The contract itself, read off the other side of it rather than quoted.
+     Both halves used to be asserted against their own copy of the sentence, so
+     rewording the script left every test green and the wizard silently stopped
+     offering the fix — the one failure a pair of pinned strings cannot catch is
+     the pair drifting apart. */
+  it('matches the sentence the app’s own script exports', async () => {
+    const source = join(repoRoot, CONNECTION_SENTENCE_FILE);
+    const { NO_GITHUB_CONNECTION } = (await import(pathToFileURL(source).href)) as {
+      NO_GITHUB_CONNECTION: string;
+    };
+    expect(
+      missingGithubConnection(NO_GITHUB_CONNECTION),
+      `${CONNECTION_SENTENCE_FILE} exports “${NO_GITHUB_CONNECTION}”, which missingGithubConnection in ${MATCHER_FILE} does not match. One of the two was reworded — change the other.`,
+    ).toBe(true);
+
+    /* And the line the deploy really prints is built out of that constant
+       rather than typed again beside it, which is what makes matching the
+       constant enough. */
+    const printer = readFileSync(join(repoRoot, CONNECTION_PRINTER_FILE), 'utf8');
+    expect(
+      printer,
+      `${CONNECTION_PRINTER_FILE} no longer builds its warning out of NO_GITHUB_CONNECTION, so nothing ties what it prints to what ${MATCHER_FILE} looks for.`,
+    ).toContain('${NO_GITHUB_CONNECTION}');
   });
 });

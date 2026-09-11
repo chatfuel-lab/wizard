@@ -134,7 +134,7 @@ export function ConversationRail({
           <EmptyState
             icon={<IconAssistant />}
             title="No chats yet"
-            description="Ask the Coworker a question, or pick one of its suggestions."
+            description="Ask the Copilot a question, or pick one of its suggestions."
             action={
               <Button variant="secondary" size="sm" onClick={onNewChat}>
                 New chat

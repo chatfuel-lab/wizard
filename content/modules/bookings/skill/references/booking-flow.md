@@ -12,9 +12,14 @@ A booking's customer is one of three things, and the panel renders all three:
 
 - **A real contact** (`contact`, any `Contact` typename — only WhatsApp ones can
   be *booked*, but a booking may carry any). Avatar, name, phone (WhatsApp),
-  the contact's own note via `BookingContactSetNote`, and a Live Chat link:
+  the contact's own note via `BookingContactSetNote`, and an Inbox link:
   `/livechat?c=<conversation.id>` when the contact has a conversation,
-  `/livechat?contact=<contact.id>` when not (the inbox starts one).
+  `/livechat?contact=<contact.id>` when not (the inbox starts one). The
+  contacts module links the same way from its own rows and record page, and
+  the two cannot share code — modules may not import each other — so
+  `contactChatLink` here and `chatLinkFor` in
+  `src/modules/contacts/lib/contactsParams.ts` are deliberate twins, each
+  tested on its own side.
 - **An inline contact** (`inlineContact`: `{id, name, phoneNumber, note}`), the
   identity space for customers with no chat. Its note goes through
   `BookingInlineContactSetNote` and is shared by every booking with that phone.

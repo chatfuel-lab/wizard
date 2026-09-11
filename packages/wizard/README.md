@@ -160,7 +160,7 @@ no scaffold directory, no file copied into an embed host, no `.env` or
 | `bookings` | Day/week/month calendar with drag-and-drop, appointments list, staff and working hours. |
 | `knowledge-base` | Everything the AI knows about the business: business facts, FAQs, a product catalog. |
 | `automations` | The AI's per-scope behaviour: the rules for each channel and entry point, with a test chat. |
-| `coworker` | The operator's AI assistant, as a full page and as a dock beside every other module. |
+| `coworker` | The operator's AI assistant, on a page of its own. |
 | `flow-builder` | Visual flow editor: canvas, inspector, block and connection editing. |
 | `ads-optimization` | Conversion reporting for click-to-WhatsApp ads: which ads each event set covers, and which moments in the chat go back to Meta so it can optimize delivery. |
 | `publishing` | Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, composed against a live preview, published now or queued — with a calendar, retries, and a library of what is already on the account. The scheduling queue needs the deployment's own database; without one, the module still composes and publishes on the spot. |

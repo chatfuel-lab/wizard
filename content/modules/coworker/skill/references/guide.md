@@ -1,4 +1,4 @@
-# Coworker (operator AI assistant)
+# Copilot
 
 The AI assistant the bot builder chats with in the dashboard ("Coworker"): it answers questions and performs account actions via tools, with a manual-approval gate. Operations: `examples/operations.graphql`.
 

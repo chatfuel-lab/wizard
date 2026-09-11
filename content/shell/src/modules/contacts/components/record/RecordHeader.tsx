@@ -8,6 +8,7 @@ import {
   IconExternal,
   IconLink,
   IconLock,
+  IconMessage,
   PageHeader,
   Spinner,
   Tag,
@@ -17,6 +18,7 @@ import {
 } from '~ui';
 import type { ContactRecordApi } from '../../hooks/useContactRecord';
 import { displayName, type Neighbours } from '../../lib/contactFields';
+import { chatLabel } from '../../lib/contactsParams';
 import { contactLinkFor } from '../../lib/tableSelection';
 import { platformOf } from '../../lib/platforms';
 import { ago } from '../../lib/time';
@@ -35,8 +37,10 @@ export interface RecordHeaderProps {
   neighbours: Neighbours;
   onClose: () => void;
   onStep: (contactId: string) => void;
-  /** Null when there is no conversation to open. */
+  /** Null only for a restricted contact — every other one has somewhere to go. */
   onOpenLiveChat: (() => void) | null;
+  /** True when the contact already has a conversation; false starts one. */
+  chatStarted: boolean;
   /** SEAM — the export control, rendered as-is. It renders nothing today. */
   exportAction?: ReactNode;
   tabs?: ReactNode;
@@ -68,6 +72,7 @@ export function RecordHeader({
   onClose,
   onStep,
   onOpenLiveChat,
+  chatStarted,
   exportAction,
   tabs,
 }: RecordHeaderProps) {
@@ -77,6 +82,8 @@ export function RecordHeader({
   const wide = bandAtLeast(band, 'wide');
   const handle = phoneOf(contact) ?? usernameOf(contact);
   const name = displayName(contact.name, handle);
+  const chatText = chatLabel(chatStarted);
+  const chatIcon = chatStarted ? <IconExternal size={14} /> : <IconMessage size={14} />;
 
   const copyLink = async () => {
     /* An absolute URL, because the point of copying is to paste it somewhere
@@ -181,12 +188,27 @@ export function RecordHeader({
               onUnassign={record.unassign}
               className="w-44"
             />
-            {onOpenLiveChat ? (
+            {onOpenLiveChat === null ? null : wide ? (
               <Button variant="secondary" size="sm" onClick={onOpenLiveChat}>
-                <IconExternal size={14} />
-                {wide ? 'Open in Live Chat' : null}
+                {chatIcon}
+                {chatText}
               </Button>
-            ) : null}
+            ) : (
+              /* Below `wide` the label is dropped, so the icon has to carry
+                 the same sentence twice over: an unnamed control is a guess,
+                 and the guess here is between opening a thread and starting
+                 one. */
+              <Button
+                variant="secondary"
+                size="sm"
+                iconOnly
+                aria-label={chatText}
+                title={chatText}
+                onClick={onOpenLiveChat}
+              >
+                {chatIcon}
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

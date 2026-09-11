@@ -2,7 +2,7 @@
  * The booking panel's own record.
  *
  * Why the panel does not just read the range store: `?b=<id>` may point at a
- * booking outside every loaded window (a link from Live Chat, a stale tab),
+ * booking outside every loaded window (a link from the Inbox, a stale tab),
  * so opening always fetches `BookingGet`; the range store's copy, when there
  * is one, is the first paint (`seed`). Live events keep it fresh; a `remove`
  * for the open id sets `gone`, and the panel says so instead of showing a

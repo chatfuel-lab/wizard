@@ -1,5 +1,6 @@
 import * as p from '@clack/prompts';
 import { WizardError } from '../errors';
+import { link } from '../link';
 import { registerSecret } from '../log';
 import type { WizardContext } from '../context';
 import {
@@ -50,7 +51,7 @@ async function resolveOrg(ctx: WizardContext, orgs: Organization[]): Promise<Org
   if (orgs.length === 0) {
     throw new WizardError(
       'The access token sees no organization',
-      'Create one at https://supabase.com/dashboard, or use a token from an account that has one.',
+      `Create one at ${link('https://supabase.com/dashboard')}, or use a token from an account that has one.`,
     );
   }
   const wanted = ctx.flags.supabaseOrg?.trim();
@@ -180,7 +181,7 @@ export async function pickOrCreateProject(
     if (project.status === 'INACTIVE') {
       throw new WizardError(
         `Project ${project.name} (${project.ref}) is paused`,
-        `Restore it at https://supabase.com/dashboard/project/${project.ref} and re-run, or pick another project.`,
+        `Restore it at ${link(`https://supabase.com/dashboard/project/${project.ref}`)} and re-run, or pick another project.`,
       );
     }
     return wait(project.ref, 'Waiting for');

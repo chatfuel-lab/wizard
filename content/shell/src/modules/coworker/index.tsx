@@ -4,12 +4,11 @@ import type { ModuleDescriptor } from '../types';
 
 /**
  * `IconAssistant`, not `IconSparkles`: the sparkle already stands for the AI
- * Agent section of the nav AND for the automations module inside it, and a
- * third meaning in the same rail is one too many.
+ * section of the nav, and a second meaning in the same rail is one too many.
  */
 export const moduleDescriptor: ModuleDescriptor = {
   id: 'coworker',
-  title: 'Coworker',
+  title: 'Copilot',
   icon: <IconAssistant />,
   Component: lazy(() => import('./CoworkerApp').then((m) => ({ default: m.CoworkerApp }))),
 };

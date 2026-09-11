@@ -97,7 +97,7 @@ function Inner({ rootRef, selectedId, onSelect, startWithContact }: InnerProps) 
   const list = useChatListStore(wireFilter);
   const { count } = useChatListCount(wireFilter);
 
-  /* What the Coworker sees when it asks what is on screen. Write-only into a
+  /* What the Copilot sees when it asks what is on screen. Write-only into a
      sink the shell owns; a no-op when this module runs as an embed. */
   usePublishScreenContext({
     module: 'Inbox',

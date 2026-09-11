@@ -13,7 +13,7 @@ import { createDraftRegistry } from './lib/drafts';
 import { UNDO_TTL_MS, undoLabel, type UndoEntry } from './lib/undo';
 
 /**
- * Embeddable root of the AI Automations module — the rail of 18 automation
+ * Embeddable root of the AI Agent module — the rail of 18 automation
  * sources, the selected source's page (Default rules + custom rules, all 15
  * settings) and the always-open Test panel beside it.
  *

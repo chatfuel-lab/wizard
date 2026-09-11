@@ -4,6 +4,7 @@ import { ChatfuelAuthError, createChatfuelClient, BATCH_THROTTLE } from '@chatfu
 import { CurrentUserDocument } from '@chatfuel/api-client/generated/core';
 import { stepArt } from '../art';
 import { ApiWizardError, WizardError } from '../errors';
+import { link } from '../link';
 import { registerSecret } from '../log';
 import { outboundFetch, proxyHint } from '../net';
 import type { WizardContext } from '../context';
@@ -49,7 +50,7 @@ export async function token(ctx: WizardContext): Promise<void> {
       if (ctx.flags.yes || !process.stdin.isTTY) {
         throw new WizardError(
           fromEnv ? 'The Chatfuel API did not accept CHATFUEL_TOKEN' : 'CHATFUEL_TOKEN is not set',
-          `A run with no questions needs a working token in the environment. Generate one at ${TOKEN_PAGE}.`,
+          `A run with no questions needs a working token in the environment. Generate one at ${link(TOKEN_PAGE)}.`,
         );
       }
       if (!noted) {
@@ -57,7 +58,7 @@ export async function token(ctx: WizardContext): Promise<void> {
           [
             'Generate a token on this page, then paste it below:',
             '',
-            `  ${pc.bold(pc.cyan(pc.underline(TOKEN_PAGE)))}`,
+            `  ${pc.bold(pc.cyan(pc.underline(link(TOKEN_PAGE))))}`,
             '',
             'The token is checked with Chatfuel, and goes to your host when you deploy. It never reaches the browser.',
           ].join('\n'),
@@ -92,7 +93,7 @@ export async function token(ctx: WizardContext): Promise<void> {
       if (attempt === ATTEMPTS) {
         throw new WizardError(
           'The token was rejected (Unauthorized).',
-          `Generate a fresh token at ${TOKEN_PAGE} and retry.`,
+          `Generate a fresh token at ${link(TOKEN_PAGE)} and retry.`,
         );
       }
       p.log.warn('The token was rejected (Unauthorized) — try again.');

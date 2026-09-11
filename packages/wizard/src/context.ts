@@ -154,6 +154,14 @@ export interface WizardAnswers {
   deployUrl?: string;
   /** The deploy step ran, failed, and the user chose to move on — the closing summary has to say so. */
   deployFailed?: true;
+  /**
+   * The deploy found that this Vercel account has no GitHub connection, so a
+   * push would never redeploy. The probe behind it answers three ways —
+   * connected, missing, or unreadable — and only the definite no is recorded
+   * here: a connection that is there needs nothing said about it, and an answer
+   * nothing could read must leave the run exactly as it was.
+   */
+  vercelGitLogin?: 'missing';
   /** No package manager could install the app's dependencies. The app is written; node_modules is not. */
   installFailed?: true;
   /**

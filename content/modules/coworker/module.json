@@ -1,7 +1,7 @@
 {
   "id": "coworker",
-  "name": "Coworker (operator AI assistant)",
-  "description": "The operator's AI assistant as a page and as a dock beside every module: streamed markdown, tool runs as steps, a manual approval gate for account changes, and an assistant that reads the current screen and can navigate the app.",
+  "name": "Copilot",
+  "description": "The operator's AI assistant on a page of its own: streamed markdown, tool runs as steps, a manual approval gate for account changes, and an assistant that reads the current screen and can navigate the app.",
   "status": "ready",
   "requires": [],
   "recommends": ["livechat"],

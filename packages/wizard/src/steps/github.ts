@@ -9,6 +9,7 @@ import { ensureGh, ghAccountLogin, ghCreateAndPush, ghIsAuthenticated, ghLogin, 
 import { originUrl, prepareLocalRepo } from '../github/repo';
 import type { PrepareResult } from '../github/repo';
 import { WizardError } from '../errors';
+import { link } from '../link';
 import type { GithubAccount } from '../github/api';
 import type { GhCli } from '../github/cli';
 import type { WizardContext } from '../context';
@@ -39,6 +40,46 @@ export interface GithubPlan {
  */
 const finishByHand = (appDir: string): string =>
   `cd ${appDir} && git init && git add -A && git commit -m "Initial commit" && gh repo create --source . --push`;
+
+/** Where a person grants Vercel the GitHub authorisation that makes a push deploy. */
+const VERCEL_AUTH_PAGE = 'https://vercel.com/account/settings/authentication';
+
+/** What is off, where to switch it on, and the command that finishes the job. */
+const redeployOffWarning = (appDir: string, pm: string): string =>
+  [
+    'A push will not redeploy: Vercel has no GitHub connection.',
+    `Add it at ${link(VERCEL_AUTH_PAGE)}, then:`,
+    `  cd ${appDir} && ${pm} run connect-git`,
+  ].join('\n');
+
+/**
+ * The one thing that has to happen in a browser before `git push` can deploy.
+ *
+ * The deploy step found it out — that is the only step where the Vercel CLI is
+ * signed in — and left the answer in the context. Asked HERE, in front of the
+ * repository name, because everything past that prompt costs the person
+ * something: a commit, a repository under their account, a push. The old
+ * behaviour said it after all three, at `vercel git connect`, by which point
+ * there is nothing left to decide.
+ *
+ * A yes clears it. A no, or a cancel, leaves it set and the run carries on —
+ * this is an optional convenience, and the neighbouring confirms read a cancel
+ * the same way.
+ */
+async function offerVercelGithubLogin(ctx: WizardContext): Promise<void> {
+  if (ctx.answers.vercelGitLogin !== 'missing') return;
+
+  p.note(
+    [
+      'Vercel has no GitHub connection, so a push will not redeploy.',
+      '',
+      `  ${pc.bold(pc.cyan(pc.underline(link(VERCEL_AUTH_PAGE))))}`,
+    ].join('\n'),
+    'Redeploy on push',
+  );
+  const added = await p.confirm({ message: 'Added it?', initialValue: true });
+  if (!p.isCancel(added) && added) ctx.answers.vercelGitLogin = undefined;
+}
 
 /**
  * Part one of putting the app on GitHub: every question, and the sign-in.
@@ -72,6 +113,8 @@ export async function prepareGithub(ctx: WizardContext): Promise<GithubPlan | un
     p.log.info(`You can do it later:  ${finishByHand(appDir)}`);
     return undefined;
   }
+
+  await offerVercelGithubLogin(ctx);
 
   const entered = await p.text({
     message: 'Name for the repository:',
@@ -321,17 +364,50 @@ async function createAndPush(plan: GithubPlan): Promise<{ url: string; pushed: b
 async function connectVercel(ctx: WizardContext, appDir: string): Promise<void> {
   if (!existsSync(join(appDir, '.vercel', 'project.json'))) return;
 
+  const pm = ctx.answers.packageManager;
+  /* Asked about above and still unanswered: there is no connection for the
+     repository to hang off, so `vercel git connect` would refuse on the first
+     call. Say what is off and how to switch it on, rather than ask a question
+     whose only honest answer is no. Inside connectVercel and not at its call
+     sites, so both ways in get it. */
+  if (ctx.answers.vercelGitLogin === 'missing') {
+    p.log.warn(redeployOffWarning(appDir, pm));
+    return;
+  }
+
   const go = await p.confirm({
     message: 'Redeploy to Vercel on every push to GitHub?',
     initialValue: true,
   });
   if (p.isCancel(go) || !go) return;
 
-  const pm = ctx.answers.packageManager;
+  /* Printed as a person would type it, and spawned as the script itself —
+     not through the package manager's run command. The script reports its own
+     refusals in whole sentences and then exits non-zero to say which one it
+     was, and a run command answers a non-zero exit with an error block of its
+     own and a path to a debug log, printed directly beneath a message whose
+     whole point is that nothing is broken. Spawned this way the exit code read
+     below arrives exactly the same, and the screen ends on the script's words.
+
+     The path is stable: the scaffold copies the whole shell template, so
+     `scripts/connect-git.mjs` is in every app it writes, and the overlay
+     denylist refuses to let anything replace it. The script works out which
+     directory it belongs to from its own location, not from the cwd. */
   console.log(pc.dim(`\n  ${pm} run connect-git\n`));
   try {
-    await execa(pm, ['run', 'connect-git'], { cwd: appDir, stdio: 'inherit', timeout: 10 * 60_000 });
-  } catch {
+    await execa(process.execPath, [join(appDir, 'scripts', 'connect-git.mjs')], {
+      cwd: appDir,
+      stdio: 'inherit',
+      timeout: 10 * 60_000,
+    });
+  } catch (err) {
+    /* Exit 2 is the script naming the missing connection. Unreachable until
+       now: the script reported that failure and exited 0, so this catch never
+       ran for the commonest cause of it. */
+    if ((err as { exitCode?: number }).exitCode === 2) {
+      p.log.warn(redeployOffWarning(appDir, pm));
+      return;
+    }
     p.log.warn(`Not connected — the output above says why. Re-run it with: ${pm} run connect-git`);
   }
 }

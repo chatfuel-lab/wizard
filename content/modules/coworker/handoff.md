@@ -1,4 +1,4 @@
-### Coworker (coworker)
+### Copilot (coworker)
 
 The operator-facing AI assistant, on its own page at `/coworker` (deep link
 `/coworker?c=<conversationID>`) — one thread over one bot-scoped subscription.

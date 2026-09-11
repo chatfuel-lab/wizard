@@ -6,6 +6,7 @@ import { declaredEnv } from '../scaffold/env';
 import { skillsSpec } from '../scaffold/skills';
 import { outroArt } from '../art';
 import { DISCORD_URL, shellUrl } from '../constants';
+import { link } from '../link';
 import { authNextSteps, productionLines, trialLines } from './authNotes';
 import { adminPasswordNote } from './adminSetup';
 import type { WizardContext } from '../context';
@@ -39,11 +40,11 @@ export function outro(ctx: WizardContext): void {
           ctx.answers.installFailed ? `  ${pm} install         ${pc.dim('# the install failed earlier')}` : '',
           `  ${pm} run dev        ${pc.dim(`# open ${shellUrl()}`)}`,
           ctx.answers.deployUrl
-            ? `  ${pc.cyan(ctx.answers.deployUrl)}   ${pc.dim('# live now; re-deploy with ' + pm + ' run deploy')}`
+            ? `  ${pc.cyan(link(ctx.answers.deployUrl))}   ${pc.dim('# live now; re-deploy with ' + pm + ' run deploy')}`
             : ctx.answers.deployFailed
               ? `  ${pm} run deploy     ${pc.dim('# the deploy stopped earlier — this picks it back up')}`
               : `  ${pm} run deploy     ${pc.dim('# put it on Vercel (CLI only, no repo needed)')}`,
-          ctx.answers.githubUrl ? `  ${pc.cyan(ctx.answers.githubUrl)}   ${pc.dim('# your code, pushed')}` : '',
+          ctx.answers.githubUrl ? `  ${pc.cyan(link(ctx.answers.githubUrl))}   ${pc.dim('# your code, pushed')}` : '',
           resume
             ? `  ${resume}   ${pc.dim(`# ${invocation ? `then ${invocation} — ` : ''}guided finish with the skills`)}`
             : '',
@@ -81,7 +82,7 @@ export function outro(ctx: WizardContext): void {
   const trialBlock = trial.length > 0 ? ['', pc.bold('Chatfuel trial:'), ...trial.map((l) => pc.cyan(l))] : [];
   // Auth next: without an owner account nobody can get into the app at all.
   const auth = authNextSteps(ctx);
-  const authBlock = auth.length > 0 ? ['', pc.bold('Sign-in (Auth & Team):'), ...auth.map((l) => pc.cyan(l))] : [];
+  const authBlock = auth.length > 0 ? ['', pc.bold('Sign-in (Accounts):'), ...auth.map((l) => pc.cyan(l))] : [];
   /* The one secret this run invented that a person has to keep. Printed here
      and written to .env, and to nothing else — the handoff and the agent
      instructions are files that get committed. */
@@ -112,7 +113,7 @@ export function outro(ctx: WizardContext): void {
     ...productionBlock,
     // A space, not an empty string: the filter below drops anything falsy.
     ' ',
-    `${pc.bold('Community:')} ${pc.cyan(pc.underline(DISCORD_URL))}`,
+    `${pc.bold('Community:')} ${pc.cyan(pc.underline(link(DISCORD_URL)))}`,
     pc.dim('Rotate the Chatfuel token any time with `npx @chatfuel/wizard auth`.'),
   ].filter(Boolean);
   p.note(lines.join('\n'), 'All set');

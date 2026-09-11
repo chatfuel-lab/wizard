@@ -177,12 +177,12 @@ const COLOR_GROUPS: TokenGroup[] = [
   {
     title: 'Channel semantics',
     blurb:
-      'One pair per messaging platform: the solid is the glyph, the soft is the tinted circle behind it — the channel badge on an AI Automations card, the platform cell in a table. Brand-adjacent, not brand-exact, and every solid clears 3:1 on its own soft in both themes; the WhatsApp green is darker than the brand’s for that reason. Widget is the product’s own channel, so it is the accent, not a sixth hue. In dark mode the softs are low-alpha tints, so one value sits on a card and a sunken row alike.',
+      'One pair per messaging platform: the solid is the glyph, the soft is the tinted circle behind it — the channel badge on an AI Agent card, the platform cell in a table. Brand-adjacent, not brand-exact, and every solid clears 3:1 on its own soft in both themes; the WhatsApp green is darker than the brand’s for that reason. Widget is the product’s own channel, so it is the accent, not a sixth hue. In dark mode the softs are low-alpha tints, so one value sits on a card and a sunken row alike.',
     tokens: [
       {
         variable: '--color-channel-instagram',
         utilities: ['text-channel-instagram'],
-        note: 'channel glyph + tinted circle in AI Automations',
+        note: 'channel glyph + tinted circle in AI Agent',
       },
       { variable: '--color-channel-instagram-soft', utilities: ['bg-channel-instagram-soft'] },
       {

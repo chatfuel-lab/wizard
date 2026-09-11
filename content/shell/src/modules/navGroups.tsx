@@ -40,7 +40,7 @@ export interface NavGroupDef {
 export const NAV_GROUPS: readonly NavGroupDef[] = [
   {
     id: 'ai',
-    title: 'AI Agent',
+    title: 'AI',
     icon: <IconSparkles />,
     items: ['automations', 'flow-builder', 'knowledge-base'],
   },

@@ -18,6 +18,32 @@ export interface CustomerSectionProps {
   onAttach: (input: BookingUpdateInput) => Promise<{ ok: boolean; error: unknown }>;
 }
 
+/** Where the Inbox link on a customer points, and what it says. */
+export interface ContactChatLink {
+  href: string;
+  label: string;
+}
+
+/**
+ * The inbox link for a booking's contact.
+ *
+ * `?c=` names a conversation and the inbox's conversation field is non-null,
+ * so asking for one the contact does not have is an error rather than an empty
+ * thread. A contact with none gets `?contact=`, which is the inbox's own
+ * "ensure a conversation exists" path.
+ *
+ * DELIBERATE TWIN of `chatLinkFor` in the contacts module
+ * (`src/modules/contacts/lib/contactsParams.ts`). Modules may not import each
+ * other, so the rule is written twice and tested on both sides; change one and
+ * change the other.
+ */
+export function contactChatLink(contact: { id: string; conversation?: { id: string } | null }): ContactChatLink {
+  const conversation = contact.conversation;
+  return conversation
+    ? { href: `/livechat?c=${encodeURIComponent(conversation.id)}`, label: 'Open in Inbox' }
+    : { href: `/livechat?contact=${encodeURIComponent(contact.id)}`, label: 'Start a chat' };
+}
+
 const PLATFORM_LABEL: Record<string, string> = {
   WhatsappContact: 'WhatsApp',
   InstagramContact: 'Instagram',
@@ -31,7 +57,7 @@ const PLATFORM_LABEL: Record<string, string> = {
  * Who the booking is for — three identities the API keeps, one section:
  *
  * - a REAL contact (`contact`): avatar, name, phone, the contact's note
- *   (`BookingContactSetNote`), and "Open in Live Chat" — `/livechat?c=` when
+ *   (`BookingContactSetNote`), and "Open in Inbox" — `/livechat?c=` when
  *   a conversation exists, `/livechat?contact=` (the inbox starts one) when
  *   not;
  * - an INLINE contact (`inlineContact`): name, phone, its own note
@@ -50,9 +76,7 @@ export function CustomerSection({ booking, canEdit, saving, onSetNote, onAttach 
 
   if (contact) {
     const phone = contact.__typename === 'WhatsappContact' ? contact.phone : null;
-    const href = contact.conversation
-      ? `/livechat?c=${encodeURIComponent(contact.conversation.id)}`
-      : `/livechat?contact=${encodeURIComponent(contact.id)}`;
+    const chat = contactChatLink(contact);
     return (
       <div className="space-y-3">
         <div className="flex items-start gap-3">
@@ -67,10 +91,10 @@ export function CustomerSection({ booking, canEdit, saving, onSetNote, onAttach 
             </div>
           </div>
           <a
-            href={href}
+            href={chat.href}
             className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control px-2 text-xs font-medium text-accent hover:bg-surface-hover focus-visible:focus-ring"
           >
-            {contact.conversation ? 'Open in Live Chat' : 'Start a chat'}
+            {chat.label}
             <IconExternal size={12} />
           </a>
         </div>

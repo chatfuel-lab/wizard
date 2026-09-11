@@ -22,6 +22,9 @@
 //      (and its manifest's `hidden` flag matches the descriptor's)
 //      exporting moduleDescriptor, is listed in the shell registry (exactly), has handoff.md,
 //      and its embed.roots resolve under content/shell
+//  20. a module's display name is the same string in its manifest, its shell descriptor title,
+//      its handoff heading and its skill heading — four files, four audiences, and nothing else
+//      could see them drift apart
 //   8. template invariants: marked blocks present; tsconfig fallback paths match the
 //      pruneTsconfigFallbacks regex shape
 //   9. codegen coverage: every codegen module id has an operations.graphql; every ready module
@@ -93,6 +96,7 @@ import { checkOperationAllowlist } from './validate/passes/operation-allowlist.t
 import { checkOperationDocs } from './validate/passes/operation-docs.ts';
 import { checkMarkdownGraphql } from './validate/passes/markdown-graphql.ts';
 import { checkContentIndex } from './validate/passes/content-index.ts';
+import { checkModuleNames } from './validate/passes/module-names.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -123,6 +127,7 @@ if (checkTrees(ctx)) {
   checkSchemaReachability(ctx); // pass 4c — every declaration in the SDL is reachable from a root
   checkAssetTwins(ctx); // pass 4b — shipped asset twins
   checkShellIntegrity(ctx); // pass 7 — shell integrity
+  checkModuleNames(ctx); // pass 20 — one display name per module, in every layer that shows one
   checkTemplateInvariants(ctx); // pass 8 — template invariants
   checkCodegenCoverage(ctx); // pass 9 — codegen coverage
   checkMigrations(ctx); // pass 12 — Supabase migration hygiene

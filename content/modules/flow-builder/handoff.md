@@ -51,7 +51,7 @@ there is no stop mutation. A flow with no starting point cannot be run and the
 dock says so with a button that takes you to a block. Sending needs
 `Inbox: Edit` while starting needs only `Flows: View`, so the dock can be
 readable with a closed composer. `references/test-panel.md` is the contract;
-the thread itself is `~ui`'s `TestChat`, shared with the Automations panel.
+the thread itself is `~ui`'s `TestChat`, shared with the AI Agent panel.
 **No message carries a block id**, so there is no trace of which block said
 what — do not build one.
 

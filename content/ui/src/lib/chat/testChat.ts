@@ -3,7 +3,7 @@
  *
  * A "test chat" is a preview conversation: a real conversation on a synthetic
  * contact that the production pipeline answers, opened beside the thing being
- * built — one flow in the flow builder, one automation in Automations. Both
+ * built — one flow in the flow builder, one automation in AI Agent. Both
  * surfaces used to carry their own copy of everything below, because a module
  * may not import another module's files; this file is the copy they share.
  *

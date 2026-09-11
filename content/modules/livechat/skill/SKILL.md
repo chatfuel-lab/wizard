@@ -3,7 +3,7 @@ name: chatfuel-livechat
 description: Build live-chat (operator inbox) clients on the Chatfuel GraphQL API — conversation lists with live updates, message threads with per-platform rendering (WhatsApp, Instagram, Facebook, TikTok, web widget), sending text and attachments, take-over and close-to-flow, GraphQL subscriptions over WebSocket. Use when embedding Chatfuel live chat into another product (CRM, helpdesk) or building any operator-side chat UI against the Chatfuel API. Requires the chatfuel-core skill (auth, CORS proxy, pagination, schema).
 ---
 
-# Chatfuel Live Chat
+# Chatfuel Inbox
 
 Operator-side chat on the Chatfuel platform API: the conversation list, the message thread, sending per platform, conversation lifecycle, real-time subscriptions. **`Conversation.id` IS the contact id** — every `conversationID` argument takes the contact's id.
 

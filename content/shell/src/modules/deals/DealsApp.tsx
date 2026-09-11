@@ -148,7 +148,7 @@ function DealsWorkspace({ rootRef, params, view: viewSeg, setLocation }: Workspa
   // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the serialized filter so an equal-but-fresh object keeps its identity
   const filter = useMemo(() => parsed.filter, [filterKey]);
 
-  /* What the Coworker sees when it asks what is on screen. Write-only into a
+  /* What the Copilot sees when it asks what is on screen. Write-only into a
      sink the shell owns; a no-op when this module runs as an embed. */
   usePublishScreenContext({
     module: 'Deals',

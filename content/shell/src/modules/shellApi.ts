@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useId } from 'react';
  * exports would put React into a file that today erases to nothing.
  *
  * Three capabilities live here. Two of them exist for one feature — the
- * Coworker, an assistant that can be asked about the app it is part of:
+ * Copilot, an assistant that can be asked about the app it is part of:
  *
  *   1. A module can *publish what the operator is looking at*
  *      (`usePublishScreenContext`). The assistant's `get_frontend_state` tool
@@ -42,7 +42,7 @@ import { createContext, useContext, useEffect, useId } from 'react';
 export type ScreenValue = string | number | boolean | null | ScreenValue[] | { [key: string]: ScreenValue };
 export type ScreenDetail = Record<string, ScreenValue>;
 
-/** What the shell knows about the current screen, handed to the dock on demand. */
+/** What the shell knows about the current screen, handed over on demand. */
 export interface ScreenSnapshot {
   moduleId: string | null;
   moduleTitle: string | null;

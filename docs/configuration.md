@@ -71,6 +71,12 @@ mirror to fetch that content from instead of `https://raw.githubusercontent.com`
 directory the fetched content and its branch-resolution cache are kept in, instead of
 `~/.cache/chatfuel-wizard` (or `$XDG_CACHE_HOME/chatfuel-wizard` when that is set).
 
+One last one is about the terminal rather than about the run:
+
+| Name | What it does |
+| --- | --- |
+| `FORCE_HYPERLINK` | Whether a printed link is a short clickable name instead of the address itself. Detected from the terminal, and left off wherever the escape would show as literal bytes; `1` turns it on anyway, `0` off. The one case worth knowing about is a multiplexer — a recent one renders the link, an older one shows the plain name, and the wizard cannot tell them apart from inside. Where a checkout address is the only copy of a single-use session, it is printed whether or not the name was. |
+
 ## App environment
 
 `VITE_*` values are compiled into the browser bundle **at build time**; everything else is read

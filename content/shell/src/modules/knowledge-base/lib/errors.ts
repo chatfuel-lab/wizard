@@ -47,7 +47,7 @@ const MESSAGES: Record<string, string> = {
   FuelyBusinessHoursScheduleInvalidTimeFormat: 'Times must look like 09:00.',
   FuelyBusinessHoursScheduleInvalidTimeRange: 'The closing time must be after the opening time.',
   FuelyBusinessHoursScheduleDuplicateDays: 'Each weekday can appear only once.',
-  BotMigratedToNewFuelySettings: 'This setting moved to AI Automations on this bot.',
+  BotMigratedToNewFuelySettings: 'This setting moved to AI Agent on this bot.',
 };
 
 /** Every code in the map, so a caller can assert coverage. */

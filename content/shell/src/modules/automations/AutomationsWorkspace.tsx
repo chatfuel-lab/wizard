@@ -52,10 +52,10 @@ export function AutomationsWorkspace({ rootRef, params, setParams }: WorkspacePr
     dirtyCount: drafts.dirtyCount,
   });
 
-  /* What the Coworker sees when it asks what is on screen. Write-only into a
+  /* What the Copilot sees when it asks what is on screen. Write-only into a
      sink the shell owns; a no-op when this module runs as an embed. */
   usePublishScreenContext({
-    module: 'AI Automations',
+    module: 'AI Agent',
     source: parsed.scope,
     openRule: parsed.automation,
     openSetting: parsed.setting,

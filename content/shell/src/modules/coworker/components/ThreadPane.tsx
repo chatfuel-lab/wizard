@@ -272,7 +272,7 @@ export function ThreadPane({ conversationId, ensureConversation }: ThreadPanePro
             ) : null
           }
           footer={live}
-          empty={<EmptyState icon={<IconAssistant />} title="Ask the Coworker anything" />}
+          empty={<EmptyState icon={<IconAssistant />} title="Ask the Copilot anything" />}
         />
 
         {/* The list correctly refuses to drag a reader back to the bottom when

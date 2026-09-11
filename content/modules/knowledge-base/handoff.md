@@ -16,7 +16,7 @@ deep links `?source=overview|profile|instructions|faq|products|services|team|gap
   the questions worth answering, one click to turn a group into an FAQ.
 
 Two things worth knowing: the agent's name, language, greeting and emoji policy
-are NOT here — they live in AI Automations. And nothing on this page is live:
+are NOT here — they live in AI Agent. And nothing on this page is live:
 there is no subscription for it, so it refetches after every write, on reconnect
 and on Refresh.
 

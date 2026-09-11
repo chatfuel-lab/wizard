@@ -4,11 +4,15 @@ import { MessageContent } from './MessageContent';
 /**
  * The answer as it is being written.
  *
- * Drawn exactly like a finished one — same column, same width cap, same name
- * above it — so the moment `CoworkerMessageAdded` replaces the buffer nothing
- * moves. A streaming state that looks different from its own result makes the
- * thread jump on every reply, which is the tell that it is a separate code
- * path; here it is the same components with a caret on the end.
+ * Drawn exactly like a finished one — same column, same width cap, same
+ * components — so the moment `CoworkerMessageAdded` replaces the buffer the
+ * text does not reflow. A streaming state that looks different from its own
+ * result makes the thread jump on every reply, which is the tell that it is a
+ * separate code path; here it is the same components with a caret on the end.
+ *
+ * The one thing a finished answer does not carry is the name above it: while
+ * the words are still arriving it says who is writing them, and it is the
+ * module's own name, the one on the rail and on the page header.
  *
  * `text` is everything received so far, not the latest chunk — the hook already
  * accumulates and batches, and `StreamingText` reveals the difference at a
@@ -29,7 +33,7 @@ export function StreamingMessage({ text, compact = false }: { text: string; comp
     <div className="pt-2">
       <div className="mb-1 flex items-center gap-1.5 text-micro font-medium text-text-muted">
         <IconAssistant size={12} className="text-accent" />
-        Coworker
+        Copilot
       </div>
       {/* `aria-live="polite"` and nothing else: the list itself is aria-live
           off, because a virtualized log would re-announce the whole thread on

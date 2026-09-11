@@ -4,6 +4,7 @@ import { hasErrorCode } from '@chatfuel/api-client';
 import { stepArt } from '../art';
 import { WorkspaceCreateDocument } from '../billing';
 import { DASHBOARD_URL } from '../constants';
+import { link } from '../link';
 import { ApiWizardError, WizardError } from '../errors';
 import type { WizardContext } from '../context';
 
@@ -84,7 +85,7 @@ export async function workspacePick(ctx: WizardContext): Promise<void> {
             ? 'This Chatfuel account is at its workspace limit'
             : 'Could not create a Chatfuel workspace',
           err,
-          `Create one at ${DASHBOARD_URL} — that is where the plan is paid — then re-run.`,
+          `Create one at ${link(DASHBOARD_URL)} — that is where the plan is paid — then re-run.`,
         );
       }
     }
@@ -150,7 +151,7 @@ export async function workspacePick(ctx: WizardContext): Promise<void> {
       }
     }
   } else if (picked.bots.length === 0) {
-    p.log.warn(`${picked.title} holds no bots yet — create one at ${DASHBOARD_URL} and the app will pick it up.`);
+    p.log.warn(`${picked.title} holds no bots yet — create one at ${link(DASHBOARD_URL)} and the app will pick it up.`);
   }
 
   ctx.answers.workspace = {
