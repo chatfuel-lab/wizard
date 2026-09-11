@@ -10,7 +10,7 @@ working hours (one break a day), the services they offer, avatars, and a
 per-specialist Google Calendar connection with a progress-tracked sync.
 **Services**: the catalog with duration, price, availability and images.
 **Settings**: the AI booking configuration (confirmation, the 2 h / 24 h notices,
-channel, locale; the AI autonomy is read here and changed in AI Automations) and the bot time zone. **Insights**: status mix,
+channel, locale; the AI autonomy is read here and changed in AI Agent) and the bot time zone. **Insights**: status mix,
 no-show and cancel rates, attended revenue per currency, utilisation per
 specialist, busiest hours — every number over the loaded window, and it says so.
 Route: `/bookings`, the next segment picks the section (`/bookings/staff`),
@@ -39,7 +39,7 @@ First-task ideas:
    Then drag the same booking onto a specialist with no working hours and watch
    nothing stop you: the API accepts anything on the calendar; only the wizard
    is opinionated.
-2. Open `/bookings?new=1&contact=<a WhatsApp contact id>` from your Live Chat —
+2. Open `/bookings?new=1&contact=<a WhatsApp contact id>` from your Inbox —
    the wizard opens on the customer step with the contact chosen. Wire a "Book"
    button there.
 3. Add a status colour legend to the calendar toolbar when `color=status` is on

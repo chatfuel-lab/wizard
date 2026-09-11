@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { backoffDelay } from '@chatfuel/api-client';
+import { link } from '../link';
 import { outboundFetch, proxyHint } from '../net';
 import type { AuthConfigView, AuthPatch, RecoveryTemplatePatch } from './authConfig';
 import type { ManagementApiKey } from './keys';
@@ -310,7 +311,7 @@ export function createManagementClient(options: ManagementClientOptions): Manage
           {
             status: 0,
             endpoint: label,
-            hint: 'The project may still come up — check https://supabase.com/dashboard and re-run with --supabase-project <ref>.',
+            hint: `The project may still come up — check ${link('https://supabase.com/dashboard')} and re-run with --supabase-project <ref>.`,
           },
         );
       }

@@ -55,7 +55,11 @@ import — comes back with `conversation: null` and never appears there.
 `contactsCount` and `contactChatsCountV2` differ by exactly the contacts that
 have never messaged. Searching the chats
 engine for such a contact returns nothing while the same contact sits on the
-first page of the segment engine.
+first page of the segment engine. The same nullable field decides the module's
+inbox affordance, which is why it is never hidden: `lib/contactsParams.ts`
+builds `/livechat?c=<conversation id>` for a contact that has one and
+`/livechat?contact=<contact id>` — the inbox starts one — for a contact that
+does not.
 
 A contact list that silently hides part of the address book is wrong in a
 way no caveat repairs. So the segment engine is the floor, and the chats engine

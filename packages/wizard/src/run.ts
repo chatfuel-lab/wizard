@@ -1,6 +1,7 @@
 import * as p from '@clack/prompts';
 import { createContentSource } from './content';
 import { DISCORD_URL } from './constants';
+import { link } from './link';
 import { loadRegistry } from './registry';
 import { WizardError } from './errors';
 import { capture } from './telemetry';
@@ -71,7 +72,7 @@ export function reportWizardError(err: unknown, verbose = false): boolean {
   // The cause carries what the transport actually said: noise in the normal
   // case, and the whole answer when someone is diagnosing one.
   if (verbose && err.cause instanceof Error) p.log.message(err.cause.message);
-  p.log.info(`Stuck? Ask in the community: ${DISCORD_URL}`);
+  p.log.info(`Stuck? Ask in the community: ${link(DISCORD_URL)}`);
   p.outro('Wizard stopped.');
   process.exitCode = 1;
   return true;

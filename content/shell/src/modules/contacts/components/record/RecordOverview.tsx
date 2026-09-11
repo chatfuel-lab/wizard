@@ -1,4 +1,4 @@
-import { Button, Card, IconExternal, Tag } from '~ui';
+import { Button, Card, IconExternal, IconMessage, Tag } from '~ui';
 import type { ContactBookingsApi } from '../../hooks/useContactBookings';
 import type { ContactMessagesApi } from '../../hooks/useContactMessages';
 import type { ContactRecordApi } from '../../hooks/useContactRecord';
@@ -11,6 +11,7 @@ import {
   type ContactFieldBindings,
   type ContactFieldKey,
 } from '../../lib/contactFields';
+import { chatLabel } from '../../lib/contactsParams';
 import { messageTimeLabel, recentMessages } from '../../lib/contactMessages';
 import type { ContactRecord } from '../../types';
 import { phoneOf } from '../../types';
@@ -27,8 +28,10 @@ export interface RecordOverviewProps {
   record: ContactRecordApi;
   messages: ContactMessagesApi;
   bookings: ContactBookingsApi;
-  /** Null when there is no conversation to open. */
+  /** Null only for a restricted contact — every other one has somewhere to go. */
   onOpenLiveChat: (() => void) | null;
+  /** True when the contact already has a conversation; false starts one. */
+  chatStarted: boolean;
 }
 
 /** Everything except the two money fields, which have their own card. */
@@ -61,6 +64,7 @@ export function RecordOverview({
   messages,
   bookings,
   onOpenLiveChat,
+  chatStarted,
 }: RecordOverviewProps) {
   const moved = stageMovedAgo(contact.lastSalesStageUpdateTime);
   const recent = recentMessages(messages.messages, RECENT);
@@ -131,8 +135,10 @@ export function RecordOverview({
         title="Last messages"
         actions={
           onOpenLiveChat ? (
+            /* The same two words as the row menu and the header. A third
+               wording for one action reads as a third action. */
             <Button variant="ghost" size="sm" onClick={onOpenLiveChat}>
-              <IconExternal size={14} /> Reply in Live Chat
+              {chatStarted ? <IconExternal size={14} /> : <IconMessage size={14} />} {chatLabel(chatStarted)}
             </Button>
           ) : null
         }

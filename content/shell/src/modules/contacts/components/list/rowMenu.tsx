@@ -1,7 +1,8 @@
-import { IconCopy, IconExternal, IconLink, IconUser, type MenuItem } from '~ui';
+import { IconCopy, IconExternal, IconLink, IconMessage, IconUser, type MenuItem } from '~ui';
 import type { ContactRow, TeamMember } from '../../types';
 import { phoneOf, usernameOf } from '../../types';
 import type { BulkAction } from '../../lib/bulk';
+import { chatLabel, chatLinkFor } from '../../lib/contactsParams';
 import { STAGE_META, STAGE_ORDER } from '../../lib/tableColumns';
 
 export interface RowMenuOptions {
@@ -10,7 +11,8 @@ export interface RowMenuOptions {
   canEdit: boolean;
   team: TeamMember[];
   onOpen: (contactId: string) => void;
-  onLiveChat: (contactId: string) => void;
+  /** The row, not its id: the link depends on whether it has a conversation. */
+  onLiveChat: (row: ContactRow) => void;
   onCopy: (text: string, what: string) => void;
   onLink: (contactId: string) => void;
   onAction: (action: BulkAction, targets: ContactRow[]) => void;
@@ -47,16 +49,19 @@ export function buildRowMenu({
   const items: MenuItem[] = [];
 
   if (!many) {
+    const chat = chatLinkFor(first);
     items.push(
       { id: 'open', label: 'Open record', icon: <IconExternal size={14} />, onSelect: () => onOpen(first.id) },
       {
         id: 'livechat',
-        label: 'Open in Live Chat',
-        icon: <IconExternal size={14} />,
-        /* The conversation id IS the contact id on this API, so the deep link
-           needs nothing else. A contact that has never chatted opens an empty
-           thread rather than an error. */
-        onSelect: () => onLiveChat(first.id),
+        /* Two sentences, because there are two things to press. A contact who
+           has never messaged has no conversation to open — the inbox has to
+           start one first, and saying "Open in Inbox" over that would
+           promise a thread that is not there. `lib/contactsParams.ts` owns
+           both halves; this only asks which one. */
+        label: chatLabel(chat.started),
+        icon: chat.started ? <IconExternal size={14} /> : <IconMessage size={14} />,
+        onSelect: () => onLiveChat(first),
       },
       { kind: 'separator', id: 'sep-open' },
     );

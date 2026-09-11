@@ -1,17 +1,18 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
-import { execa } from 'execa';
 import { hasErrorCode } from '@chatfuel/api-client';
 import { stepArt } from '../art';
 import {
   BillingProductsDocument,
   pickMonthlyPricing,
+  type Pricing,
   StripePaymentLinkDocument,
   StripeTrialLinkDocument,
   WorkspaceSubscriptionDocument,
 } from '../billing';
 import { ApiWizardError, WizardError } from '../errors';
 import { COUPON_CODE, COUPON_VALUE, DASHBOARD_URL } from '../constants';
+import { link } from '../link';
 import type { WizardContext } from '../context';
 
 /**
@@ -36,6 +37,11 @@ import type { WizardContext } from '../context';
  * for both - the reader has the same thing to do, and which mutation answered
  * is not something they can act on.
  *
+ * The checkout link is printed as a name where the terminal renders one and as
+ * the address wherever it does not. Either way it is the same single-use
+ * session, so the address is printed as well on the two paths that never reach
+ * a browser: a run with no questions, and an open that reported failure.
+ *
  * --dry-run ends the step early and without ending the run: it may create
  * nothing, and a checkout session is something.
  */
@@ -47,50 +53,9 @@ const PATIENCE_MS = 5 * 60_000;
 /** The catalogue is a plain read; a few retries cover a slow moment, not an outage. */
 const CATALOGUE_ATTEMPTS = 3;
 const CATALOGUE_RETRY_MS = 2_000;
-/**
- * A browser that opens the instant the link is printed takes the screen with
- * it, and the coupon is never read — which is the one line here that is worth
- * money to whoever is reading. So the terminal gets a beat first.
- */
-const READ_FIRST_MS = 6_000;
-
 const NO_PLAN_WARNING = 'The AI will not answer until the workspace has a plan.';
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Best-effort browser open. The URL is printed before this runs, so a machine
- * with no display, no opener, or no permission to spawn one loses nothing —
- * and that is also why a refusal here is silent: the link is already on screen.
- *
- * The address comes back from a mutation, so it is the server's string and not
- * this process's. `open` and `xdg-open` both take whatever they are handed and
- * ask the desktop what it is registered to: `file://` opens a file manager,
- * and on a Linux desktop a URL scheme is a line in a .desktop entry, which is
- * to say an arbitrary command. https is the only answer that means a browser,
- * so it is the only one that gets passed on.
- *
- * On Windows it is not the scheme but the opener: `cmd /c start` re-parses its
- * argument, and `&`, `^` and `|` are all legal in a query string. rundll32
- * hands the address to the shell as one string and does not go through cmd at
- * all, which is what makes the checkout URL — several hundred characters of
- * Stripe query — arrive whole.
- */
-async function openInBrowser(url: string): Promise<boolean> {
-  try {
-    if (new URL(url).protocol !== 'https:') return false;
-  } catch {
-    return false;
-  }
-  const [command, args] =
-    process.platform === 'darwin'
-      ? ['open', [url]]
-      : process.platform === 'win32'
-        ? ['rundll32', ['url.dll,FileProtocolHandler', url]]
-        : ['xdg-open', [url]];
-  const result = await execa(command, args as string[], { reject: false, timeout: 10_000, stdio: 'ignore' });
-  return result.exitCode === 0;
-}
 
 /** null = never been through checkout. */
 async function readSubscription(ctx: WizardContext, workspaceId: string): Promise<unknown | null> {
@@ -135,10 +100,11 @@ export async function trial(ctx: WizardContext): Promise<void> {
 
   p.log.message(stepArt('trial'));
 
-  const pricing = await loadMonthlyPricing(ctx);
+  const { pricing, why } = await loadMonthlyPricing(ctx);
   if (!pricing) {
     // A catalogue the wizard cannot read is not a reason to throw away the run.
-    p.log.warn(`Could not load the Chatfuel plans. Start the trial at ${DASHBOARD_URL}.`);
+    p.log.warn(`Could not load the Chatfuel plans. Start the trial at ${link(DASHBOARD_URL)}.`);
+    if (why) p.log.warn(why);
     p.log.warn(NO_PLAN_WARNING);
     ctx.answers.trialStarted = false;
     return;
@@ -183,9 +149,19 @@ export async function trial(ctx: WizardContext): Promise<void> {
     }
   }
 
-  // Not a note: a checkout URL is hundreds of characters long and a boxed one
-  // stretches the frame past the width of any terminal. Bare lines wrap, and a
-  // wrapped URL is still one thing to copy.
+  /* Nothing here opens a browser: whoever is reading follows this link when
+     they are ready, and a window that takes the screen mid-run takes the coupon
+     with it. So this line is the only way in, and it is either a name the
+     terminal can be clicked on or, where it cannot, the address itself —
+     `clickable !== url` is the whole of that difference. The heading already
+     says what to do, so the name is a noun and not a verb, and it is as true of
+     the plain checkout as of the trial. */
+  const clickable = link(url, 'Chatfuel checkout');
+
+  // Not a note: what this line holds is sometimes a name and sometimes hundreds
+  // of characters of Stripe query, and a boxed one of those stretches the frame
+  // past the width of any terminal. Bare lines wrap, and a wrapped URL is still
+  // one thing to copy.
   // One heading for both links. Which mutation answered is the server's
   // business; whoever is reading has the same thing to do either way, and a
   // line about what this account has already used tells them nothing they can
@@ -193,7 +169,11 @@ export async function trial(ctx: WizardContext): Promise<void> {
   p.log.message(
     [
       pc.bold(`Activate your trial, and use promo code ${COUPON_CODE} for an additional ${COUPON_VALUE} in credits:`),
-      pc.cyan(url),
+      // Cyan is the house style for a standalone URL; the underline goes on
+      // only where a label is what got printed, because a word that is not an
+      // address does not otherwise read as something to click. With hyperlinks
+      // off this line is byte for byte the line it always was.
+      clickable === url ? pc.cyan(url) : pc.cyan(pc.underline(clickable)),
       '',
       ...couponBlock(),
     ].join('\n'),
@@ -204,12 +184,6 @@ export async function trial(ctx: WizardContext): Promise<void> {
     ctx.answers.trialStarted = false;
     return;
   }
-
-  const opening = p.spinner();
-  opening.start('Opening checkout in your browser…');
-  await sleep(READ_FIRST_MS);
-  const opened = await openInBrowser(url);
-  opening.stop(opened ? 'Checkout is open in your browser' : 'Open the link above in your browser');
 
   ctx.answers.trialStarted = await waitForSubscription(ctx, workspace.id, workspace.title);
   if (!ctx.answers.trialStarted) p.log.warn(NO_PLAN_WARNING);
@@ -226,14 +200,14 @@ function billingError(err: unknown, title: string, fallback: string): WizardErro
     return new ApiWizardError(
       `“${title}” is not billed through Stripe`,
       err,
-      `Start its plan at ${DASHBOARD_URL}, then re-run.`,
+      `Start its plan at ${link(DASHBOARD_URL)}, then re-run.`,
     );
   }
   if (hasErrorCode(err, 'TooManyBotsInWorkspace')) {
     return new ApiWizardError(
       `“${title}” holds more bots than this plan allows`,
       err,
-      `Remove a bot or pick a bigger plan at ${DASHBOARD_URL}, then re-run.`,
+      `Remove a bot or pick a bigger plan at ${link(DASHBOARD_URL)}, then re-run.`,
     );
   }
   if (hasErrorCode(err, 'NotEnoughPermissions')) {
@@ -261,19 +235,29 @@ function couponBlock(): string[] {
   ];
 }
 
-/** The monthly plan, or undefined when the catalogue will not answer. */
-async function loadMonthlyPricing(ctx: WizardContext) {
+/**
+ * The monthly plan, and why there is none when there is none.
+ *
+ * The reason is carried out rather than swallowed: this read is hand-written
+ * against an API this repository does not generate from, so the way it fails is
+ * a field that stopped existing — and a run that only says the catalogue would
+ * not load sends whoever is reading to look at their account, which is the one
+ * place the answer is not.
+ */
+async function loadMonthlyPricing(ctx: WizardContext): Promise<{ pricing?: Pricing; why?: string }> {
+  let why: string | undefined;
   for (let attempt = 1; attempt <= CATALOGUE_ATTEMPTS; attempt += 1) {
     try {
       const data = await ctx.client!.query(BillingProductsDocument, {});
       const pricing = pickMonthlyPricing(data.env.stripeProductsSchema.business);
-      if (pricing) return pricing;
-    } catch {
-      // Falls through to the retry; the last failure is reported by the caller.
+      if (pricing) return { pricing };
+      why = 'the catalogue holds no monthly plan with the AI on it';
+    } catch (err) {
+      why = err instanceof Error ? err.message : String(err);
     }
     if (attempt < CATALOGUE_ATTEMPTS) await sleep(CATALOGUE_RETRY_MS);
   }
-  return undefined;
+  return { why };
 }
 
 /**

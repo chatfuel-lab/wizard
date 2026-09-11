@@ -39,7 +39,16 @@ import { deployHosts, failNetwork, looksLikeNetworkFailure } from './deploy/netw
 import { projectSlug } from './deploy/output.mjs';
 import { fail, info, warn } from './deploy/report.mjs';
 import { makeRunner, makeStreamRunner, resolveCli } from './deploy/runners.mjs';
-import { stepCli, stepDeploy, stepEnv, stepHealth, stepLink, stepLogin, stepPublicUrl } from './deploy/steps.mjs';
+import {
+  stepCli,
+  stepDeploy,
+  stepEnv,
+  stepGitLogin,
+  stepHealth,
+  stepLink,
+  stepLogin,
+  stepPublicUrl,
+} from './deploy/steps.mjs';
 
 export {
   DEPLOY_ENV,
@@ -62,7 +71,13 @@ export {
 } from './deploy/output.mjs';
 export { deployHosts, looksLikeNetworkFailure, hostsInOutput, networkFailureLines } from './deploy/network.mjs';
 export { makeRunner, makeStreamRunner } from './deploy/runners.mjs';
-export { stepCli, listProjectNames } from './deploy/steps.mjs';
+export {
+  GIT_NAMESPACES_PATH,
+  NO_GITHUB_CONNECTION,
+  parseNamespaces,
+  githubLoginConnection,
+} from './deploy/gitConnection.mjs';
+export { stepCli, stepGitLogin, listProjectNames } from './deploy/steps.mjs';
 
 /** @param {string} [appDir] */
 export async function main(appDir = process.cwd()) {
@@ -98,6 +113,10 @@ export async function main(appDir = process.cwd()) {
   // run at all both land.
   await stepCli(run, cli);
   await stepLogin(run, cli);
+  // Before the link, the environment and the build: whether a push will ever
+  // redeploy is a thing to find out while it is still one browser tab and no
+  // commits, not after several minutes of build log.
+  await stepGitLogin(run);
   await stepLink(run, appDir, slug);
   stepEnv(run, entries);
   const deploymentUrl = await stepDeploy(run, runStreamed, cli);

@@ -639,7 +639,7 @@ mutation BookingConfigSetLocale($botID: BotID!, $locale: DashboardLocale!) {
 # to the per-scope model, and this schema publishes no setter for the old one:
 # `fuelyConfigBookingSetAIAutonomyLevel` is not in the bundle. Bookings
 # READS the Default (All-scope base) value here and sends the person to the
-# AI Automations module to change it. `FuelyBookingConfig.aiAutonomyLevel` still
+# AI Agent module to change it. `FuelyBookingConfig.aiAutonomyLevel` still
 # reads back, but it is not what the AI obeys.
 query BookingAiAutonomy($botID: BotID!) {
   bot(id: $botID) {

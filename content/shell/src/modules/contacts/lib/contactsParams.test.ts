@@ -3,8 +3,9 @@ import { Platform, SalesStageV2, Sort } from '~api/generated/contacts/graphql';
 import { EMPTY_FILTER, userAssigneeKey } from './contactsFilter';
 import {
   DEFAULT_PARAMS,
+  chatLabel,
+  chatLinkFor,
   contactLink,
-  livechatLink,
   parseContactsParams,
   toggleStage,
   viewSegment,
@@ -118,7 +119,19 @@ describe('writeContactsParams', () => {
 describe('links and stage toggling', () => {
   it('builds the module deep links', () => {
     expect(contactLink('wa_1 2')).toBe('/contacts?contact=wa_1%202');
-    expect(livechatLink('c-1')).toBe('/livechat?c=c-1');
+  });
+
+  it('opens the conversation of a contact who has one and asks for a new one when there is none', () => {
+    expect(chatLinkFor({ id: 'wa_1 2', conversation: { id: 'conv 7' } })).toEqual({
+      href: '/livechat?c=conv%207',
+      started: true,
+    });
+    expect(chatLinkFor({ id: 'wa_1 2', conversation: null })).toEqual({
+      href: '/livechat?contact=wa_1%202',
+      started: false,
+    });
+    expect(chatLabel(true)).toBe('Open in Inbox');
+    expect(chatLabel(false)).toBe('Start a chat');
   });
 
   it('collapses all six stages back to "no filter"', () => {

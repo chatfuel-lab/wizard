@@ -2,6 +2,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { printBanner } from '../art';
 import { DISCORD_URL } from '../constants';
+import { link } from '../link';
 import type { WizardContext } from '../context';
 
 export async function welcome(ctx: WizardContext): Promise<void> {
@@ -14,7 +15,7 @@ export async function welcome(ctx: WizardContext): Promise<void> {
       'skills for your coding agent and creates starter assets in your bot.',
       '',
       'Questions, or want to see what other people built?',
-      `  ${pc.bold(pc.cyan(pc.underline(DISCORD_URL)))}`,
+      `  ${pc.bold(pc.cyan(pc.underline(link(DISCORD_URL))))}`,
     ].join('\n'),
     'Welcome',
   );

@@ -1,9 +1,12 @@
-### Live Chat Inbox (livechat)
+### Inbox (livechat)
 
 The operator inbox: chat list + message thread + composer, live over
 WebSocket. Route: `/livechat`; a conversation deep link is
 `/livechat?c=<conversationId>` and opens the thread even when the
-conversation is not listed in the inbox.
+conversation is not listed in the inbox. `/livechat?contact=<contactId>`
+is the other half: a contact who has never messaged has no conversation to
+name, so that link starts one and opens it — which is how the other modules
+hand a person to the inbox.
 
 First-task ideas:
 1. Open the inbox, write to the bot from a connected channel, and watch the

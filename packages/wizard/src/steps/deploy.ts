@@ -66,6 +66,17 @@ export async function deploy(ctx: WizardContext): Promise<void> {
   // and the person is still here, at the terminal, with the whole log on screen.
   for (;;) {
     const result = await runDeployScript(appDir, pm, project);
+    /* Read before the outcome is branched on: the GitHub step downstream asks
+       about redeploy-on-push whichever way this run ended, and only a definite
+       no is ever recorded.
+
+       Written on every attempt, including the silent ones, because a retry is
+       how the warning gets fixed: somebody reads it, adds the connection in a
+       browser and picks "Try again". The second run says nothing about the
+       connection precisely because there is now nothing to say, and a flag left
+       standing from the first would have the repository step telling them the
+       thing they just fixed is still off. */
+    ctx.answers.vercelGitLogin = result.githubConnection;
     if (result.url) {
       ctx.answers.deployUrl = result.url;
       p.log.success(`Live at ${result.url}`);
@@ -107,6 +118,8 @@ interface DeployRun {
   url?: string;
   /** The one line worth repeating when it did not — the script's own STOPPED line. */
   reason?: string;
+  /** The script said this Vercel account has no GitHub connection. */
+  githubConnection?: 'missing';
 }
 
 /**
@@ -122,6 +135,7 @@ async function runDeployScript(appDir: string, pm: string, projectName: string):
   console.log(pc.dim(`\n  ${pm} run deploy\n`));
   let output = '';
   let errors = '';
+  let stopped = false;
   try {
     const child = execa(pm, ['run', 'deploy'], {
       cwd: appDir,
@@ -141,10 +155,46 @@ async function runDeployScript(appDir: string, pm: string, projectName: string):
       process.stderr.write(chunk);
     });
     await child;
-  } catch {
-    return { ok: false, reason: stopReason(errors) };
+  } catch (err) {
+    stopped = true;
+    /* execa rejects with its own copy of both streams, and it can reject before
+       the last chunk has reached the handlers above — which is where the two
+       sentences read below live. Whichever copy is longer is the whole of what
+       the script said, and taking the longer one cannot lose anything either
+       way. */
+    output = longer(output, captured(err, 'stdout'));
+    errors = longer(errors, captured(err, 'stderr'));
   }
-  return { ok: true, url: deploymentUrl(output) };
+  // Said by a step that runs early, so it is there whether or not a later one
+  // stopped the run.
+  const githubConnection = missingGithubConnection(output) ? ('missing' as const) : undefined;
+  if (stopped) return { ok: false, reason: stopReason(errors), githubConnection };
+  return { ok: true, url: deploymentUrl(output), githubConnection };
+}
+
+/** One captured stream off a rejected execa call, when it carried one. */
+function captured(err: unknown, stream: 'stdout' | 'stderr'): string {
+  const value = (err as Record<string, unknown> | null | undefined)?.[stream];
+  return typeof value === 'string' ? value : '';
+}
+
+function longer(a: string, b: string): string {
+  return b.length > a.length ? b : a;
+}
+
+/**
+ * Whether the deploy said this Vercel account has no GitHub connection.
+ *
+ * The app's own script owns that question — it is asked of the Vercel CLI, and
+ * only the deploy has one signed in; the wizard holds no Vercel credential and
+ * is not going to gain one. So the answer comes back the only way it can, as a
+ * sentence in the output this step already tees and reads.
+ *
+ * Matched on the fragment rather than the whole line, so the script can keep
+ * rewording the half that is for the person reading it.
+ */
+export function missingGithubConnection(output: string): boolean {
+  return /no GitHub connection/i.test(output);
 }
 
 /**

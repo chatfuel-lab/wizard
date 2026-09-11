@@ -4,6 +4,8 @@ import { createTestClient } from '../testClient';
 import { ModuleRoot } from '~ui';
 import { CoworkerContext, type CoworkerContextValue } from './CoworkerContext';
 import { CoworkerWorkspace } from './CoworkerWorkspace';
+import { StreamingMessage } from './components/thread/StreamingMessage';
+import { moduleDescriptor } from './index';
 import type { CoworkerRuntime } from './lib/runtime';
 
 /**
@@ -52,11 +54,26 @@ describe('the module renders', () => {
         </ModuleRoot>
       </CoworkerContext.Provider>,
     );
-    expect(html).toContain('Coworker');
+    expect(html).toContain('Copilot');
     expect(html).toContain('aria-label="Search your chats"');
     /* The keyboard has to be findable without knowing it is there. */
     expect(html).toContain('aria-label="Open the command palette"');
     /* No `?c=` at mount, so the detail pane is the empty thread and its box. */
     expect(html).toContain('What can I help you with?');
+  });
+
+  /**
+   * The name above a streaming answer, pinned separately.
+   *
+   * `toContain('Copilot')` above is satisfied by the page header alone, and
+   * this label is the only other place the module names itself — once per
+   * reply, on every reply. It went on saying "Coworker" through a rename that
+   * moved every other layer. Asserted against the descriptor the rail renders
+   * rather than against a literal, so the two cannot drift apart again.
+   */
+  it('names itself the same way above a streaming answer', () => {
+    const html = renderToStaticMarkup(<StreamingMessage text="Looking that up…" />);
+    expect(html).toContain(moduleDescriptor.title);
+    expect(html).not.toContain('Coworker');
   });
 });

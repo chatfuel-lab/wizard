@@ -1,7 +1,7 @@
 {
   "id": "automations",
-  "name": "AI Automations",
-  "description": "AI Automations: the rail of 18 per-scope sources beside the selected source's page — the Default rules and the custom rules, all 15 setting types, inheritance and compare, drafts for prompts and lists, real pickers for Instagram media, Facebook posts, Meta ads, teammates and attributes, duplicate / copy-to / delete with restore — and an always-open Test panel that runs the preview chat pinned to the source's Default or one rule. Live via the fan-out subscription, ⌘K, keyboard, undo.",
+  "name": "AI Agent",
+  "description": "AI Agent: the rail of 18 per-scope sources beside the selected source's page — the Default rules and the custom rules, all 15 setting types, inheritance and compare, drafts for prompts and lists, real pickers for Instagram media, Facebook posts, Meta ads, teammates and attributes, duplicate / copy-to / delete with restore — and an always-open Test panel that runs the preview chat pinned to the source's Default or one rule. Live via the fan-out subscription, ⌘K, keyboard, undo.",
   "status": "ready",
   "requires": [],
   "recommends": [

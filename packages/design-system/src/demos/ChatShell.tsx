@@ -39,15 +39,18 @@ import { Demo, Note, Row } from './shared';
 
 const STATUSES: MessageStatus[] = ['sending', 'sent', 'delivered', 'read', 'failed'];
 
-/* The shell's real three groups, with the shell's real titles — the gallery is
-   where this layout gets reviewed, so a made-up menu would review nothing. */
+/* The shell's real groups, with the shell's real titles and the icon each
+   module's own descriptor carries — the gallery is where this layout gets
+   reviewed, so a made-up menu would review nothing, and a menu that is a group
+   short reviews the wrong rail height. Source: navGroups.tsx and the module
+   descriptors beside it. */
 const DEMO_GROUPS = [
   {
     id: 'ai',
-    title: 'AI Agent',
+    title: 'AI',
     icon: <Icons.IconSparkles />,
     items: [
-      { id: 'automations', title: 'Automations', icon: <Icons.IconBolt /> },
+      { id: 'automations', title: 'AI Agent', icon: <Icons.IconBolt /> },
       { id: 'flow-builder', title: 'Flow Builder', icon: <Icons.IconFlow /> },
       { id: 'knowledge-base', title: 'Knowledge Base', icon: <Icons.IconBook /> },
     ],
@@ -56,10 +59,7 @@ const DEMO_GROUPS = [
     id: 'chat',
     title: 'Live Chat',
     icon: <Icons.IconInbox />,
-    items: [
-      { id: 'livechat', title: 'Inbox', icon: <Icons.IconInbox /> },
-      { id: 'coworker', title: 'Coworker', icon: <Icons.IconSparkles /> },
-    ],
+    items: [{ id: 'livechat', title: 'Inbox', icon: <Icons.IconInbox /> }],
   },
   {
     id: 'crm',
@@ -70,6 +70,23 @@ const DEMO_GROUPS = [
       { id: 'deals', title: 'Deals', icon: <Icons.IconKanban /> },
       { id: 'bookings', title: 'Bookings', icon: <Icons.IconCalendar /> },
     ],
+  },
+  {
+    id: 'growth',
+    title: 'Growth',
+    icon: <Icons.IconMegaphone />,
+    items: [
+      { id: 'coworker', title: 'Copilot', icon: <Icons.IconAssistant /> },
+      { id: 'publishing', title: 'Publishing', icon: <Icons.IconInstagram /> },
+      { id: 'broadcasts', title: 'Broadcasts', icon: <Icons.IconMegaphone /> },
+      { id: 'ads-optimization', title: 'Ads Optimization', icon: <Icons.IconMegaphone /> },
+    ],
+  },
+  {
+    id: 'settings',
+    title: 'Settings',
+    icon: <Icons.IconSettings />,
+    items: [{ id: 'channels', title: 'Channels', icon: <Icons.IconLink /> }],
   },
 ];
 

@@ -8,6 +8,7 @@ import { join } from 'node:path';
 
 import { HEALTH_PATH, targetsFor } from './env.mjs';
 import { describeProxy, outboundFetch } from './egress.mjs';
+import { NO_GITHUB_CONNECTION, githubLoginConnection } from './gitConnection.mjs';
 import {
   deployHosts,
   failNetwork,
@@ -105,6 +106,29 @@ export async function stepLogin(run, cli) {
     );
   }
   ok('Signed in to Vercel');
+}
+
+/**
+ * Whether a push to GitHub will ever redeploy this app.
+ *
+ * Here, and not at `vercel git connect`, because by the time that call is made
+ * the repository exists, the source is in it and the app is live — every step
+ * this could have changed has already happened. Right after the sign-in it
+ * costs one request and lands before the build's several minutes scroll it off
+ * the screen.
+ *
+ * Silent unless the answer is a definite no. `connected` needs nothing said,
+ * and `unknown` is the probe declining to have an opinion — which must read on
+ * screen exactly like the probe not being here at all.
+ *
+ * No URL on that line, deliberately: this stream is also where the wizard looks
+ * for the address of the deployment.
+ *
+ * @param {Runner} run
+ */
+export async function stepGitLogin(run) {
+  if (githubLoginConnection(run) !== 'missing') return;
+  warn(`${NO_GITHUB_CONNECTION} — a push to GitHub will not redeploy this app.`);
 }
 
 /**

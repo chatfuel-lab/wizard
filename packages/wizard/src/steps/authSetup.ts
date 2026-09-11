@@ -2,6 +2,7 @@ import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { stepArt } from '../art';
 import { WizardError } from '../errors';
+import { link } from '../link';
 import { registerSecret } from '../log';
 import type { AuthAnswers, WizardContext } from '../context';
 import {
@@ -216,8 +217,8 @@ async function selectMethod(ctx: WizardContext): Promise<'pat' | 'manual'> {
 
   p.note(
     [
-      'The Auth & Team module runs on YOUR Supabase project (free plan is fine).',
-      `The easy way is a personal access token: ${pc.bold(PAT_HELP_URL)}`,
+      'The Accounts module runs on YOUR Supabase project (free plan is fine).',
+      `The easy way is a personal access token: ${pc.bold(link(PAT_HELP_URL))}`,
       '→ Generate new token → copy it. The wizard uses it to pick or create the project,',
       'apply the database migration and switch email + password sign-in on. It is used',
       'once, kept in memory only, and never written anywhere.',
@@ -297,7 +298,7 @@ async function runPatPath(
   if (!project) return { outcome, ...options }; // dry-run create
 
   const ref = project.ref;
-  const sqlEditorHint = `Run supabase/migrations/0001_chatfuel_auth.sql in the SQL editor: https://supabase.com/dashboard/project/${ref}/sql`;
+  const sqlEditorHint = `Run supabase/migrations/0001_chatfuel_auth.sql in the SQL editor: ${link(`https://supabase.com/dashboard/project/${ref}/sql`)}`;
 
   // ---- keys
   const keysSpinner = p.spinner();
@@ -449,7 +450,7 @@ async function runManualPath(ctx: WizardContext): Promise<{
   if (!ctx.flags.yes && (url === undefined || anonKey === undefined)) {
     p.note(
       [
-        '1. Open your project at https://supabase.com/dashboard → Project Settings → API Keys.',
+        `1. Open your project at ${link('https://supabase.com/dashboard')} → Project Settings → API Keys.`,
         '2. Copy the Project URL (https://<ref>.supabase.co) and the anon / publishable key.',
         '3. Optional: the secret / service_role key — enables admin “Reset password link”;',
         '   it stays server-side in .env and is never sent to the browser.',

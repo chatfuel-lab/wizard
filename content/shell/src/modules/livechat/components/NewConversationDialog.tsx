@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Alert, Button, Dialog, Input, Label, Spinner } from '~ui';
-import { messageOf } from '../lib/errors';
+import { startFailureText } from '../lib/startConversation';
 
 export interface NewConversationDialogProps {
   open: boolean;
@@ -42,7 +42,7 @@ export function NewConversationDialog({ open, onClose, onCreate }: NewConversati
     try {
       await onCreate(trimmed);
     } catch (err) {
-      setError(messageOf(err));
+      setError(startFailureText(err));
     } finally {
       setBusy(false);
     }

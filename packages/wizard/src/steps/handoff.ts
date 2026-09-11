@@ -231,7 +231,7 @@ function trialFacts(ctx: WizardContext): string {
 function authFacts(ctx: WizardContext): string {
   const lines = [...authNextSteps(ctx), ...productionLines(ctx)];
   if (lines.length === 0) return '';
-  return `\n- Auth & Team is installed. Say this in your first message, before anything else:\n${lines
+  return `\n- Accounts is installed. Say this in your first message, before anything else:\n${lines
     .map((line) => `  ${line}`)
     .join('\n')}`;
 }
@@ -420,7 +420,7 @@ script in chatfuel-core; never print the token.
 function agentAuthBlock(ctx: WizardContext): string {
   const lines = authNextSteps(ctx);
   if (lines.length === 0) return '';
-  return `\n- Auth & Team (Supabase) is installed:\n${lines.map((line) => `  ${line}`).join('\n')}`;
+  return `\n- Accounts (Supabase) is installed:\n${lines.map((line) => `  ${line}`).join('\n')}`;
 }
 
 const EMBED_BEGIN = '<!-- chatfuel:begin -->';

@@ -29,7 +29,7 @@ export const AUTONOMY_LABELS: Record<FuelySettingBookingRulesAutonomyLevel, { la
   },
 };
 
-/** Where the setting is edited: the Default rules of the AI Automations module. */
+/** Where the setting is edited: the Default rules of the AI Agent module. */
 export const AUTONOMY_LINK = '/automations?setting=bookingRules';
 
 export interface AutonomySectionProps {
@@ -38,7 +38,7 @@ export interface AutonomySectionProps {
 
 /**
  * How far the AI goes on its own when a customer asks to book — READ here,
- * changed in AI Automations. Since the bot moved to the per-scope automation
+ * changed in AI Agent. Since the bot moved to the per-scope automation
  * model the legacy `fuelyConfigBookingSetAIAutonomyLevel` is deprecated and
  * always answers `BotMigratedToNewFuelySettings`; the
  * value the AI obeys is the Default (All-scope) automation's Booking rules,
@@ -78,7 +78,7 @@ export function AutonomySection({ readOnly }: AutonomySectionProps) {
   return (
     <Card
       title="AI autonomy"
-      description="What the AI may do by itself when a customer wants an appointment. Set in AI Automations — the Default rules, or per source."
+      description="What the AI may do by itself when a customer wants an appointment. Set in AI Agent — the Default rules, or per source."
     >
       {error ? (
         <Alert
@@ -107,7 +107,7 @@ export function AutonomySection({ readOnly }: AutonomySectionProps) {
               className="inline-flex w-fit items-center gap-1 text-sm text-accent hover:underline focus-visible:focus-ring"
               aria-disabled={readOnly || undefined}
             >
-              {readOnly ? 'See in AI Automations' : 'Change in AI Automations'}
+              {readOnly ? 'See in AI Agent' : 'Change in AI Agent'}
               <IconExternal size={14} />
             </a>
           </div>

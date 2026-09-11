@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
@@ -49,14 +50,6 @@ vi.mock('@clack/prompts', () => {
   };
 });
 
-const opened: string[] = [];
-vi.mock('execa', () => ({
-  execa: async (_command: string, args: string[]) => {
-    opened.push(args[args.length - 1]!);
-    return { exitCode: 0 };
-  },
-}));
-
 const { ChatfuelGraphQLError } = await import('@chatfuel/api-client');
 const { createContext } = await import('../src/run');
 const { trial } = await import('../src/steps/trial');
@@ -77,8 +70,6 @@ const PRODUCTS = {
           id: 'p1',
           name: 'Pro',
           featureSet: 'All',
-          isActive: true,
-          isSelectable: true,
           pricingList: [
             {
               id: 'pricing-annual',
@@ -105,8 +96,6 @@ const PRODUCTS = {
           id: 'p0',
           name: 'Lite',
           featureSet: 'NoAI',
-          isActive: true,
-          isSelectable: true,
           pricingList: [
             {
               id: 'pricing-noai',
@@ -180,7 +169,6 @@ function ctxWith(
 beforeEach(() => {
   warnings.length = 0;
   notes.length = 0;
-  opened.length = 0;
   trialLink = undefined;
   confirmAnswers.length = 0;
   vi.useFakeTimers();
@@ -188,6 +176,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe('trial', () => {
@@ -197,35 +186,33 @@ describe('trial', () => {
     expect(ctx.answers.trialStarted).toBe(true);
     expect(calls.linkVariables).toBeUndefined();
     expect(notes).toHaveLength(0);
-    expect(opened).toHaveLength(0);
   });
 
-  it('opens checkout on the monthly AI plan and waits for the trial', async () => {
+  it('prints checkout on the monthly AI plan and waits for the trial', async () => {
     const { ctx, calls } = ctxWith(3);
     const done = trial(ctx);
-    // The link is printed well before the browser steals the screen.
+    // The link is on screen before anything is waited for.
     await vi.advanceTimersByTimeAsync(1_000);
     expect(notes.join('\n')).toContain(CHECKOUT_URL);
-    expect(opened).toHaveLength(0);
     await vi.advanceTimersByTimeAsync(30_000);
     await done;
     expect(calls.linkVariables).toMatchObject({ workspaceID: 'w1', pricingID: 'pricing-monthly' });
-    expect(opened).toEqual([CHECKOUT_URL]);
     expect(notes.join('\n')).toContain(CHECKOUT_URL);
     expect(ctx.answers.trialStarted).toBe(true);
     expect(warnings).toHaveLength(0);
   });
 
-  it('prints an address it will not open, rather than handing it to the desktop', async () => {
-    // The link is the server's string. `open` and `xdg-open` ask the desktop
-    // what a scheme is registered to, and on Linux that answer is a command
-    // line in a .desktop entry — so anything but https is printed only.
+  it('prints an address it will not dress up as a name', async () => {
+    // The link is the server's string, and a name is only ever put on an https
+    // one: a word that hides where it goes is worth nothing on a scheme the
+    // terminal would hand to the desktop.
+    vi.stubEnv('FORCE_HYPERLINK', '1');
     trialLink = 'file:///etc/passwd';
     const { ctx } = ctxWith(3);
     const done = trial(ctx);
     await vi.advanceTimersByTimeAsync(30_000);
     await done;
-    expect(opened).toHaveLength(0);
+    expect(notes.join('\n')).not.toContain('Chatfuel checkout');
     expect(notes.join('\n')).toContain('file:///etc/passwd');
   });
 
@@ -259,7 +246,6 @@ describe('trial', () => {
     await trial(ctx);
     expect(calls.linkVariables).toBeDefined();
     expect(notes.join('\n')).toContain(CHECKOUT_URL);
-    expect(opened).toHaveLength(0);
     expect(ctx.answers.trialStarted).toBe(false);
     expect(warnings.join('\n')).toMatch(/will not answer until the workspace has a plan/);
   });
@@ -270,7 +256,6 @@ describe('trial', () => {
     // The subscription read is free; the checkout session is not.
     expect(calls.subscriptionReads).toBe(1);
     expect(calls.linkVariables).toBeUndefined();
-    expect(opened).toHaveLength(0);
     expect(ctx.answers.trialStarted).toBe(false);
   });
 
@@ -292,7 +277,6 @@ describe('trial', () => {
     // Same offer either way: which mutation answered is not the reader's problem.
     expect(printed).toContain('Activate your trial, and use promo code SDK');
     expect(printed).toContain('additional $100 in credits');
-    expect(opened).toEqual([PAID_URL]);
     expect(ctx.answers.trialStarted).toBe(true);
   });
 
@@ -333,5 +317,47 @@ describe('trial', () => {
       new ChatfuelGraphQLError([{ message: 'nope', extensions: { code: 'TooManyBotsInWorkspace' } }]),
     );
     await expect(trial(ctx)).rejects.toThrow(/more bots than this plan allows/);
+  });
+});
+
+/**
+ * The same block through a terminal that renders OSC 8, where the address is
+ * replaced by a name. Nothing opens a browser, so that name is the way in: it
+ * is printed only where the terminal can be clicked on, and everywhere else the
+ * address itself is what goes out.
+ */
+describe('the checkout link, named', () => {
+  const ESC = String.fromCharCode(27);
+  /** What a person actually reads, with the escapes taken back out. */
+  const visible = (): string => stripVTControlCharacters(notes.join('\n'));
+
+  it('prints a name where the terminal can follow one', async () => {
+    vi.stubEnv('FORCE_HYPERLINK', '1');
+    const { ctx } = ctxWith(1);
+    const done = trial(ctx);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await done;
+    expect(notes.join('\n')).toContain('Chatfuel checkout');
+    expect(notes.join('\n')).toContain(ESC);
+    // The address is behind the name, not beside it.
+    expect(visible()).not.toContain(CHECKOUT_URL);
+  });
+
+  it('prints the address where it cannot', async () => {
+    vi.stubEnv('FORCE_HYPERLINK', '0');
+    const { ctx } = ctxWith(1);
+    const done = trial(ctx);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await done;
+    expect(notes.join('\n')).not.toContain('Chatfuel checkout');
+    expect(visible()).toContain(CHECKOUT_URL);
+  });
+
+  it('says the same thing on a run that asks nothing', async () => {
+    vi.stubEnv('FORCE_HYPERLINK', '1');
+    const { ctx } = ctxWith(Number.POSITIVE_INFINITY, { yes: true });
+    await trial(ctx);
+    expect(notes.join('\n')).toContain('Chatfuel checkout');
+    expect(visible()).not.toContain(CHECKOUT_URL);
   });
 });

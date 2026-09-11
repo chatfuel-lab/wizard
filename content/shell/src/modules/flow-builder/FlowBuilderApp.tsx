@@ -81,7 +81,7 @@ function Inner({
   const flows = useFlowsList();
   const prefetch = useFlowPrefetch();
 
-  /* What the Coworker sees when it asks what is on screen. Write-only into a
+  /* What the Copilot sees when it asks what is on screen. Write-only into a
      sink the shell owns; a no-op when this module runs as an embed. */
   usePublishScreenContext({
     module: 'Flows',

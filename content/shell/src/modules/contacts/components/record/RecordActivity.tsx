@@ -1,12 +1,19 @@
 import { Alert, Button, EmptyState, IconMessage, MessageBubble, MessageList, Skeleton, Spinner, SystemLine } from '~ui';
 import type { ContactMessagesApi } from '../../hooks/useContactMessages';
 import { messageTimeLabel, type RecordMessage } from '../../lib/contactMessages';
+import { chatLabel } from '../../lib/contactsParams';
 
 export interface RecordActivityProps {
   contactId: string;
   contactName: string;
   api: ContactMessagesApi;
-  /** Null when there is no conversation to open. */
+  /**
+   * Hand this contact to the inbox, which starts the conversation. Null for a
+   * restricted contact, which has nothing to hand over.
+   */
+  onStartChat: (() => void) | null;
+  /** True when the contact already has a conversation; false starts one. */
+  chatStarted: boolean;
 }
 
 /**
@@ -25,7 +32,7 @@ export interface RecordActivityProps {
  * that crashed on a typename it had never seen would be worse than one that
  * names it.
  */
-export function RecordActivity({ contactId, contactName, api }: RecordActivityProps) {
+export function RecordActivity({ contactId, contactName, api, onStartChat, chatStarted }: RecordActivityProps) {
   if (api.loading && api.messages.length === 0) {
     return (
       <div className="flex flex-col gap-3 p-gutter">
@@ -48,7 +55,21 @@ export function RecordActivity({ contactId, contactName, api }: RecordActivityPr
   if (!api.conversation) {
     return (
       <div className="p-gutter">
-        <EmptyState icon={<IconMessage size={22} />} title="No conversation yet" />
+        {/* The tab this contact came to is empty, so the way out of it is the
+            button: the inbox starts a conversation from a contact id. The
+            word on it is the link's, not this tab's — the same button opens
+            an existing thread for a contact who has one. */}
+        <EmptyState
+          icon={<IconMessage size={22} />}
+          title="No conversation yet"
+          action={
+            onStartChat ? (
+              <Button size="sm" variant="secondary" onClick={onStartChat}>
+                {chatLabel(chatStarted)}
+              </Button>
+            ) : undefined
+          }
+        />
       </div>
     );
   }

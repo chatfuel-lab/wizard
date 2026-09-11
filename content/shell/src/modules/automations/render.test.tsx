@@ -26,7 +26,7 @@ describe('the module renders', () => {
         navigate={() => undefined}
       />,
     );
-    expect(html).toContain('AI Automations');
+    expect(html).toContain('AI Agent');
     /* The rail, through SplitPane's own aside. */
     expect(html).toContain('aria-label="Sources"');
     /* The keyboard has to be findable without knowing it is there. */

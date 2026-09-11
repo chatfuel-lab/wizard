@@ -17,7 +17,7 @@ export interface DealDetailState {
 
 /**
  * One open deal. `contactUpdated` carries the whole contact, so an edit made in
- * Live Chat, a flow, or another tab lands here without polling — and a mutation
+ * the Inbox, a flow, or another tab lands here without polling — and a mutation
  * response is the same shape, which is why `apply` exists instead of a refetch.
  */
 export function useDealDetail(contactId: string | null, fieldNames: string[]): DealDetailState {

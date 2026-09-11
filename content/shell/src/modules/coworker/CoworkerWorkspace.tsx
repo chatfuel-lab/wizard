@@ -83,7 +83,7 @@ export function CoworkerWorkspace({ params, setParams }: CoworkerWorkspaceProps)
     return (
       <EmptyState
         icon={<IconAssistant />}
-        title="No access to the Coworker"
+        title="No access to the Copilot"
         description="You need the Bot: View permission to chat with the assistant."
       />
     );
@@ -101,7 +101,7 @@ export function CoworkerWorkspace({ params, setParams }: CoworkerWorkspaceProps)
           reading a thread, and the only way to start a second chat used to be
           to go back first. */}
       <PageHeader
-        title="Coworker"
+        title="Copilot"
         actions={
           <>
             <button

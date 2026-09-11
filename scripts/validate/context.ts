@@ -12,6 +12,8 @@ import type { DocumentNode, GraphQLSchema } from 'graphql';
  */
 export interface ModuleManifest {
   id?: string;
+  /** The display name — pass 20 holds every other layer to it. */
+  name?: string;
   status?: string;
   hidden?: boolean;
   requires?: string[];

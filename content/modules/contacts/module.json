@@ -1,6 +1,6 @@
 {
   "id": "contacts",
-  "name": "Contacts / CRM",
+  "name": "Contacts",
   "description": "A CRM workspace over Chatfuel contacts: a record table with saved views, nested AND/OR attribute filters and inline editing, a full record page, a Fields surface over the bot's attribute catalog, an audience breakdown, and CSV import and export. Routes between the two list engines — the one that sees every contact and the live one that only sees contacts with a conversation — and says which one answered.",
   "status": "ready",
   "requires": [],

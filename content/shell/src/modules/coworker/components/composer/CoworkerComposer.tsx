@@ -324,7 +324,7 @@ export function CoworkerComposer({
         onSend={send}
         disabled={disabled}
         disabledHint={disabledHint}
-        placeholder="Ask the Coworker…"
+        placeholder="Ask the Copilot…"
         /* Audio, by the one route that carries it: a recorder where the browser
            has one, and the file picker where it does not or where the
            microphone was refused. Either way the clip becomes a staged file and

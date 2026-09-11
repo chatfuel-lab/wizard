@@ -3,7 +3,7 @@ name: chatfuel-auth
 description: Add user sign-in to a Chatfuel-wizard app with Supabase Auth on the user's own project, where every account that signs up gets a Chatfuel bot of its own and can add more — created by the app's server with the deployment's master token — plus invite links, owner/admin/member roles, per-bot access, a Team page, and a proxy gate that lets a session reach only the bots it was granted. Use when a Chatfuel app is turned into a self-serve product, when adding or changing invites, roles, per-bot access or provisioning, or when wiring the gate into another host. Requires the chatfuel-core skill.
 ---
 
-# Chatfuel Auth & Team
+# Chatfuel Accounts
 
 Supabase Auth (email + password) in front of a Chatfuel-wizard app, in the shape a SaaS needs: **one workspace per account, as many Chatfuel bots inside it as the plan allows**. Somebody signs up, the app's server creates their first bot with the deployment's master Chatfuel token, and they can add, rename and delete more from the Team page. The token stays server-side; the proxy asks Supabase which bots the caller's session may open and refuses every request that names another one.
 

@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -19,18 +19,25 @@ import type { WizardContext } from '../src/context';
  * where these tests want it to stop.
  */
 let confirmAnswer: boolean | symbol = false;
+/** When set, answers the confirms in order — the last one repeats. */
+let confirmAnswers: Array<boolean | symbol> | null = null;
 const confirmCalls: string[] = [];
 const textCalls: string[] = [];
 const selectCalls: Array<{ message: string; initialValue?: unknown }> = [];
 const infoLines: string[] = [];
+/** Every prompt, in the order it was asked — the confirms and the text alike. */
+const promptOrder: string[] = [];
 
 vi.mock('@clack/prompts', () => ({
   confirm: (opts: { message: string }) => {
     confirmCalls.push(opts.message);
-    return Promise.resolve(confirmAnswer);
+    promptOrder.push(opts.message);
+    const scripted = confirmAnswers?.[Math.min(confirmCalls.length - 1, confirmAnswers.length - 1)];
+    return Promise.resolve(scripted ?? confirmAnswer);
   },
   text: (opts: { message: string; defaultValue?: string }) => {
     textCalls.push(opts.message);
+    promptOrder.push(opts.message);
     return Promise.resolve(opts.defaultValue ?? '');
   },
   select: (opts: { message: string; initialValue?: unknown }) => {
@@ -52,9 +59,20 @@ vi.mock('@clack/prompts', () => ({
   spinner: () => ({ start: () => undefined, message: () => undefined, stop: () => undefined, error: () => undefined }),
 }));
 
+/* Recorded as well as refused: "did it shell out, and at what?" is the only
+   question some of these tests have, and the throw is what keeps every path
+   that must not shell out honest. */
+const execaCalls: string[] = [];
+/**
+ * What the next spawn throws. A plain error by default — no path here is meant
+ * to reach one — and an error carrying an exit code for the tests that are
+ * about which code the connect script came back with.
+ */
+let execaFailure: Error = new Error('shelled out when it should not have');
 vi.mock('execa', () => ({
-  execa: () => {
-    throw new Error('shelled out when it should not have');
+  execa: (bin: string, args: string[]) => {
+    execaCalls.push([bin, ...args].join(' '));
+    throw execaFailure;
   },
 }));
 
@@ -63,12 +81,15 @@ vi.mock('execa', () => ({
    live, and the whole point of the split is that none of them happen until the
    handoff has finished writing the app. */
 const repoCalls: string[] = [];
+/** What the local repository is in — 'stop' unless a test needs to get past it. */
+let prepared: 'stop' | 'ready' | 'unpushed' = 'stop';
+let originAnswer: string | undefined;
 vi.mock('../src/github/repo', () => ({
   prepareLocalRepo: (_ctx: unknown, dir: string) => {
     repoCalls.push(dir);
-    return Promise.resolve('stop');
+    return Promise.resolve(prepared);
   },
-  originUrl: () => Promise.resolve(undefined),
+  originUrl: () => Promise.resolve(originAnswer),
 }));
 
 // No gh anywhere, so part one takes the token route and asks for one.
@@ -81,11 +102,14 @@ vi.mock('../src/github/cli', () => ({
 }));
 
 let tokenAnswer: { login: string; token: string } | null = { login: 'jane', token: 'ghp_x' };
+/** What the two pushing paths do — both refuse, until a test needs one to work. */
+let createdRepo: string | undefined;
+let pushed = false;
 vi.mock('../src/github/api', () => ({
   askForGithubToken: () => Promise.resolve(tokenAnswer),
-  createRepo: () => Promise.resolve(undefined),
-  pushToOrigin: () => Promise.resolve(false),
-  pushWithToken: () => Promise.resolve(false),
+  createRepo: () => Promise.resolve(createdRepo),
+  pushToOrigin: () => Promise.resolve(pushed),
+  pushWithToken: () => Promise.resolve(pushed),
 }));
 
 let appDir: string;
@@ -106,8 +130,16 @@ beforeEach(() => {
   selectCalls.length = 0;
   infoLines.length = 0;
   repoCalls.length = 0;
+  execaCalls.length = 0;
+  promptOrder.length = 0;
   tokenAnswer = { login: 'jane', token: 'ghp_x' };
   confirmAnswer = false;
+  confirmAnswers = null;
+  prepared = 'stop';
+  originAnswer = undefined;
+  createdRepo = undefined;
+  pushed = false;
+  execaFailure = new Error('shelled out when it should not have');
   Object.defineProperty(process.stdin, 'isTTY', { value: true, configurable: true });
 });
 
@@ -251,6 +283,161 @@ describe('github step, split around the handoff', () => {
     expect(prepare).toBeGreaterThan(-1);
     expect(hand).toBeGreaterThan(prepare);
     expect(push).toBeGreaterThan(hand);
+  });
+});
+
+/**
+ * The GitHub connection Vercel needs before `git push` can redeploy anything.
+ *
+ * Found out during the deploy — the only step where the Vercel CLI is signed in
+ * — and acted on here, in front of the repository name, because everything past
+ * that prompt costs the person something: a commit, a repository under their
+ * account, a push. Saying it afterwards is what the old behaviour did, and by
+ * then there is nothing left to decide.
+ */
+describe('the Vercel GitHub connection', () => {
+  function missingConnection(): WizardContext {
+    const ctx = standaloneContext();
+    ctx.answers.vercelGitLogin = 'missing';
+    return ctx;
+  }
+
+  /** The plan part one would have handed over, so part two can be run alone. */
+  const planFor = () => ({
+    appDir,
+    name: 'app',
+    isPrivate: true,
+    description: 'x',
+    account: { login: 'jane', token: 'ghp_x' },
+  });
+
+  /** A linked Vercel project and a push that goes through — what it takes to reach connectVercel. */
+  function linkedAndPushed(): void {
+    mkdirSync(join(appDir, '.vercel'));
+    writeFileSync(join(appDir, '.vercel', 'project.json'), '{"projectName":"app"}');
+    prepared = 'ready';
+    createdRepo = 'https://github.com/jane/app';
+    pushed = true;
+  }
+
+  it('asks about it before anything has been named or created', async () => {
+    confirmAnswer = true;
+    const ctx = missingConnection();
+    await prepareGithub(ctx);
+    expect(confirmCalls).toContain('Added it?');
+    const offered = promptOrder.indexOf('Added it?');
+    expect(promptOrder[0]).toContain('GitHub');
+    expect(offered).toBe(1);
+    expect(promptOrder.slice(offered + 1).join(' ')).toMatch(/repository/i);
+  });
+
+  it('forgets it once the person says they added it', async () => {
+    confirmAnswer = true;
+    const ctx = missingConnection();
+    await prepareGithub(ctx);
+    expect(ctx.answers.vercelGitLogin).toBeUndefined();
+  });
+
+  it('keeps it, and carries on, on a no and on a cancel', async () => {
+    for (const answer of [false, Symbol('cancel')] as Array<boolean | symbol>) {
+      const ctx = missingConnection();
+      confirmAnswers = [true, answer];
+      const plan = await prepareGithub(ctx);
+      expect(ctx.answers.vercelGitLogin).toBe('missing');
+      /* A cancel here is a no, not the end of the run: the repository question
+         was answered yes already, and this one is about a convenience. */
+      expect(plan).toBeDefined();
+      confirmCalls.length = 0;
+      promptOrder.length = 0;
+    }
+  });
+
+  it('asks nothing extra of a run whose account is connected', async () => {
+    confirmAnswer = true;
+    await prepareGithub(standaloneContext());
+    expect(confirmCalls).toEqual(['Put this app on GitHub?']);
+  });
+
+  /* `connectVercel` is private and is reached from both of the paths that end
+     in a push, which is exactly why the branch has to live inside it. Driven
+     through both below: a fresh push, and a resumed one. */
+  it('does not offer redeploy-on-push when there is nothing to connect to', async () => {
+    const ctx = missingConnection();
+    linkedAndPushed();
+    await pushToGithub(ctx, planFor());
+    expect(confirmCalls).not.toContain('Redeploy to Vercel on every push to GitHub?');
+    expect(execaCalls.join('\n')).not.toContain('connect-git');
+    const said = infoLines.join('\n');
+    expect(said).toContain('will not redeploy');
+    expect(said).toContain('https://vercel.com/account/settings/authentication');
+    expect(said).toContain('run connect-git');
+  });
+
+  it('asks as it always did when the connection is there', async () => {
+    const ctx = standaloneContext();
+    linkedAndPushed();
+    confirmAnswer = false;
+    await pushToGithub(ctx, planFor());
+    expect(confirmCalls).toEqual(['Redeploy to Vercel on every push to GitHub?']);
+    expect(infoLines.join('\n')).not.toContain('will not redeploy');
+  });
+
+  it('reaches the same branch on the resumed push', async () => {
+    const ctx = missingConnection();
+    linkedAndPushed();
+    prepared = 'unpushed';
+    originAnswer = 'https://github.com/jane/app.git';
+    confirmAnswer = true;
+    await pushToGithub(ctx, planFor());
+    expect(ctx.answers.githubUrl).toBe('https://github.com/jane/app');
+    expect(confirmCalls).toEqual(['Finish pushing to https://github.com/jane/app.git?']);
+    expect(infoLines.join('\n')).toContain('will not redeploy');
+  });
+
+  /* Through the package manager's run command, the script's careful "this is
+     off, here is the one click that turns it on" was followed by an error block
+     and a path to a debug log — which reads as breakage. The script is spawned
+     directly instead; the advice still names the command a person types. */
+  it('runs the app’s own script rather than the package manager', async () => {
+    const ctx = standaloneContext();
+    linkedAndPushed();
+    confirmAnswer = true;
+    await pushToGithub(ctx, planFor());
+    expect(execaCalls).toEqual([`${process.execPath} ${join(appDir, 'scripts', 'connect-git.mjs')}`]);
+    expect(infoLines.join('\n')).toContain('npm run connect-git');
+  });
+
+  /* Exit 2 is the script saying the account has no GitHub connection — not
+     that anything broke. Until the script started exiting non-zero for it,
+     nothing could reach this branch. */
+  it('repeats the browser fix when the script exits 2', async () => {
+    const ctx = standaloneContext();
+    linkedAndPushed();
+    confirmAnswer = true;
+    execaFailure = Object.assign(new Error('Command failed with exit code 2'), { exitCode: 2 });
+    await pushToGithub(ctx, planFor());
+    const said = infoLines.join('\n');
+    expect(said).toContain('will not redeploy');
+    expect(said).toContain('https://vercel.com/account/settings/authentication');
+    expect(said).not.toContain('Not connected');
+  });
+
+  it('says only that it did not connect for any other failure', async () => {
+    linkedAndPushed();
+    confirmAnswer = true;
+    for (const failure of [
+      Object.assign(new Error('Command failed with exit code 1'), { exitCode: 1 }),
+      new Error('spawn ENOENT'),
+    ]) {
+      const ctx = standaloneContext();
+      execaFailure = failure;
+      await pushToGithub(ctx, planFor());
+      const said = infoLines.join('\n');
+      expect(said, failure.message).toContain('Not connected');
+      expect(said, failure.message).toContain('npm run connect-git');
+      expect(said, failure.message).not.toContain('will not redeploy');
+      infoLines.length = 0;
+    }
   });
 });
 

@@ -1,4 +1,4 @@
-### AI Automations (automations)
+### AI Agent (automations)
 
 The workspace over the bot's AI, one surface behind `/automations`: the rail
 of 18 sources on the left, the selected source's page in the middle — the

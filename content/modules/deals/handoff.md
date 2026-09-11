@@ -1,4 +1,4 @@
-### Deals Kanban (deals)
+### Deals (deals)
 
 Three views over contacts by `salesStageV2` (New, Sorting, Ready, Working on,
 Won, Lost): a kanban **board** with Pointer-Events drag-and-drop that works on

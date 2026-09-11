@@ -110,7 +110,7 @@ export function actionParams(parameters: Record<string, unknown>): URLSearchPara
 
 export interface BridgeDeps {
   destinations: readonly Destination[];
-  /** Read at call time, never captured: the route changes under the dock. */
+  /** Read at call time, never captured: the route changes under whoever holds this. */
   currentRoute: () => { moduleId: string | null; params: URLSearchParams };
   /** The shell's own navigation — the bridge never touches window itself. */
   navigate: (moduleId: string, params: URLSearchParams) => void;

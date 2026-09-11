@@ -9,7 +9,7 @@ import { navigate as navigateUrl, type AppRoute } from './lib/route';
  *
  * A module publishes what the operator is looking at (`usePublishScreenContext`)
  * and, if it has reason to, reads or moves the app (`useShellBridge`). Only one
- * module does the second — the Coworker, whose assistant is asked "what am I
+ * module does the second — the Copilot, whose assistant is asked "what am I
  * looking at" by a tool on the server and answers with whatever this collects.
  *
  * This was a dock: the assistant rendered as a panel beside every other module,

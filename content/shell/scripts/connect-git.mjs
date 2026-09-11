@@ -17,14 +17,27 @@
  *
  * Not idempotent by accident: `vercel git connect` on an already-connected
  * project is a no-op that says so, so re-running is safe.
+ *
+ * Three exit codes, because this is also run on its own and read by the
+ * wizard that scaffolded the app:
+ *
+ *   0 — connected, or connected already.
+ *   2 — the Vercel account has no GitHub connection. Nothing here can grant
+ *       one; it is a browser and one click, and everything else is done.
+ *   1 — anything else, including the two preconditions checked below.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { isLoginConnectionFailure } from './deploy/gitConnection.mjs';
 import { fail, info, ok, warn } from './deploy/report.mjs';
 import { makeRunner, resolveCli } from './deploy/runners.mjs';
+
+export { isLoginConnectionFailure } from './deploy/gitConnection.mjs';
+
+/** @typedef {import('./deploy/runners.mjs').Runner} Runner */
 
 /**
  * The push URL of `origin`, or null when there is no repository yet.
@@ -85,10 +98,16 @@ function plainUrl(host, path) {
 }
 
 /**
+ * The runner is a parameter so the CLI's refusals can be read back without a
+ * Vercel account. Resolved here when nobody passed one, which is every real
+ * run — but resolving it INSIDE was what left the branch below untested, and
+ * the branch below is the one that fires.
+ *
  * @param {string} [appDir]
+ * @param {Runner} [run]
  * @returns {Promise<void>}
  */
-export async function main(appDir = process.cwd()) {
+export async function main(appDir = process.cwd(), run = undefined) {
   console.log('\nConnecting the Vercel project to Git\n');
 
   if (!existsSync(join(appDir, '.vercel', 'project.json'))) {
@@ -104,9 +123,11 @@ export async function main(appDir = process.cwd()) {
   if (!url) fail(`Could not read a repository URL out of the remote: ${remote}`);
   info(`Repository: ${url}`);
 
-  const cli = resolveCli();
-  if (cli.firstRunNote) info(cli.firstRunNote);
-  const run = makeRunner(cli);
+  if (!run) {
+    const cli = resolveCli();
+    if (cli.firstRunNote) info(cli.firstRunNote);
+    run = makeRunner(cli);
+  }
 
   const result = run(['git', 'connect', url, '--yes'], { cwd: appDir });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
@@ -115,15 +136,24 @@ export async function main(appDir = process.cwd()) {
     return;
   }
 
-  // Not a failure of this app: the commonest cause by far is a Vercel account
-  // with no GitHub connection at all, which only the person can grant, in a
-  // browser. Vercel says so itself, so its output goes first and the two places
-  // to fix it follow.
-  warn('Vercel would not connect the repository.');
+  /* Not a failure of this app, and never a reason to stop: the repository is
+     pushed and the app is deployed by the time this runs, so what failed is the
+     optional half. It reports and sets an exit code rather than calling fail().
+
+     Two causes, one remedy. A Vercel account with no GitHub connection at all
+     is the commonest by far and is worth naming, because "would not connect the
+     repository" reads as a problem with the repository — which sends somebody
+     to check a remote that is perfectly fine. Every other refusal keeps the
+     wording it always had. Vercel's own output goes in either way: it is the
+     evidence, and only it knows the details. */
+  const noConnection = isLoginConnectionFailure(output);
+  if (!noConnection) warn('Vercel would not connect the repository.');
   if (output.trim()) console.log(output.trim());
+  if (noConnection) warn('Vercel has no GitHub connection, so it would not take the repository.');
   warn('Connect GitHub to Vercel, then run this again:');
   warn('  vercel.com → Settings → Authentication → GitHub');
   warn('  or:  vercel.com → this project → Settings → Git');
+  process.exitCode = noConnection ? 2 : 1;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

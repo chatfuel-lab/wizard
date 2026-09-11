@@ -7,7 +7,7 @@ import { useContactMessages } from '../../hooks/useContactMessages';
 import { useContactRecord } from '../../hooks/useContactRecord';
 import { attributeMap } from '../../lib/attributeValue';
 import { bindForContact, displayName, neighbours as neighboursOf } from '../../lib/contactFields';
-import { livechatLink, type RecordTab } from '../../lib/contactsParams';
+import { chatLinkFor, type RecordTab } from '../../lib/contactsParams';
 import type { Navigate } from '../../../types';
 import type { ContactRecord, TeamMember } from '../../types';
 import { isRestricted, phoneOf, usernameOf } from '../../types';
@@ -64,8 +64,9 @@ export interface RecordPageProps {
  * is here rather than inside a tab:
  * - a **restricted** contact (`UnavailableContact`) — every field is empty by
  *   design, so the page says so and offers nothing to click;
- * - a **missing conversation** — ordinary for a CSV import, so Live Chat is
- *   absent rather than disabled;
+ * - a **missing conversation** — ordinary for a CSV import, so the Inbox
+ *   action says "Start a chat" and hands the contact to the inbox, which
+ *   starts one;
  * - a **contact with no name** — named "Unnamed contact", with the phone or the
  *   @handle beside it;
  * - a **deleted owner** — kept in the picker, labelled as gone.
@@ -138,10 +139,14 @@ export function RecordPage({
   }
 
   const restricted = isRestricted(contact);
-  /* A conversation is what Live Chat opens, and a contact created through the
-     API or a CSV import has none. Absent rather than disabled:
-     a greyed-out button invites the question "why not?" on every record. */
-  const onOpenLiveChat = restricted || !contact.conversation ? null : () => navigate(livechatLink(contact.id));
+  /* Two conditions were fused here, and only one of them belonged. A
+     restricted contact still offers nothing to click — there is no id worth
+     handing anyone. A MISSING CONVERSATION used to hide the action too, which
+     was the bug: the inbox can start a conversation from a contact id, so the
+     contacts this was hiding the button from are exactly the ones who need
+     it. It changes the link and the word on it, and nothing else. */
+  const chat = chatLinkFor(contact);
+  const onOpenLiveChat = restricted ? null : () => navigate(chat.href);
 
   return (
     <>
@@ -155,6 +160,7 @@ export function RecordPage({
         onClose={onClose}
         onStep={(next) => onOpenContact?.(next)}
         onOpenLiveChat={onOpenLiveChat}
+        chatStarted={chat.started}
         /* SEAM — a stub to fill. A one-id selection IS "export this
            contact": `csvContactExportStartByIDsList` takes a list. */
         exportAction={<ExportButton segment={null} selectedIds={[contact.id]} catalog={catalog} />}
@@ -174,6 +180,8 @@ export function RecordPage({
           contactId={contact.id}
           contactName={displayName(contact.name, phoneOf(contact) ?? usernameOf(contact))}
           api={messages}
+          onStartChat={onOpenLiveChat}
+          chatStarted={chat.started}
         />
       ) : (
         <PageBody measure="app">
@@ -195,6 +203,7 @@ export function RecordPage({
               messages={messages}
               bookings={bookings}
               onOpenLiveChat={onOpenLiveChat}
+              chatStarted={chat.started}
             />
           )}
         </PageBody>

@@ -1,4 +1,4 @@
-# Auth & Team — guide
+# Accounts — guide
 
 Supabase Auth (email + password) in front of a Chatfuel-wizard app, in the shape a SaaS needs:
 **one workspace per account, many Chatfuel bots inside it**. Somebody signs up, the app's server

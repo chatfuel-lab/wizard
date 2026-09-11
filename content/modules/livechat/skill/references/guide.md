@@ -8,6 +8,12 @@ Operator-side chat: list of conversations, message thread, sending, real-time up
 - `Conversation` — **`Conversation.id` equals the contact id**; every `conversationID` argument takes it. `status: open | closed | automated`. Always request `__typename` here too.
 - `Message` — interface with ~70 concrete types across 5 platforms + `System*` messages. Base fields: `id` (nullable!), `clientId` (non-null), `sentTime`, `updatedAt`, `sender`, `errors`. Platform payload fields are **disambiguated by prefix**: `whatsappStatus` vs widget `status`; never assume a field exists on all implementers — spread inline fragments per concrete type (see the `*MessageParts` fragments in the examples).
 
+### Deep links into a conversation
+
+- `?c=<conversationID>` opens a thread by id, listed or not. `bot.conversation(conversationID)` is **non-null**, so an id with no conversation behind it is a field ERROR, not an empty thread.
+- `?contact=<contactID>` is the correct link for a contact whose `conversation` is null — one created by `whatsappContactCreateV2` or by a CSV import. It runs `CreateConversation(contactID)` (see "Conversation lifecycle"), which ensures a conversation exists, and opens what comes back. That is a mutation: it needs `Inbox: Edit`, so refuse it before sending and say which permission is missing.
+- A caller holding the contact picks between the two on `Contact.conversation`, which is nullable and genuinely null. `?c=` is the common form — a read, no round trip, no write permission.
+
 ## Chat list (left pane)
 
 - Query `ChatList` → `bot.contactChatsConnection(first!, after, assigneeFilter!, unreadOnly!, salesStageV2Filter!, textInputFilter)`. Unfiltered: `{type: Any}`, `false`, `[]`. Sort key: `lastConversationMessageTime` desc.

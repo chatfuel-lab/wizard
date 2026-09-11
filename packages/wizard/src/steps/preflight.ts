@@ -1,5 +1,6 @@
 import { execa } from 'execa';
 import { detectAgents } from '../agents';
+import { link } from '../link';
 import { nodeIsSupported, nodeUpgradeHint } from '../node';
 import { WizardError } from '../errors';
 import type { PackageManager, WizardContext } from '../context';
@@ -27,7 +28,7 @@ async function resolvePackageManager(): Promise<PackageManager> {
   if (await hasBinary('pnpm')) return 'pnpm';
   throw new WizardError(
     'No package manager found on PATH',
-    'npm normally comes with Node. Reinstall Node from https://nodejs.org/en/download and try again.',
+    `npm normally comes with Node. Reinstall Node from ${link('https://nodejs.org/en/download')} and try again.`,
   );
 }
 

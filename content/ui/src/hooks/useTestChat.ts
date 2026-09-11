@@ -20,7 +20,7 @@ import {
  * `~ui` may import react and nothing else, which is exactly the right
  * constraint here: a test chat is one state machine over five requests, and the
  * requests are the only part that differs between the flow builder and
- * Automations. The host implements this; the machine above it is shared.
+ * AI Agent. The host implements this; the machine above it is shared.
  *
  * The object may be rebuilt on every render — the hook holds it in a ref and
  * keys its effects on `targetKey` and the session's `conversationID`, so a

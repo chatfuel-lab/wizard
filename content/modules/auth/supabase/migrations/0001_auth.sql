@@ -1,5 +1,5 @@
 -- ============================================================================
--- chatfuel-wizard · Auth & Team · migration 0001
+-- chatfuel-wizard · Accounts · migration 0001
 --
 -- Supabase Auth (email + password) in front of a Chatfuel-wizard app, multi-tenant:
 -- ONE WORKSPACE PER ACCOUNT, MANY BOTS INSIDE IT. Somebody signs up, the server

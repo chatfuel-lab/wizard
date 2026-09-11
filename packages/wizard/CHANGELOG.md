@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.4.1 — 2026-09-11
+
+### Added
+
+- **Message a contact from the CRM, including one who has never written.**
+  Every contact now opens a conversation from the row menu, the record header,
+  the overview card and the activity tab. A contact who arrived from an import
+  or from the API has no conversation yet, and the inbox starts one — until now
+  those contacts were sent to a thread that does not exist, and the record page
+  hid the action from them entirely.
+- **A checkout link that carries a name.** Where the terminal renders
+  hyperlinks, the trial step prints a short clickable name instead of several
+  hundred characters of checkout address; where it does not, it prints the
+  address exactly as before. The links the wizard prints elsewhere became
+  clickable too, with their text unchanged. Set `FORCE_HYPERLINK=0` to turn the
+  whole thing off.
+
+### Changed
+
+- **One name per module, and it is the name on the website.** The assistant is
+  Copilot, the inbox is Inbox, the automations module is AI Agent, the sign-in
+  module is Accounts, and the contacts module is Contacts. Module identifiers,
+  routes, skill names and `--modules` values are unchanged: `--modules coworker`
+  still installs Copilot, and it still lives at `/coworker`. Two module
+  descriptions that had gone stale were corrected while we were there.
+- **The trial step no longer opens a browser.** It prints the checkout link and
+  waits. A window that takes the screen mid-run takes the coupon with it.
+
+### Fixed
+
+- **Vercel is asked about its GitHub connection before the repository is
+  pushed, not after.** An account with no connection could not have its
+  repository linked, so a push never redeployed — and the wizard only said so
+  once the repository existed. It now offers the one setting to change, up
+  front, and says plainly when redeploy-on-push will be off and how to turn it
+  on later. The script that does the connecting reports a real exit code and
+  names the cause instead of printing the raw failure.
+- **The plans catalogue loads again.** Two fields disappeared from the
+  billing API, and asking for them failed the whole query, so every run finished
+  with a workspace that had no plan. A catalogue that still will not load now
+  says what the server said.
+
 ## 0.4.0 — 2026-09-08
 
 ### Added

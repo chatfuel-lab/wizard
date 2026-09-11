@@ -29,7 +29,7 @@ export function AutomationsHeader({
 }: AutomationsHeaderProps) {
   return (
     <PageHeader
-      title="AI Automations"
+      title="AI Agent"
       meta={
         <>
           {dirtyCount > 0 ? (

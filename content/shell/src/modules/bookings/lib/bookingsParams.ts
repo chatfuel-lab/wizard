@@ -18,7 +18,7 @@
  * `mode=week&date=` — and never written back; `?b=<id>` survives unchanged.
  * `?new=1&start=&end=&contact=&ns=<specialistID>&nsvc=<serviceID>` opens the wizard
  * prefilled (the shared `specialist=`/`service=` filter keys are the fallback),
- * which is what a "Book an appointment" button in Live Chat will link to.
+ * which is what a "Book an appointment" button in the Inbox will link to.
  */
 import type { BookingStatus } from '~api/generated/bookings/graphql';
 import { EMPTY_FILTER, parseFilter, type BookingsFilter } from './bookingsFilter';

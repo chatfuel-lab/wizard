@@ -3,7 +3,7 @@ import { useToast, type MenuItem } from '~ui';
 import type { Navigate } from '../../types';
 import { buildRowMenu } from '../components/list/rowMenu';
 import { planBulk, type BulkAction, type BulkPlan, type RowAction } from '../lib/bulk';
-import { livechatLink } from '../lib/contactsParams';
+import { chatLinkFor } from '../lib/contactsParams';
 import { contactLinkFor } from '../lib/tableSelection';
 import { contactName } from '../lib/tableColumns';
 import type { ContactRow, TeamMember } from '../types';
@@ -82,7 +82,7 @@ export function useRowActions({
     [copyText],
   );
 
-  const openLiveChat = useCallback((contactId: string) => navigate(livechatLink(contactId)), [navigate]);
+  const openLiveChat = useCallback((row: ContactRow) => navigate(chatLinkFor(row).href), [navigate]);
 
   const rowMenuFor = useCallback(
     (targets: ContactRow[]) =>
