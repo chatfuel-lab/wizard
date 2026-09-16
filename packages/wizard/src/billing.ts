@@ -88,50 +88,72 @@ export interface Pricing {
   id: string;
   intervalUnit: 'Day' | 'Week' | 'Month' | 'Year';
   intervalCount: number;
+  /** The whole period's price. */
   price: string;
+  /** The price per interval unit — the same number as `price` on a monthly plan. */
   intervalPrice: string;
+  /** The API's own casing, e.g. `Usd`. */
   currency: string;
-  isActive: boolean;
+  /** AI credits, in USD, granted by the base subscription for the whole period. */
+  credits: number;
 }
 
 export interface Product {
   id: string;
   name: string;
-  featureSet: 'NoAI' | 'All';
+  description: string;
+  /** How many bots the workspace may hold on this plan; 0 = no limit. */
+  workspaceBotsLimit: number;
   pricingList: Pricing[];
 }
 
+/** The two lists the catalogue sells from. `free` exists too, and is never offered. */
+export type PlanGroup = 'business' | 'agency';
+
+export type ProductsSchema = Record<PlanGroup, Product[]>;
+
 export interface BillingProductsData {
   env: {
-    stripeProductsSchema: {
-      business: Product[];
-    };
+    stripeProductsSchema: ProductsSchema;
   };
 }
 
 /**
- * The catalogue the checkout link is built from. `business` is the list this
- * wizard reads.
+ * The catalogue the checkout link is built from: one Business product and the
+ * Agency tiers, which is what the website's paywall offers too.
+ *
+ * Nothing about availability is selected. `Product.isActive`, `isSelectable`
+ * and `featureSet`, and `Pricing.isActive`, are all deprecated in the SDL, and
+ * the API has already dropped the first two: a query that asked for them
+ * stopped validating, and every run finished with a workspace that had no
+ * plan. What the API lists is what it sells.
  */
 export const BillingProductsDocument = new TypedDocumentString(`
 query WizardBillingProducts {
   env {
     stripeProductsSchema {
       business {
-        id
-        name
-        featureSet
-        pricingList {
-          id
-          intervalUnit
-          intervalCount
-          price
-          intervalPrice
-          currency
-          isActive
-        }
+        ...WizardPlanProduct
+      }
+      agency {
+        ...WizardPlanProduct
       }
     }
+  }
+}
+fragment WizardPlanProduct on Product {
+  id
+  name
+  description
+  workspaceBotsLimit
+  pricingList {
+    id
+    intervalUnit
+    intervalCount
+    price
+    intervalPrice
+    currency
+    credits
   }
 }`) as unknown as TypedDocumentString<BillingProductsData, Record<string, never>>;
 
@@ -191,24 +213,82 @@ mutation WizardStripeCreatePaymentLink(
   )
 }`) as unknown as TypedDocumentString<StripePaymentLinkData, StripeTrialLinkVars>;
 
+/** One line of the plan picker: a product at its monthly price. */
+export interface PlanOption {
+  group: PlanGroup;
+  product: Product;
+  pricing: Pricing;
+}
+
+const GROUP_ORDER: PlanGroup[] = ['business', 'agency'];
+
+const isMonthly = (pricing: Pricing): boolean => pricing.intervalUnit === 'Month' && pricing.intervalCount === 1;
+
 /**
- * The monthly plan out of the catalogue, or undefined when the catalogue holds
- * none. Anything without the AI feature set is dropped — a plan the AI cannot
- * run on is not a plan worth starting a trial of — and so is an archived price.
- * Cheapest first, so a catalogue carrying several monthly tiers offers the one
- * somebody would actually try.
+ * Every plan the picker offers, in the order it offers them: the Business
+ * product first, then the Agency tiers, each group cheapest first — the order
+ * the website's paywall uses, so a person who has seen one recognises the
+ * other. Monthly prices only; a year priced as twelve months is a year.
  *
- * A product carries no availability flags of its own: `isActive` and
- * `isSelectable` were on `Product` until the API dropped them, and asking for
- * either now fails the whole query at validation, which is how a catalogue
- * stopped loading at all. A price still says whether it is live, and that is
- * the flag this reads.
+ * One price per product. A product carrying two monthly prices (a
+ * grandfathered one next to the current) is still one tier, and the first
+ * entry is the one billing sells. A product with no monthly price is not
+ * offered at all.
+ *
+ * Nothing but `pricingList` is consulted on the way in — see the document
+ * above for what happened when a field was.
  */
-export function pickMonthlyPricing(products: Product[]): Pricing | undefined {
-  return products
-    .filter((product) => product.featureSet === 'All')
-    .flatMap((product) => product.pricingList)
-    .filter((pricing) => pricing.isActive)
-    .sort((a, b) => Number(a.intervalPrice) - Number(b.intervalPrice))
-    .find((pricing) => pricing.intervalUnit === 'Month' && pricing.intervalCount === 1);
+export function monthlyPlans(schema: ProductsSchema): PlanOption[] {
+  return GROUP_ORDER.flatMap((group) =>
+    (schema[group] ?? [])
+      .flatMap((product) => {
+        const pricing = product.pricingList.find(isMonthly);
+        return pricing ? [{ group, product, pricing }] : [];
+      })
+      .sort((a, b) => Number(a.pricing.price) - Number(b.pricing.price)),
+  );
+}
+
+/**
+ * `$20`, `$48.25`, `€15`. The API spells currencies its own way (`Usd`), and a
+ * code the runtime does not know falls back to the number and the code, which
+ * is still a price somebody can read.
+ */
+export function formatMoney(amount: string | number, currency: string): string {
+  const code = currency.toUpperCase();
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return `${amount} ${code}`;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code,
+      currencyDisplay: 'narrowSymbol',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `${value} ${code}`;
+  }
+}
+
+/** `1 bot`, `5 bots`, `unlimited bots` — the limit as a phrase. */
+export function botsPhrase(limit: number): string {
+  if (limit === 0) return 'unlimited bots';
+  return `${limit} bot${limit === 1 ? '' : 's'}`;
+}
+
+/** The monthly price, as printed. */
+export const planPrice = ({ pricing }: PlanOption): string => formatMoney(pricing.price, pricing.currency);
+
+/** The monthly AI credits, as printed. Credits are denominated in USD. */
+export const planCredits = ({ pricing }: PlanOption): string => formatMoney(pricing.credits, 'usd');
+
+/** What a line of the picker says after the name: `$20/mo · $20 AI credits/mo · 1 bot`. */
+export function planHint(option: PlanOption): string {
+  return `${planPrice(option)}/mo · ${planCredits(option)} AI credits/mo · ${botsPhrase(option.product.workspaceBotsLimit)}`;
+}
+
+/** The plan in one breath: `Business — $20/mo, $20 AI credits/mo`. */
+export function planSummary(option: PlanOption): string {
+  return `${option.product.name} — ${planPrice(option)}/mo, ${planCredits(option)} AI credits/mo`;
 }

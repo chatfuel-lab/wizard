@@ -9,12 +9,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * checkout wants a card, and somebody without one still has to be able to
  * finish.
  *
- * clack is replaced with prompts that THROW, except `confirm`, which is
- * scripted: the only question this step may ever ask is the way out.
+ * clack is replaced with prompts that THROW, except the two that are scripted:
+ * `select`, which is the plan, and `confirm`, which is the way out. Those are
+ * the only questions this step may ever ask.
  */
 const warnings: string[] = [];
+const infos: string[] = [];
 const notes: string[] = [];
 const confirmAnswers: boolean[] = [];
+interface SelectOption {
+  value: string;
+  label: string;
+  hint?: string;
+}
+interface SelectAsked {
+  message: string;
+  options: SelectOption[];
+  initialValue?: string;
+}
+/** What the plan picker was asked with, when it was. */
+const selectsAsked: SelectAsked[] = [];
+/** The value the next `select` answers with; absent = its initial value. */
+const selectAnswers: string[] = [];
 vi.mock('@clack/prompts', () => {
   const prompted = (name: string) => () => {
     throw new Error(`prompted when it should not have: ${name}`);
@@ -22,7 +38,10 @@ vi.mock('@clack/prompts', () => {
   return {
     text: prompted('text'),
     password: prompted('password'),
-    select: prompted('select'),
+    select: async (asked: SelectAsked) => {
+      selectsAsked.push(asked);
+      return selectAnswers.shift() ?? asked.initialValue ?? asked.options[0]!.value;
+    },
     multiselect: prompted('multiselect'),
     confirm: async () => {
       if (confirmAnswers.length === 0) throw new Error('confirm asked more often than scripted');
@@ -35,7 +54,7 @@ vi.mock('@clack/prompts', () => {
     intro: () => undefined,
     outro: () => undefined,
     log: {
-      info: () => undefined,
+      info: (m: string) => infos.push(m),
       warn: (m: string) => warnings.push(m),
       error: () => undefined,
       success: () => undefined,
@@ -62,52 +81,34 @@ const CHECKOUT_URL = 'https://checkout.stripe.com/c/pay/cs_test_wizard';
 // whichever link was printed.
 const PAID_URL = 'https://checkout.stripe.com/c/pay/cs_test_paidplan';
 
+/** A pricing the way the API shapes it: a whole-period price, and credits for the period. */
+function pricingFixture(id: string, intervalCount: number, price: string, intervalPrice: string, credits: number) {
+  return { id, intervalUnit: 'Month', intervalCount, price, intervalPrice, currency: 'Usd', credits };
+}
+
+function productFixture(id: string, name: string, workspaceBotsLimit: number, monthly: string, annual: string) {
+  return {
+    id,
+    name,
+    description: '',
+    workspaceBotsLimit,
+    // Annual first, the way the API lists them: the picker has to find the
+    // monthly one on its own.
+    pricingList: [
+      pricingFixture(`${id}-annual`, 12, annual, String(Number(annual) / 12), Number(annual)),
+      pricingFixture(`${id}-monthly`, 1, monthly, monthly, Number(monthly)),
+    ],
+  };
+}
+
+/** The catalogue as the website's paywall reads it: one Business, the Agency tiers. */
 const PRODUCTS = {
   env: {
     stripeProductsSchema: {
-      business: [
-        {
-          id: 'p1',
-          name: 'Pro',
-          featureSet: 'All',
-          pricingList: [
-            {
-              id: 'pricing-annual',
-              intervalUnit: 'Month',
-              intervalCount: 12,
-              price: '579',
-              intervalPrice: '48.25',
-              currency: 'Usd',
-              isActive: true,
-            },
-            {
-              id: 'pricing-monthly',
-              intervalUnit: 'Month',
-              intervalCount: 1,
-              price: '69',
-              intervalPrice: '69',
-              currency: 'Usd',
-              isActive: true,
-            },
-          ],
-        },
-        {
-          // No AI on this one, so its cheaper monthly plan must be ignored.
-          id: 'p0',
-          name: 'Lite',
-          featureSet: 'NoAI',
-          pricingList: [
-            {
-              id: 'pricing-noai',
-              intervalUnit: 'Month',
-              intervalCount: 1,
-              price: '9',
-              intervalPrice: '9',
-              currency: 'Usd',
-              isActive: true,
-            },
-          ],
-        },
+      business: [productFixture('business', 'Business', 1, '20', '168')],
+      agency: [
+        productFixture('agency-m', 'Agency M', 5, '199', '1668'),
+        productFixture('agency-s', 'Agency S', 3, '99', '780'),
       ],
     },
   },
@@ -168,9 +169,12 @@ function ctxWith(
 
 beforeEach(() => {
   warnings.length = 0;
+  infos.length = 0;
   notes.length = 0;
   trialLink = undefined;
   confirmAnswers.length = 0;
+  selectsAsked.length = 0;
+  selectAnswers.length = 0;
   vi.useFakeTimers();
 });
 
@@ -188,7 +192,7 @@ describe('trial', () => {
     expect(notes).toHaveLength(0);
   });
 
-  it('prints checkout on the monthly AI plan and waits for the trial', async () => {
+  it('prints checkout on the plan that was picked and waits for the trial', async () => {
     const { ctx, calls } = ctxWith(3);
     const done = trial(ctx);
     // The link is on screen before anything is waited for.
@@ -196,10 +200,71 @@ describe('trial', () => {
     expect(notes.join('\n')).toContain(CHECKOUT_URL);
     await vi.advanceTimersByTimeAsync(30_000);
     await done;
-    expect(calls.linkVariables).toMatchObject({ workspaceID: 'w1', pricingID: 'pricing-monthly' });
+    expect(calls.linkVariables).toMatchObject({ workspaceID: 'w1', pricingID: 'business-monthly' });
     expect(notes.join('\n')).toContain(CHECKOUT_URL);
     expect(ctx.answers.trialStarted).toBe(true);
     expect(warnings).toHaveLength(0);
+  });
+
+  it('offers every plan with what it costs, Business first', async () => {
+    const { ctx } = ctxWith(1);
+    const done = trial(ctx);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await done;
+    expect(selectsAsked).toHaveLength(1);
+    const asked = selectsAsked[0]!;
+    expect(asked.message).toMatch(/which chatfuel plan/i);
+    expect(asked.options).toEqual([
+      { value: 'business-monthly', label: 'Business', hint: '$20/mo · $20 AI credits/mo · 1 bot' },
+      { value: 'agency-s-monthly', label: 'Agency S', hint: '$99/mo · $99 AI credits/mo · 3 bots' },
+      { value: 'agency-m-monthly', label: 'Agency M', hint: '$199/mo · $199 AI credits/mo · 5 bots' },
+    ]);
+    expect(asked.initialValue).toBe('business-monthly');
+  });
+
+  it('builds checkout for the plan that was picked, and names it', async () => {
+    selectAnswers.push('agency-s-monthly');
+    const { ctx, calls } = ctxWith(1);
+    const done = trial(ctx);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await done;
+    expect(calls.linkVariables).toMatchObject({ pricingID: 'agency-s-monthly' });
+    expect(notes.join('\n')).toContain(
+      'Activate your Agency S trial ($99/mo, $99 AI credits/mo), and use promo code SDK',
+    );
+    expect(ctx.answers.plan).toEqual({
+      name: 'Agency S',
+      pricingId: 'agency-s-monthly',
+      hint: '$99/mo · $99 AI credits/mo · 3 bots',
+    });
+  });
+
+  it('takes Business without asking on a run that asks nothing', async () => {
+    const { ctx, calls } = ctxWith(Number.POSITIVE_INFINITY, { yes: true });
+    await trial(ctx);
+    expect(selectsAsked).toHaveLength(0);
+    expect(calls.linkVariables).toMatchObject({ pricingID: 'business-monthly' });
+    expect(infos.join('\n')).toContain('Plan: Business — $20/mo, $20 AI credits/mo');
+    expect(infos.join('\n')).toContain('--pricing');
+  });
+
+  it('takes the plan --pricing names, and asks nothing', async () => {
+    const { ctx, calls } = ctxWith(1, { pricing: 'agency-m-monthly' });
+    const done = trial(ctx);
+    await vi.advanceTimersByTimeAsync(30_000);
+    await done;
+    expect(selectsAsked).toHaveLength(0);
+    expect(calls.linkVariables).toMatchObject({ pricingID: 'agency-m-monthly' });
+    expect(notes.join('\n')).toContain('Activate your Agency M trial ($199/mo');
+  });
+
+  it('stops on a --pricing it does not know, with the list attached', async () => {
+    const { ctx, calls } = ctxWith(1, { pricing: 'agency-xxl-monthly' });
+    await expect(trial(ctx)).rejects.toMatchObject({
+      message: expect.stringContaining('--pricing agency-xxl-monthly is not a monthly plan'),
+      hint: expect.stringContaining('agency-s-monthly — Agency S — $99/mo, $99 AI credits/mo'),
+    });
+    expect(calls.linkVariables).toBeUndefined();
   });
 
   it('prints an address it will not dress up as a name', async () => {
@@ -275,7 +340,7 @@ describe('trial', () => {
     expect(printed).toContain(PAID_URL);
     expect(printed).not.toContain(CHECKOUT_URL);
     // Same offer either way: which mutation answered is not the reader's problem.
-    expect(printed).toContain('Activate your trial, and use promo code SDK');
+    expect(printed).toContain('Activate your Business trial ($20/mo, $20 AI credits/mo), and use promo code SDK');
     expect(printed).toContain('additional $100 in credits');
     expect(ctx.answers.trialStarted).toBe(true);
   });

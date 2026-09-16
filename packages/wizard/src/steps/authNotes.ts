@@ -30,8 +30,12 @@ const sqlEditorUrl = (projectRef: string | undefined): string =>
  */
 export function trialLines(ctx: WizardContext): string[] {
   if (ctx.answers.trialStarted !== false) return [];
+  const plan = ctx.answers.plan;
   return [
     `Switch the AI on at ${DASHBOARD_URL} — it answers nothing until the workspace has a plan.`,
+    ...(plan
+      ? [`  The checkout the wizard printed was for ${plan.name} (${plan.hint}); the dashboard sells the same plans.`]
+      : []),
     `  Enter ${COUPON_CODE} in the promo field — ${COUPON_OFFER}.`,
   ];
 }

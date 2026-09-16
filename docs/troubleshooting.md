@@ -26,6 +26,11 @@ deployment is a public URL with somebody's Chatfuel token behind it.
 workspace, so the second workspace of the same account has already used it. The checkout that
 follows is the same offer minus the trial days.
 
+**The plan I wanted is not in the list.** The wizard offers the monthly price of every plan the
+catalogue sells — Business and the Agency tiers. Yearly billing, and a plan the catalogue no
+longer lists, are on the dashboard at <https://panel.chatfuel.com>, and `--pricing <id>` takes
+any id the list prints.
+
 **Ctrl+C during a run.** It stops the run and undoes what was half-written: a target directory
 the wizard created for this run is removed, so the same command can be run again. A directory
 that was already there is never deleted — what was written into it is named instead, and nothing

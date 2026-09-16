@@ -56,11 +56,14 @@ CLI) if you do not have one.
 4. Checks whether that workspace has a plan, and starts one if it has not. A
    workspace with no subscription has no AI: the bot answers nothing, and the
    app you are about to get looks broken for reasons that have nothing to do
-   with it. So checkout opens in your browser — it wants a card even for the
-   trial — and the wizard waits, with a way out if you would rather come back
-   to it later. A trial belongs to the Chatfuel account rather than to a
-   workspace, so the second workspace of the same account gets the plain
-   checkout instead. `--dry-run` prints what this step would do and opens nothing.
+   with it. So the wizard lists the plans — Business, or one of the Agency
+   tiers — with what each costs a month, the AI credits that come with it and
+   how many bots the workspace may hold, prints a checkout link for the one you
+   pick (it wants a card even for the trial) and waits, with a way out if you
+   would rather come back to it later. A trial belongs to the Chatfuel account
+   rather than to a workspace, so the second workspace of the same account gets
+   the plain checkout instead. `--pricing <id>` picks a plan without the list;
+   `--dry-run` prints what this step would do and creates nothing.
 5. Asks what the app is called and, if you have one, for a logo file. Both are
    yours from the first run: the name is the browser tab, the top bar and the
    sign-in screen, and the image becomes the tab icon and the mark beside it.
@@ -97,8 +100,8 @@ npx @chatfuel/wizard auth         # replace the stored Chatfuel token
 
 Useful flags: `--dir <path>` (where to write it), `--modules <ids>` (skip the
 picker), `--agent <claude|codex>` (which coding agent finishes the setup),
-`--workspace <id>`, `--app-name <name>` and `--logo <path>` (the app's own name
-and mark), `--admin-password <value>` (the `admin` module's, 16 characters at
+`--workspace <id>`, `--pricing <id>` (which plan the trial starts on),
+`--app-name <name>` and `--logo <path>` (the app's own name and mark), `--admin-password <value>` (the `admin` module's, 16 characters at
 least — generated otherwise), `--yes` (accept every default), `--dry-run` (write
 the app, create nothing in your accounts), `--plan` (print the whole run and
 write none of it).
