@@ -18,6 +18,7 @@ this page is the reference for what goes in them.
 | `--apps-ref <ref>` | Branch or tag of the catalog to clone (default: its default branch). |
 | `--agent <claude\|codex>` | Which coding agent's skill layout to install. |
 | `--workspace <id>` | The Chatfuel workspace the app opens on. |
+| `--pricing <id>` | Which Chatfuel plan the trial starts on, by pricing id (default: Business, the cheapest). The plan list of an interactive run shows every plan with its price, AI credits and bot limit; an id it does not know stops the run and prints the list. Monthly plans only. |
 | `--app-name <name>` | Browser tab, top bar, sign-in screen. |
 | `--logo <path>` | An image file; becomes the tab icon and the mark beside the name. |
 | `--yes` | Accept every default and ask nothing. Never deploys, never pushes to GitHub. |

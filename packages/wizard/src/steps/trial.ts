@@ -4,8 +4,12 @@ import { hasErrorCode } from '@chatfuel/api-client';
 import { stepArt } from '../art';
 import {
   BillingProductsDocument,
-  pickMonthlyPricing,
-  type Pricing,
+  monthlyPlans,
+  planCredits,
+  planHint,
+  type PlanOption,
+  planPrice,
+  planSummary,
   StripePaymentLinkDocument,
   StripeTrialLinkDocument,
   WorkspaceSubscriptionDocument,
@@ -25,6 +29,13 @@ import type { WizardContext } from '../context';
  * here without it will spend the evening debugging a scaffold that is fine.
  *
  * The trial's length is the server's business; this step never sends one.
+ *
+ * Which plan is the one question the step asks. The catalogue sells a
+ * Business plan and several Agency tiers, and they differ in what somebody
+ * actually pays for — the monthly price, the AI credits that come with it and
+ * how many bots the workspace may hold — so each line of the picker says all
+ * three. A run that asks nothing takes Business, the cheapest, unless
+ * `--pricing <id>` names another.
  *
  * The wait is not open-ended. Checkout wants a card even for a trial, so
  * somebody without one at hand must be able to walk away and still finish.
@@ -100,8 +111,8 @@ export async function trial(ctx: WizardContext): Promise<void> {
 
   p.log.message(stepArt('trial'));
 
-  const { pricing, why } = await loadMonthlyPricing(ctx);
-  if (!pricing) {
+  const { plans, why } = await loadPlans(ctx);
+  if (!plans) {
     // A catalogue the wizard cannot read is not a reason to throw away the run.
     p.log.warn(`Could not load the Chatfuel plans. Start the trial at ${link(DASHBOARD_URL)}.`);
     if (why) p.log.warn(why);
@@ -110,12 +121,15 @@ export async function trial(ctx: WizardContext): Promise<void> {
     return;
   }
 
+  const plan = await choosePlan(ctx, plans);
+  ctx.answers.plan = { name: plan.product.name, pricingId: plan.pricing.id, hint: planHint(plan) };
+
   // Checkout insists on absolute URLs and the wizard has no address of its own,
   // so both ends land on the dashboard. Neither is how the wizard finds out
   // what happened - it asks the API.
   const linkVars = {
     workspaceID: workspace.id,
-    pricingID: pricing.id,
+    pricingID: plan.pricing.id,
     successURL: DASHBOARD_URL,
     cancelURL: DASHBOARD_URL,
   };
@@ -165,10 +179,13 @@ export async function trial(ctx: WizardContext): Promise<void> {
   // One heading for both links. Which mutation answered is the server's
   // business; whoever is reading has the same thing to do either way, and a
   // line about what this account has already used tells them nothing they can
-  // act on.
+  // act on. The plan is named, with its price: the link that follows is a
+  // checkout for exactly that, and the coupon comes on top of it.
   p.log.message(
     [
-      pc.bold(`Activate your trial, and use promo code ${COUPON_CODE} for an additional ${COUPON_VALUE} in credits:`),
+      pc.bold(
+        `Activate your ${plan.product.name} trial (${planPrice(plan)}/mo, ${planCredits(plan)} AI credits/mo), and use promo code ${COUPON_CODE} for an additional ${COUPON_VALUE} in credits:`,
+      ),
       // Cyan is the house style for a standalone URL; the underline goes on
       // only where a label is what got printed, because a word that is not an
       // address does not otherwise read as something to click. With hyperlinks
@@ -217,7 +234,50 @@ function billingError(err: unknown, title: string, fallback: string): WizardErro
       'The token must belong to the account that pays for the workspace.',
     );
   }
+  if (hasErrorCode(err, 'ProductNotInStripeProductsSchema')) {
+    return new ApiWizardError(
+      'The plan is no longer in the catalogue',
+      err,
+      'It was there a moment ago; re-run and pick again.',
+    );
+  }
   return new ApiWizardError(fallback, err);
+}
+
+/**
+ * Which plan. `--pricing` answers it outright — for a script, and for the
+ * person who read the list once and does not want it again — and a name it
+ * does not know is a mistake worth stopping on, with the list attached so the
+ * next attempt has it. A run that asks nothing takes the first line, which is
+ * Business: the cheapest, and the one a person trying the thing out wants.
+ */
+async function choosePlan(ctx: WizardContext, plans: PlanOption[]): Promise<PlanOption> {
+  const wanted = ctx.flags.pricing;
+  if (wanted) {
+    const plan = plans.find((candidate) => candidate.pricing.id === wanted);
+    if (plan) return plan;
+    throw new WizardError(
+      `--pricing ${wanted} is not a monthly plan in the catalogue`,
+      [
+        'The plans on offer:',
+        ...plans.map((candidate) => `  ${candidate.pricing.id} — ${planSummary(candidate)}`),
+      ].join('\n'),
+    );
+  }
+
+  if (ctx.flags.yes) {
+    const plan = plans[0]!;
+    p.log.info(`Plan: ${planSummary(plan)} (--pricing <id> picks another).`);
+    return plan;
+  }
+
+  const answer = await p.select({
+    message: 'Which Chatfuel plan should the workspace start on?',
+    options: plans.map((plan) => ({ value: plan.pricing.id, label: plan.product.name, hint: planHint(plan) })),
+    initialValue: plans[0]!.pricing.id,
+  });
+  if (p.isCancel(answer)) throw new WizardError('Cancelled.');
+  return plans.find((plan) => plan.pricing.id === answer)!;
 }
 
 /**
@@ -236,7 +296,7 @@ function couponBlock(): string[] {
 }
 
 /**
- * The monthly plan, and why there is none when there is none.
+ * The monthly plans, and why there are none when there are none.
  *
  * The reason is carried out rather than swallowed: this read is hand-written
  * against an API this repository does not generate from, so the way it fails is
@@ -244,14 +304,14 @@ function couponBlock(): string[] {
  * not load sends whoever is reading to look at their account, which is the one
  * place the answer is not.
  */
-async function loadMonthlyPricing(ctx: WizardContext): Promise<{ pricing?: Pricing; why?: string }> {
+async function loadPlans(ctx: WizardContext): Promise<{ plans?: PlanOption[]; why?: string }> {
   let why: string | undefined;
   for (let attempt = 1; attempt <= CATALOGUE_ATTEMPTS; attempt += 1) {
     try {
       const data = await ctx.client!.query(BillingProductsDocument, {});
-      const pricing = pickMonthlyPricing(data.env.stripeProductsSchema.business);
-      if (pricing) return { pricing };
-      why = 'the catalogue holds no monthly plan with the AI on it';
+      const plans = monthlyPlans(data.env.stripeProductsSchema);
+      if (plans.length > 0) return { plans };
+      why = 'the catalogue holds no monthly plan';
     } catch (err) {
       why = err instanceof Error ? err.message : String(err);
     }

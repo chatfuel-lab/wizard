@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.4.2 — 2026-09-16
+
+### Added
+
+- **Pick the plan.** The trial step lists every plan the catalogue sells —
+  Business and the Agency tiers — with what each costs a month, the AI credits
+  that come with it and how many bots the workspace may hold, and builds the
+  checkout for the one you pick. Until now it took the cheapest monthly plan
+  without saying which, or what it cost. A run with `--yes` still takes
+  Business; `--pricing <id>` takes any plan on the list, and an id the
+  catalogue does not know stops the run with the list attached.
+
+### Changed
+
+- **The checkout heading names the plan and its price**, and the closing
+  summary of a run that left the workspace unsubscribed says which plan the
+  printed checkout was for.
+- **The catalogue read asks for nothing deprecated.** It reads the Business and
+  Agency lists the website's paywall reads, with each price's credits, and no
+  longer selects `featureSet` or a price's `isActive` — both marked deprecated
+  in the API, and of the same kind that disappeared once already and took the
+  whole catalogue with it.
+
+### Fixed
+
+- The README said checkout opens in your browser. It has printed a link and
+  waited since 0.4.1; the README now says so.
+
 ## 0.4.1 — 2026-09-11
 
 ### Added
