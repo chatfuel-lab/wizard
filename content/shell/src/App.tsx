@@ -16,7 +16,15 @@ import {
 import { MODULES } from './modules';
 import type { HostBot, HostRuntime, Navigate } from './modules/types';
 import { buildNavGroups, railModules } from './modules/navGroups';
-import { BASE, interceptLinks, navigatePath, navigateTo, onRouteChange, parseLocation } from './lib/route';
+import {
+  BASE,
+  interceptLinks,
+  navigatePath,
+  navigateTo,
+  onRouteChange,
+  parseLocation,
+  resolveRouted,
+} from './lib/route';
 import { ShellHost } from './ShellHost';
 
 /* Where the app opens, not where it is confined: every workspace the token's
@@ -113,7 +121,11 @@ export default function App() {
   const navigate = useCallback<Navigate>((path, options) => navigatePath(path, options), []);
 
   const isHostRoute = host !== null && route.moduleId !== null && (HOST?.routes ?? []).includes(route.moduleId);
-  const active = VISIBLE.find((m) => m.id === route.moduleId) ?? VISIBLE[0];
+  const { routed, notFound } = resolveRouted(VISIBLE, route.moduleId, isHostRoute);
+  /* Still the first module when the address names none: the shell around the
+     not-found page needs a module to hang its keys and its view on. It is not
+     rendered then, and the menu does not mark it. */
+  const active = routed ?? VISIBLE[0];
   /* The module's own view, when the address is actually pointing at it: the
      second segment of '/contacts/fields'. A module we fell back to gets '' —
      it is not the page that was asked for, so it opens at its root. */
@@ -130,7 +142,9 @@ export default function App() {
   }, [route.segments.length]);
 
   const selectModule = (id: string) => {
-    if (id === active.id) return;
+    // On the not-found page nothing is selected, so nothing is a no-op — not
+    // even the first module, which is the one most people reach for to leave.
+    if (!notFound && id === active.id) return;
     // Module switch resets the view and the params — deep links are per-module.
     navigateTo(id);
   };
@@ -221,14 +235,16 @@ export default function App() {
   const shell = (
     <AppShell
       nav={
-        navGroups.length > 0 ? <SideNav groups={navGroups} activeId={active.id} onSelect={selectModule} /> : undefined
+        navGroups.length > 0 ? (
+          <SideNav groups={navGroups} activeId={notFound ? '' : active.id} onSelect={selectModule} />
+        ) : undefined
       }
       // The same nav as one column. Two slots rather than cloning: a drawer is
       // opened deliberately and read once, so its groups are headings over their
       // modules rather than icons hiding them behind a hover.
       navDrawer={
         navGroups.length > 0 ? (
-          <SideNav groups={navGroups} activeId={active.id} onSelect={selectModule} variant="expanded" />
+          <SideNav groups={navGroups} activeId={notFound ? '' : active.id} onSelect={selectModule} variant="expanded" />
         ) : undefined
       }
       // No module name here. The rail on the left marks the section it is in
@@ -298,6 +314,16 @@ export default function App() {
     >
       {isHostRoute && host?.Page ? (
         <host.Page route={route} navigate={navigate} />
+      ) : notFound ? (
+        /* An address that names no module this app has. It used to open the
+           first module instead, which made a module that was copied in and
+           never registered look like it worked. The shell stays up around it:
+           the menu is the way out. */
+        <EmptyState
+          icon={<IconWarning />}
+          title="Page not found"
+          description={`Nothing in this app answers at /${route.moduleId}. Pick a page from the menu.`}
+        />
       ) : host && !botId ? (
         /* Nobody granted them one — the case this is now for. A workspace that
            OWNS none is provisioned instead (see the auth module's
