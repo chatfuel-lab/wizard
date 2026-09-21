@@ -25,7 +25,7 @@ const program = new Command('chatfuel-wizard')
   .version(packageJson.version, '-v, --version')
   .option(
     '-y, --yes',
-    'accept all defaults, skip confirmations (installs every ready module unless --modules narrows it; the auth module also needs --supabase-project or --supabase-create)',
+    'accept all defaults, skip confirmations (installs every ready module except the opt-in ones — auth, admin — which only --modules brings in; auth then also needs --supabase-project or --supabase-create)',
     false,
   )
   .option('--dry-run', 'stop before creating any account assets; the app itself is still written', false)
