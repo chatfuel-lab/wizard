@@ -63,11 +63,9 @@ const MAX_HEIGHT = 'calc(100vh - 4rem)';
  * here stretches now, and there is no leftover height to stretch into: the card
  * grows as the post does and stops when the window runs out.
  *
- * ONE column, with air either side of it. The writing and the picture of the
- * writing are two ways of looking at the same post rather than two halves of a
- * screen, so they are two tabs and not two panes: side by side, each one is half
- * the width it wanted, and the preview — the thing whose whole job is to show
- * what a photograph will look like — is the half that suffers.
+ * ONE column, with air either side of it, and nothing beside it: there is no
+ * preview pane and no preview tab. What the post will look like is the media
+ * strip and the format tile's thumbnail, inside the form, and that is all of it.
  *
  * Whose account this is goes in the header, next to the title, because every
  * format tile below leads to the same one and repeating it four times said
@@ -93,11 +91,13 @@ export function ComposerModal({ target, at, from, account, onClose }: ComposerMo
   const queue = usePostsQueue();
   const band = useBand();
   const toast = useToast();
-  const sources = useMediaSources(client, botId);
   const publisher = usePublish(account.id);
   const seed = useComposerSeed(client, botId, target === NEW_POST ? from : null, at);
 
   const [draft, setDraft] = useState<NewPost>(() => emptyDraft(at));
+  /* A file added while the post has a time on it goes to the deployment's own
+     bucket: the platform's address would be dead before the time came. */
+  const sources = useMediaSources(client, botId, draft.scheduledAt !== null && queue.canSchedule);
   const [zone, setZone] = useState<string>(() => localTimeZone());
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState<Intent | null>(null);

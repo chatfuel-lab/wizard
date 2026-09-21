@@ -74,11 +74,12 @@ copied in beside the client it produces. Both are covered under [talking to
 Chatfuel](#talking-to-chatfuel).
 
 Two rules keep the vendored trees portable: every internal import is relative, and `~ui`
-imports nothing but `react` and `react-dom`. Both hold in the code today, and neither is
-checked by anything — `pnpm validate` reads `content/ui/src` for tokens, barrels and class
-names, never for import specifiers, and its one import-boundary pass is scoped to
-`content/shell/src/modules/<id>/`. They are conventions you have to keep by hand; break one and
-you find out when the tree lands in somebody's app and does not resolve.
+imports nothing but `react` and `react-dom`. `pnpm validate` checks both: its import-boundary
+pass walks `content/ui`, `content/api-client` and `content/vite-plugin-proxy` as well as the
+shell, and fails a relative import that climbs out of its tree, an alias or absolute path, and
+a bare import that is not a `dependency` or `peerDependency` of the tree's own `package.json` —
+which for `~ui` is `react` and `react-dom` and nothing else. A `devDependency` does not count: it
+is installed here and absent in the app the tree lands in.
 
 ## Where the content comes from
 
@@ -172,7 +173,9 @@ gets a typed refusal with a code it can branch on.
 
 Each module ships a skill (`content/modules/<id>/skill/`) that the wizard installs into
 `.claude/skills/` or `.agents/skills/` depending on the coding agent you chose, and a
-`handoff.md` that is inlined into that agent's instructions file. This is why the app arrives
+`handoff.md` that is inlined into the finish-setup checklist the wizard writes for that agent.
+The instructions file itself (`CLAUDE.md` or `AGENTS.md`) stays short — the routes, the list of
+skills to read, and how to resume setup. This is why the app arrives
 extensible rather than merely generated: the agent that continues the work has the same notes
 about the API's edges that we do.
 

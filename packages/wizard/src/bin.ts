@@ -25,7 +25,7 @@ const program = new Command('chatfuel-wizard')
   .version(packageJson.version, '-v, --version')
   .option(
     '-y, --yes',
-    'accept all defaults, skip confirmations (installs every ready module unless --modules narrows it; the auth module also needs --supabase-project or --supabase-create)',
+    'accept all defaults, skip confirmations (installs every ready module except the opt-in ones — auth, admin — which only --modules brings in; auth then also needs --supabase-project or --supabase-create)',
     false,
   )
   .option('--dry-run', 'stop before creating any account assets; the app itself is still written', false)
@@ -44,6 +44,10 @@ const program = new Command('chatfuel-wizard')
   .option('--app-name <name>', "the app's own name — browser tab, top bar, sign-in screen")
   .option('--logo <path>', "path to an image file to use as the app's logo and tab icon")
   .option('--workspace <id>', 'Chatfuel workspace id to use without prompting')
+  .option(
+    '--pricing <id>',
+    'Chatfuel plan to start the trial on, by pricing id (default: Business); the picker prints every id',
+  )
   .option('--supabase-token <pat>', 'Supabase personal access token (else SUPABASE_ACCESS_TOKEN env) — auth module')
   .option('--supabase-project <ref>', 'existing Supabase project ref; skips the project picker — auth module')
   .option(
@@ -86,6 +90,7 @@ interface CliOpts {
   appName?: string;
   logo?: string;
   workspace?: string;
+  pricing?: string;
   supabaseToken?: string;
   supabaseProject?: string;
   supabaseCreate?: string;
@@ -116,6 +121,7 @@ program.action(async () => {
     appName: opts.appName,
     logo: opts.logo,
     workspace: opts.workspace,
+    pricing: opts.pricing,
     supabaseToken: opts.supabaseToken,
     supabaseProject: opts.supabaseProject,
     supabaseCreate: opts.supabaseCreate,

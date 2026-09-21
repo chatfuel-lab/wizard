@@ -25,9 +25,11 @@ export interface ModuleManifest {
       default?: string;
       /** May stay empty; written as a commented-out line when it has no value. */
       optional?: boolean;
-      /** Which wizard step supplies the value. */
+      /**
+       * Which wizard step supplies the value. Descriptive only: the steps write
+       * into `answers.env` by variable name and nothing dispatches on this.
+       */
       resolve?: 'authSetup' | 'workspacePick' | 'adminSetup';
-      prompt?: string;
     }>;
     embed?: {
       /** Shell-relative embeddable roots, e.g. "src/modules/livechat". */

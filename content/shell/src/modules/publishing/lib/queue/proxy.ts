@@ -105,6 +105,30 @@ function errorMessageIn(text: string, response: Response): string {
   return `${response.status} ${response.statusText}`.trim();
 }
 
+/**
+ * Store a file where a post that waits can still find it.
+ *
+ * The platform's own upload hands back an address that stops resolving within
+ * hours, which is fine for a post going out now and useless for one going out
+ * on Thursday. The proxy keeps a bucket for exactly that, behind the same gate
+ * and mounted with the same routes as the queue — so wherever scheduling is
+ * offered, this answers.
+ *
+ * No content-type is set: the browser writes the multipart boundary itself, and
+ * a header set by hand would name a boundary the body does not use.
+ */
+export async function uploadDurableMedia(
+  proxyFetch: ProxyFetch,
+  botId: string,
+  file: File,
+): Promise<{ url: string; key: string }> {
+  const form = new FormData();
+  form.append('file', file, file.name);
+  return json<{ url: string; key: string }>(
+    await proxyFetch(`${ROOT}/media?botID=${encodeURIComponent(botId)}`, { method: 'POST', body: form }),
+  );
+}
+
 export function createProxyBackend(proxyFetch: ProxyFetch, botId: string, scheduling: boolean): QueueBackend {
   const url = (path = ''): string => `${ROOT}/posts${path}?botID=${encodeURIComponent(botId)}`;
   const body = (value: unknown): RequestInit => ({

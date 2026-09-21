@@ -20,6 +20,7 @@
   },
   "permissions": [
     { "object": "Inbox", "action": "View", "requiredFor": "reading the inbox" },
-    { "object": "Inbox", "action": "Edit", "requiredFor": "sending, mark-as-read and take-over" }
+    { "object": "Inbox", "action": "Edit", "requiredFor": "sending, mark-as-read and take-over" },
+    { "object": "People", "action": "View", "requiredFor": "the contact card beside the thread — attributes and the note" }
   ]
 }

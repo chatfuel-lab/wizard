@@ -69,6 +69,13 @@ describe('what a kind is', () => {
     expect(acceptAttribute('story')).toContain('video/mp4');
   });
 
+  it('names the formats for a post that waits, because its bucket takes only these', () => {
+    // `image/*` lets a HEIC through the picker, and the bucket answers 415.
+    expect(acceptAttribute('post', true)).toBe('image/jpeg,image/png,image/webp');
+    expect(acceptAttribute('reel', true)).toBe('video/mp4,video/quicktime');
+    expect(acceptAttribute('story', true)).toBe('image/jpeg,image/png,image/webp,video/mp4,video/quicktime');
+  });
+
   it('gives a story no caption at all', () => {
     expect(hasCaption('story')).toBe(false);
     expect(hasCaption('post')).toBe(true);
@@ -396,6 +403,7 @@ describe('how long a source lasts', () => {
     expect(needsDurableStorage({ ...photo(1), source: 'upload' })).toBe(true);
     expect(needsDurableStorage({ ...photo(1), source: 'link' })).toBe(false);
     expect(needsDurableStorage({ ...photo(1), source: 'library' })).toBe(false);
+    expect(needsDurableStorage({ ...photo(1), source: 'durable' })).toBe(false);
   });
 
   it('finds the ones a scheduled post could not rely on', () => {

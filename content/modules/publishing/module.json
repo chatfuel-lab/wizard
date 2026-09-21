@@ -1,7 +1,7 @@
 {
   "id": "publishing",
   "name": "Publishing",
-  "description": "Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, composed against a live preview of what the post will look like, then published immediately or put in a queue. A calendar of what is going out and when, a queue where failures are read and retried, and a library of everything already on the account. Scheduling runs on the deployment's own database when there is one \u2014 the Chatfuel API publishes immediately and has no scheduled-publish of its own \u2014 and the module works without it, composing and publishing on the spot.",
+  "description": "Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, written in a composer that picks the format first, then published immediately or put in a queue. A calendar of what is going out and when, a queue where failures are read and retried, and a library of everything already on the account. Scheduling runs on the deployment's own database when there is one \u2014 the Chatfuel API publishes immediately and has no scheduled-publish of its own \u2014 and the module works without it, composing and publishing on the spot.",
   "status": "ready",
   "requires": [],
   "recommends": [

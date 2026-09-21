@@ -1,8 +1,8 @@
 ### Publishing (publishing)
 
 Publishing to the Instagram account connected to the bot: feed photos, Reels,
-Stories and carousels, written in a composer with a live preview of what the
-post will look like, then published on the spot or put in a queue. Route:
+Stories and carousels, written in a composer that picks the format first, then
+published on the spot or put in a queue. Route:
 `/publishing` (the calendar); `/publishing/queue` and `/publishing/library` are the
 other two, and `?compose=<id>` or `?compose=new` opens the composer over any of
 them. **There is no post entity on the API** — the four `instagramAccountPublish`
@@ -40,7 +40,7 @@ First-task ideas:
 3. Add a field to a publish input. `lib/publishInput.ts` is the one map from a
    post to a mutation, and it is pure, so a new knob is an edit there, a case in
    its test, and a control in the composer.
-4. Give the queue a second attempt policy. `cf_ig_reap` puts a stale claim back
+4. Give the queue a second attempt policy. `cf_pub_reap` puts a stale claim back
    and fails it past a cap; the cap is a number, and what a good one is depends
    on whether the failure was Instagram refusing the media or a function being
    killed halfway. The API does not tell those apart, which is the real problem.

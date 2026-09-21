@@ -93,9 +93,8 @@
               },
               "resolve": {
                 "enum": ["authSetup", "workspacePick", "adminSetup"],
-                "description": "Which wizard step supplies the value: the auth setup step (Supabase project), the Chatfuel workspace picker, or the admin-password step."
-              },
-              "prompt": { "type": "string" }
+                "description": "Which wizard step supplies the value: the auth setup step (Supabase project), the Chatfuel workspace picker, or the admin-password step. Descriptive only — nothing dispatches on it: each step writes its values into the run's answers under the variable's name, and the .env writer looks them up by that name. App presets may not set it."
+              }
             }
           }
         },

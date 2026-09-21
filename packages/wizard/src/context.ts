@@ -40,6 +40,11 @@ export interface WizardFlags {
   logo?: string;
   /** Chatfuel workspace id to use without prompting (non-interactive runs). */
   workspace?: string;
+  /**
+   * Pricing id of the plan the trial starts on, without prompting. Absent, a
+   * run that asks nothing takes the Business plan; the picker prints every id.
+   */
+  pricing?: string;
   /** Supabase Management API personal access token (else SUPABASE_ACCESS_TOKEN env). */
   supabaseToken?: string;
   /** Existing Supabase project ref — skips the project picker on the PAT path. */
@@ -107,6 +112,16 @@ export interface WorkspaceAnswer {
   botsLimit: number;
   /** Bots already in it when the wizard looked. */
   botCount: number;
+}
+
+/** The plan the trial step built checkout for, as the closing words name it. */
+export interface PlanAnswer {
+  /** The product's name — `Business`, `Agency S`. */
+  name: string;
+  /** The Pricing id sent to checkout; `--pricing` takes the same value. */
+  pricingId: string;
+  /** Price, credits and bot limit in one line, as the picker showed them. */
+  hint: string;
 }
 
 /** What the brand step settled: the app's own name and, if one was given, its mark. */
@@ -215,6 +230,8 @@ export interface WizardAnswers {
    * nothing else will.
    */
   trialStarted?: boolean;
+  /** Set by the trial step once a plan is chosen — what checkout was built for. */
+  plan?: PlanAnswer;
   /**
    * Env values resolved by steps other than the token one (the workspace and
    * auth steps). collectEnv() reads a declared name from here first.

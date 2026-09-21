@@ -56,11 +56,14 @@ CLI) if you do not have one.
 4. Checks whether that workspace has a plan, and starts one if it has not. A
    workspace with no subscription has no AI: the bot answers nothing, and the
    app you are about to get looks broken for reasons that have nothing to do
-   with it. So checkout opens in your browser — it wants a card even for the
-   trial — and the wizard waits, with a way out if you would rather come back
-   to it later. A trial belongs to the Chatfuel account rather than to a
-   workspace, so the second workspace of the same account gets the plain
-   checkout instead. `--dry-run` prints what this step would do and opens nothing.
+   with it. So the wizard lists the plans — Business, or one of the Agency
+   tiers — with what each costs a month, the AI credits that come with it and
+   how many bots the workspace may hold, prints a checkout link for the one you
+   pick (it wants a card even for the trial) and waits, with a way out if you
+   would rather come back to it later. A trial belongs to the Chatfuel account
+   rather than to a workspace, so the second workspace of the same account gets
+   the plain checkout instead. `--pricing <id>` picks a plan without the list;
+   `--dry-run` prints what this step would do and creates nothing.
 5. Asks what the app is called and, if you have one, for a logo file. Both are
    yours from the first run: the name is the browser tab, the top bar and the
    sign-in screen, and the image becomes the tab icon and the mark beside it.
@@ -97,8 +100,8 @@ npx @chatfuel/wizard auth         # replace the stored Chatfuel token
 
 Useful flags: `--dir <path>` (where to write it), `--modules <ids>` (skip the
 picker), `--agent <claude|codex>` (which coding agent finishes the setup),
-`--workspace <id>`, `--app-name <name>` and `--logo <path>` (the app's own name
-and mark), `--admin-password <value>` (the `admin` module's, 16 characters at
+`--workspace <id>`, `--pricing <id>` (which plan the trial starts on),
+`--app-name <name>` and `--logo <path>` (the app's own name and mark), `--admin-password <value>` (the `admin` module's, 16 characters at
 least — generated otherwise), `--yes` (accept every default), `--dry-run` (write
 the app, create nothing in your accounts), `--plan` (print the whole run and
 write none of it).
@@ -163,7 +166,7 @@ no scaffold directory, no file copied into an embed host, no `.env` or
 | `coworker` | The operator's AI assistant, on a page of its own. |
 | `flow-builder` | Visual flow editor: canvas, inspector, block and connection editing. |
 | `ads-optimization` | Conversion reporting for click-to-WhatsApp ads: which ads each event set covers, and which moments in the chat go back to Meta so it can optimize delivery. |
-| `publishing` | Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, composed against a live preview, published now or queued — with a calendar, retries, and a library of what is already on the account. The scheduling queue needs the deployment's own database; without one, the module still composes and publishes on the spot. |
+| `publishing` | Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, published now or queued — with a calendar, retries, and a library of what is already on the account. The scheduling queue needs the deployment's own database; without one, the module still composes and publishes on the spot. |
 | `channels` | Every channel connected to the bot, with Disconnect, and the one-shot links that let somebody without dashboard access connect a new WhatsApp, Instagram or TikTok channel or refresh an existing one's permissions — created, copied and revoked from one page. |
 | `auth` | Sign-in for the people who use the app, on your own Supabase project. Every account that signs up gets a bot of its own in your workspace, and can create more; a teammate can be granted some of the account's bots and not others. This is what turns the app into a product other people can buy. |
 | `admin` | The account behind this deployment's own token: every workspace and bot, created, renamed and deleted from inside the app, connected channels, and a health page. Opened by a password in the server environment rather than by any Chatfuel identity, and never in the navigation rail. |
@@ -185,7 +188,8 @@ envelope, pagination, the CORS proxy and the traps worth knowing.
   per module, each with the operations, the guides and the playbooks for it, plus
   `chatfuel-update`, which is about the wizard rather than about any module and
   is installed whatever you picked.
-- `.env` with your token, written `0600`, and `.env.example` beside it.
+- `.env` with your token, written `0600`. The `.env.example` beside it comes with the template as
+  it is, so it lists every module's variables, not only the ones you installed.
 - `.chatfuel/lock.json` — what every file in the app was made of: where it came
   from, the digest it had when it landed, and the commit the content was pinned
   to. It is what makes an update possible without a diff.

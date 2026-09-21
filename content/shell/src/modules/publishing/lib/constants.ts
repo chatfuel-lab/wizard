@@ -26,6 +26,19 @@ export const CAROUSEL_MAX = 10;
  */
 export const PUBLISH_TIMEOUT_MS = 300_000;
 
+/**
+ * What the deployment's own bucket takes, for a post that waits.
+ *
+ * Both are the proxy's numbers, not Instagram's: `INSTAGRAM_MEDIA_TYPES` and
+ * `INSTAGRAM_MEDIA_MAX_BYTES` in the proxy's publishingMedia.ts. They are
+ * repeated here so the composer can refuse at the control — before 40 MB of
+ * video has crossed the network to be told 413, and before a HEIC straight off
+ * a phone is told 415 by a route whose answer reads like a fault.
+ */
+export const DURABLE_MEDIA_MAX_BYTES = 25 * 1024 * 1024;
+export const DURABLE_IMAGE_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp'];
+export const DURABLE_VIDEO_TYPES: readonly string[] = ['video/mp4', 'video/quicktime'];
+
 /** Media per page in the library, and how many to pull down from Instagram first. */
 export const LIBRARY_PAGE_SIZE = 24;
 export const REFETCH_COUNT = 30;
