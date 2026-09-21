@@ -93,7 +93,14 @@ export function validatePost(post: NewPost, options: ValidateOptions = {}): Post
        whose upload has not resolved into one has nothing to publish. */
     problems.push({ field: 'media', message: 'One item is not ready yet.' });
   } else if (options.requireDurableMedia && expiringMedia(post).length > 0) {
-    problems.push({ field: 'media', message: 'An upload cannot be held until a later time.' });
+    /* Only an upload made BEFORE the post had a time: one made after goes to
+       the deployment's own bucket and is not among these. The bytes are already
+       at an address that expires, so the way out is to add the file again. */
+    problems.push({
+      field: 'media',
+      message:
+        'This upload was added before the post had a time, and cannot be held until then. Remove it and add it again.',
+    });
   }
 
   /* ── caption ───────────────────────────────────────────────────────── */

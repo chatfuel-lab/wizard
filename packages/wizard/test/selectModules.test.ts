@@ -78,3 +78,25 @@ describe('--yes', () => {
     expect(await run({ yes: true, modules: 'auth' })).toContain('auth');
   });
 });
+
+// `recommends` is a log line in a non-interactive run, and `--yes` leaves auth
+// out by default — so this is the pair every unattended run lands on.
+describe('publishing without auth', () => {
+  it('says the schedule is what goes missing', async () => {
+    notes.length = 0;
+    await run({ modules: 'publishing' });
+    expect(notes.join('\n')).toMatch(/publishing without auth: .*nothing can be scheduled/);
+  });
+
+  it('says it in a --yes run too, which is where nobody chose the pair', async () => {
+    notes.length = 0;
+    await run({ yes: true });
+    expect(notes.join('\n')).toMatch(/publishing without auth/);
+  });
+
+  it('says nothing once auth is there', async () => {
+    notes.length = 0;
+    await run({ modules: 'publishing,auth' });
+    expect(notes.join('\n')).not.toMatch(/publishing without auth/);
+  });
+});

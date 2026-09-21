@@ -1,8 +1,10 @@
 # Configuration
 
 Two surfaces: the flags the wizard takes when it writes the app, and the environment the app
-reads once it exists. The wizard writes a `.env` (mode `0600`) and a `.env.example` beside it;
-this page is the reference for what goes in them.
+reads once it exists. The wizard writes a `.env` (mode `0600`) for this run — your token, the
+modules you picked. The `.env.example` beside it is not written per run: it comes over with the
+template as it is, so it lists every module's variables, including modules you did not install.
+This page is the reference for what goes in them.
 
 ## Wizard flags
 
@@ -25,6 +27,8 @@ this page is the reference for what goes in them.
 | `--dry-run` | Stop before anything is created in your Chatfuel or Supabase account — no bot, no project, no trial. The app itself is still written, so you get the scaffold without the account side of it. |
 | `--plan` | Print what the run would do and write none of it: no scaffold directory, no files copied into an embed host, no `.gitignore` or `.env` line appended, no `.chatfuel/lock.json`, no skills installed. Implies `--dry-run`, so nothing is created in your accounts either. |
 | `--verbose` | Full output instead of a summary. |
+| `-v`, `--version` | Print the wizard's version and exit. |
+| `-h`, `--help` | Print the flags and commands and exit. |
 | `--supabase-create <name>` | Create a Supabase project with this name. |
 | `--supabase-project <ref>` | Use an existing Supabase project. |
 | `--supabase-org <slug>`, `--supabase-region <code>` | Where to create it. |
@@ -136,8 +140,11 @@ app ships nothing, and nothing is forwarded.
 
 ### The `auth` module
 
-All three together turn the gate on. None of them is open mode. Some but not all is
-`ProxyAuthMisconfigured` — the proxy refuses every request rather than guessing.
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` together turn the gate on. Neither is open
+mode. One without the other is `ProxyAuthMisconfigured` — the proxy refuses every request rather
+than guessing. `SUPABASE_SERVICE_ROLE_KEY` plays no part in that switch, and is not optional
+either: with the gate on and the key missing, sign-up, password recovery and the publish queue
+are the routes that do not mount.
 
 | Name | Side | What it is |
 | --- | --- | --- |

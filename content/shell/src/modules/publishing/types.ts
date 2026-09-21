@@ -28,10 +28,17 @@ export interface MediaItem {
   id: string;
   type: 'image' | 'video';
   url: string;
-  /** Where the URL came from, which is what a failure has to be explained by. */
-  source: 'upload' | 'link' | 'library';
+  /**
+   * Where the URL came from, which is what a failure has to be explained by.
+   * `upload` is the platform's file store, whose address expires within hours;
+   * `durable` is the deployment's own bucket, whose address does not — the only
+   * kind of upload a post that waits can carry.
+   */
+  source: 'upload' | 'durable' | 'link' | 'library';
   /** Set when the URL came from an upload, so the file can be read back. */
   fileId?: string;
+  /** Set on a `durable` item: the object's key in the deployment's bucket. */
+  storageKey?: string;
   previewUrl?: string;
   /** Longest edge in pixels, when it is known — the preview uses it for shape. */
   width?: number;

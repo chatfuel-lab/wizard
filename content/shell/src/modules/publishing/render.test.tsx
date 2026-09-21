@@ -358,6 +358,7 @@ describe('the calendar renders', () => {
 
 const SOURCES: MediaSources = {
   canUpload: true,
+  durable: false,
   busy: false,
   error: null,
   dismiss: () => undefined,

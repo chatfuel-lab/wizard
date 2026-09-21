@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileStatus, InstagramFileDocument } from '~api/generated/publishing/graphql';
-import { UPLOAD_POLL_INTERVAL_MS, UPLOAD_POLL_TIMEOUT_MS } from '../lib/constants';
+import {
+  DURABLE_IMAGE_TYPES,
+  DURABLE_MEDIA_MAX_BYTES,
+  DURABLE_VIDEO_TYPES,
+  UPLOAD_POLL_INTERVAL_MS,
+  UPLOAD_POLL_TIMEOUT_MS,
+} from '../lib/constants';
 import { acceptsOf } from '../lib/composerDraft';
 import { errorMessage } from '../lib/errors';
+import { uploadDurableMedia } from '../lib/queue/proxy';
 import { newClientId } from '~api';
 import type { ApiClient, MediaItem, PostKind } from '../types';
 
@@ -20,11 +27,20 @@ import type { ApiClient, MediaItem, PostKind } from '../types';
  * what this tab draws, which is the local file itself: it appears instantly,
  * costs no round trip, and exists in exactly one browser. Publishing the second
  * one would send the platform an address that resolves nowhere.
+ *
+ * And there are two places the bytes can go. The platform's file store is the
+ * default, and its address expires within hours — right for a post going out
+ * now. A post with a time on it needs the address to still resolve when the
+ * time comes, so with `durable` set the file goes to the deployment's own
+ * bucket through the proxy instead, and comes back marked as the kind of upload
+ * a schedule may carry.
  */
 
 export interface MediaSources {
   /** False on a host with no upload path at all; the drop zone is then not offered. */
   canUpload: boolean;
+  /** True while files go to the deployment's own bucket, which takes fewer kinds of them. */
+  durable: boolean;
   busy: boolean;
   /** Why the last attempt failed, in the platform's own words. */
   error: string | null;
@@ -62,7 +78,56 @@ async function resolveFileUrl(client: ApiClient, fileId: string, deadline: numbe
   }
 }
 
-export function useMediaSources(client: ApiClient, botId: string): MediaSources {
+/**
+ * Why the deployment's own bucket would refuse this file, or null when it would not.
+ *
+ * Asked before a byte is sent. The proxy enforces the same two limits and is the
+ * authority on them — but its answer to a 40 MB video arrives after 40 MB has
+ * gone up, and its answer to a HEIC is a 415 that reads like something broke.
+ * The picker's `accept` already narrows to these types; a file that was dragged
+ * in never saw the picker.
+ */
+export function durableProblem(file: Pick<File, 'type' | 'size'>): string | null {
+  if (!DURABLE_IMAGE_TYPES.includes(file.type) && !DURABLE_VIDEO_TYPES.includes(file.type)) {
+    return 'A scheduled post takes a JPEG, PNG or WebP photo, or an MP4 or MOV video. Convert this file, or publish the post now instead.';
+  }
+  if (file.size > DURABLE_MEDIA_MAX_BYTES) {
+    const mb = (bytes: number): string => `${Math.ceil(bytes / (1024 * 1024))} MB`;
+    return `A scheduled post takes a file up to ${mb(DURABLE_MEDIA_MAX_BYTES)}, and this one is ${mb(file.size)}.`;
+  }
+  return null;
+}
+
+/** What storing a file leaves behind: an address, and where that address lives. */
+export type StoredFile = Pick<MediaItem, 'url' | 'source' | 'fileId' | 'storageKey'>;
+
+/**
+ * Put one file somewhere it can be published from.
+ *
+ * `durable` asks for the deployment's own bucket, and gets it only where the
+ * host can reach the proxy's routes; anywhere else this is the platform's file
+ * store, and the item comes back marked as the kind a schedule refuses.
+ */
+export async function storeFile(
+  client: ApiClient,
+  botId: string,
+  file: File,
+  type: MediaItem['type'],
+  durable: boolean,
+): Promise<StoredFile> {
+  if (durable && client.proxyFetch) {
+    const problem = durableProblem(file);
+    if (problem) throw new Error(problem);
+    const kept = await uploadDurableMedia(client.proxyFetch, botId, file);
+    return { url: kept.url, source: 'durable', storageKey: kept.key };
+  }
+  if (!client.uploadFile) throw new Error('This app has nowhere to upload a file to.');
+  const uploaded = await client.uploadFile(botId, file, type === 'video' ? 'Video' : 'Image');
+  const url = await resolveFileUrl(client, uploaded.id, Date.now() + UPLOAD_POLL_TIMEOUT_MS);
+  return { url, source: 'upload', fileId: uploaded.id };
+}
+
+export function useMediaSources(client: ApiClient, botId: string, durable = false): MediaSources {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /* Local preview URLs belong to this tab and leak until they are released. */
@@ -77,11 +142,11 @@ export function useMediaSources(client: ApiClient, botId: string): MediaSources 
   );
 
   const dismiss = useCallback(() => setError(null), []);
+  const canUpload = Boolean(client.uploadFile) || (durable && Boolean(client.proxyFetch));
 
   const add = useCallback(
     async (files: readonly File[], kind: PostKind): Promise<MediaItem[]> => {
-      const upload = client.uploadFile;
-      if (!upload || files.length === 0) return [];
+      if (!canUpload || files.length === 0) return [];
       const accepts = acceptsOf(kind);
       setBusy(true);
       setError(null);
@@ -92,14 +157,13 @@ export function useMediaSources(client: ApiClient, botId: string): MediaSources 
           if (!type || !accepts.includes(type)) {
             throw new Error(kind === 'reel' ? 'A reel needs a video.' : 'That file is not a photo or a video.');
           }
-          const uploaded = await upload(botId, file, type === 'video' ? 'Video' : 'Image');
-          const url = await resolveFileUrl(client, uploaded.id, Date.now() + UPLOAD_POLL_TIMEOUT_MS);
-          let previewUrl = url;
+          const stored = await storeFile(client, botId, file, type, durable);
+          let previewUrl = stored.url;
           if (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function') {
             previewUrl = URL.createObjectURL(file);
             objectUrls.current.push(previewUrl);
           }
-          made.push({ id: newClientId(), type, url, source: 'upload', fileId: uploaded.id, previewUrl });
+          made.push({ id: newClientId(), type, ...stored, previewUrl });
         }
         return made;
       } catch (err) {
@@ -111,8 +175,8 @@ export function useMediaSources(client: ApiClient, botId: string): MediaSources 
         setBusy(false);
       }
     },
-    [client, botId],
+    [client, botId, durable, canUpload],
   );
 
-  return { canUpload: Boolean(client.uploadFile), busy, error, dismiss, add };
+  return { canUpload, durable: durable && Boolean(client.proxyFetch), busy, error, dismiss, add };
 }

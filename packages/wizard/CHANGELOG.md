@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.4.3 — 2026-09-21
+
+### Fixed
+
+- **A scheduled post can carry an upload.** Every file the composer took went to
+  the platform's file store, whose address expires within hours, and the
+  schedule rightly refuses one of those — so a post with a time on it could
+  carry a pasted link or a library pick and never a file. A file added while the
+  post has a time now goes to the deployment's own bucket, through the route the
+  proxy has had all along. One added before the time was set is still refused,
+  and the message now says how to get out of it: remove it and add it again.
+  That bucket takes JPEG, PNG, WebP, MP4 and MOV up to 25 MB, so for a post that
+  waits the picker names those formats and the composer refuses anything else —
+  a HEIC off a phone, a 40 MB video — before a byte is sent.
+- **An address that names no module says so.** An unknown first path segment
+  used to open the first module under its own address, which made a module that
+  was copied into the app and never registered look like it worked. It is a
+  "Page not found" inside the shell now, with the menu still there to leave by.
+- **`publishing` without `auth` is said out loud.** The publish queue lives in
+  the `auth` module's Supabase project, so that pair composes and posts on the
+  spot and offers no schedule — and it is the pair every `--yes` run lands on.
+  The wizard now warns when it picks it, and `.env.example` no longer reads as
+  if `PUBLISHING_SECRET` were the whole requirement.
+- **The way out of a refused token write pastes under npm.** The three lines
+  that tell you to run the app with the token in the environment said
+  `npm dev`, which npm does not accept. They say `npm run dev`.
+- **The knowledge base calls one field one thing.** The undo toast and a
+  screen-reader label still said "AI instructions" on the page headed "About the
+  business" — the name that sent people to write a prompt in a box meant for
+  facts.
+- **The live chat module declares `People: View`**, which the contact card
+  beside the thread has always needed.
+- **The auth gate is two variables, and the docs say two.** `.env.example` and
+  the configuration reference both said all three Supabase variables switch the
+  gate on. `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` do; the service-role
+  key is what the gate needs once it is on.
+- Descriptions of `publishing` no longer promise a live preview the composer
+  does not have. The publishing handoff named a function, `cf_ig_reap`, that is
+  `cf_pub_reap`.
+- The `--yes` help text said it installs every ready module. It leaves out the
+  opt-in ones — `auth`, `admin` — and only `--modules` brings them in.
+- The flag table lists `--version` and `--help`; `.env.example` documents
+  `SUPABASE_PROJECT_REF`; the docs say `.env.example` comes with the template
+  rather than being written per run; the architecture page says where a module's
+  handoff actually lands, and that this repository's validator does check the
+  two vendoring rules; the API client's README no longer claims `src/` imports
+  `graphql`.
+
+### Changed
+
+- **This repository's validator checks that every module's root is a
+  `React.lazy` component.** The descriptor's type accepts an eager one, and an
+  eager one ships in the first load for everybody who never opens that module.
+- **The module manifest no longer has `app.env[].prompt`.** Nothing read it and
+  no module set it. `resolve` stays, described as what it is: the name of the
+  step that supplies the value, which nothing dispatches on.
+
 ## 0.4.2 — 2026-09-16
 
 ### Added

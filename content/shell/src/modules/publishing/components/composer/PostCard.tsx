@@ -247,7 +247,7 @@ export function PostCard({
             ref={fileRef}
             type="file"
             hidden
-            accept={acceptAttribute(draft.kind)}
+            accept={acceptAttribute(draft.kind, sources.durable)}
             multiple={capacityOf(draft.kind) > 1}
             onChange={(event) => {
               const files = [...(event.target.files ?? [])];
