@@ -396,6 +396,7 @@ describe('how long a source lasts', () => {
     expect(needsDurableStorage({ ...photo(1), source: 'upload' })).toBe(true);
     expect(needsDurableStorage({ ...photo(1), source: 'link' })).toBe(false);
     expect(needsDurableStorage({ ...photo(1), source: 'library' })).toBe(false);
+    expect(needsDurableStorage({ ...photo(1), source: 'durable' })).toBe(false);
   });
 
   it('finds the ones a scheduled post could not rely on', () => {

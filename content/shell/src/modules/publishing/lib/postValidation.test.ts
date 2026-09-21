@@ -104,6 +104,16 @@ describe('media that will not last', () => {
     expect(validatePost(draft('carousel', { media: [photo(1), library] }), { requireDurableMedia: true })).toEqual([]);
   });
 
+  it('lets an upload kept in the deployment’s own bucket wait', () => {
+    const kept: MediaItem = { ...photo(1), source: 'durable', storageKey: 'bot-1/abc.jpg' };
+    expect(validatePost(draft('post', { media: [kept] }), { requireDurableMedia: true })).toEqual([]);
+  });
+
+  it('says how to get out of it, because the bytes are already somewhere that expires', () => {
+    const post = draft('post', { media: [upload()] });
+    expect(problemFor(validatePost(post, { requireDurableMedia: true }), 'media')).toMatch(/add it again/);
+  });
+
   it('finds one upload hiding in a carousel', () => {
     const post = draft('carousel', { media: [photo(1), upload(2)] });
     expect(problemFor(validatePost(post, { requireDurableMedia: true }), 'media')).toMatch(/upload/);
