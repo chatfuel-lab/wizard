@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FileStatus, InstagramFileDocument } from '~api/generated/publishing/graphql';
-import { UPLOAD_POLL_INTERVAL_MS, UPLOAD_POLL_TIMEOUT_MS } from '../lib/constants';
+import {
+  DURABLE_IMAGE_TYPES,
+  DURABLE_MEDIA_MAX_BYTES,
+  DURABLE_VIDEO_TYPES,
+  UPLOAD_POLL_INTERVAL_MS,
+  UPLOAD_POLL_TIMEOUT_MS,
+} from '../lib/constants';
 import { acceptsOf } from '../lib/composerDraft';
 import { errorMessage } from '../lib/errors';
 import { uploadDurableMedia } from '../lib/queue/proxy';
@@ -33,6 +39,8 @@ import type { ApiClient, MediaItem, PostKind } from '../types';
 export interface MediaSources {
   /** False on a host with no upload path at all; the drop zone is then not offered. */
   canUpload: boolean;
+  /** True while files go to the deployment's own bucket, which takes fewer kinds of them. */
+  durable: boolean;
   busy: boolean;
   /** Why the last attempt failed, in the platform's own words. */
   error: string | null;
@@ -70,6 +78,26 @@ async function resolveFileUrl(client: ApiClient, fileId: string, deadline: numbe
   }
 }
 
+/**
+ * Why the deployment's own bucket would refuse this file, or null when it would not.
+ *
+ * Asked before a byte is sent. The proxy enforces the same two limits and is the
+ * authority on them — but its answer to a 40 MB video arrives after 40 MB has
+ * gone up, and its answer to a HEIC is a 415 that reads like something broke.
+ * The picker's `accept` already narrows to these types; a file that was dragged
+ * in never saw the picker.
+ */
+export function durableProblem(file: Pick<File, 'type' | 'size'>): string | null {
+  if (!DURABLE_IMAGE_TYPES.includes(file.type) && !DURABLE_VIDEO_TYPES.includes(file.type)) {
+    return 'A scheduled post takes a JPEG, PNG or WebP photo, or an MP4 or MOV video. Convert this file, or publish the post now instead.';
+  }
+  if (file.size > DURABLE_MEDIA_MAX_BYTES) {
+    const mb = (bytes: number): string => `${Math.ceil(bytes / (1024 * 1024))} MB`;
+    return `A scheduled post takes a file up to ${mb(DURABLE_MEDIA_MAX_BYTES)}, and this one is ${mb(file.size)}.`;
+  }
+  return null;
+}
+
 /** What storing a file leaves behind: an address, and where that address lives. */
 export type StoredFile = Pick<MediaItem, 'url' | 'source' | 'fileId' | 'storageKey'>;
 
@@ -88,6 +116,8 @@ export async function storeFile(
   durable: boolean,
 ): Promise<StoredFile> {
   if (durable && client.proxyFetch) {
+    const problem = durableProblem(file);
+    if (problem) throw new Error(problem);
     const kept = await uploadDurableMedia(client.proxyFetch, botId, file);
     return { url: kept.url, source: 'durable', storageKey: kept.key };
   }
@@ -148,5 +178,5 @@ export function useMediaSources(client: ApiClient, botId: string, durable = fals
     [client, botId, durable, canUpload],
   );
 
-  return { canUpload, busy, error, dismiss, add };
+  return { canUpload, durable: durable && Boolean(client.proxyFetch), busy, error, dismiss, add };
 }

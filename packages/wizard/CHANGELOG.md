@@ -11,6 +11,9 @@
   post has a time now goes to the deployment's own bucket, through the route the
   proxy has had all along. One added before the time was set is still refused,
   and the message now says how to get out of it: remove it and add it again.
+  That bucket takes JPEG, PNG, WebP, MP4 and MOV up to 25 MB, so for a post that
+  waits the picker names those formats and the composer refuses anything else —
+  a HEIC off a phone, a 40 MB video — before a byte is sent.
 - **An address that names no module says so.** An unknown first path segment
   used to open the first module under its own address, which made a module that
   was copied into the app and never registered look like it worked. It is a
