@@ -25,6 +25,8 @@
 //  20. a module's display name is the same string in its manifest, its shell descriptor title,
 //      its handoff heading and its skill heading — four files, four audiences, and nothing else
 //      could see them drift apart
+//  21. a module's descriptor names its root as a React.lazy component and does not also import
+//      it statically — the type allows an eager one, and an eager one ships in the first load
 //   8. template invariants: marked blocks present; tsconfig fallback paths match the
 //      pruneTsconfigFallbacks regex shape
 //   9. codegen coverage: every codegen module id has an operations.graphql; every ready module
@@ -97,6 +99,7 @@ import { checkOperationDocs } from './validate/passes/operation-docs.ts';
 import { checkMarkdownGraphql } from './validate/passes/markdown-graphql.ts';
 import { checkContentIndex } from './validate/passes/content-index.ts';
 import { checkModuleNames } from './validate/passes/module-names.ts';
+import { checkLazyComponents } from './validate/passes/lazy-component.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -128,6 +131,7 @@ if (checkTrees(ctx)) {
   checkAssetTwins(ctx); // pass 4b — shipped asset twins
   checkShellIntegrity(ctx); // pass 7 — shell integrity
   checkModuleNames(ctx); // pass 20 — one display name per module, in every layer that shows one
+  checkLazyComponents(ctx); // pass 21 — every module's root is its own chunk
   checkTemplateInvariants(ctx); // pass 8 — template invariants
   checkCodegenCoverage(ctx); // pass 9 — codegen coverage
   checkMigrations(ctx); // pass 12 — Supabase migration hygiene

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { probeQueueRoutes, readConfig } from './proxy';
+import { probeQueueRoutes, readConfig, uploadDurableMedia } from './proxy';
 
 const answering =
   (body: string, init: ResponseInit = {}) =>
@@ -56,5 +56,35 @@ describe('probeQueueRoutes', () => {
     await expect(
       probeQueueRoutes(answering('{"errors":[{"message":"the database could not be reached"}]}', { status: 503 })),
     ).rejects.toThrow('the database could not be reached');
+  });
+});
+
+describe('uploadDurableMedia', () => {
+  const file = new File([new Uint8Array([0xff, 0xd8, 0xff])], 'photo.jpg', { type: 'image/jpeg' });
+
+  it('sends the file as the part the route reads, under the bot it belongs to', async () => {
+    const seen: Array<{ path: string; init?: RequestInit }> = [];
+    const proxyFetch = async (path: string, init?: RequestInit): Promise<Response> => {
+      seen.push({ path, init });
+      return new Response(
+        '{"url":"https://x.supabase.co/storage/v1/object/public/cf-pub-media/bot%201/a.jpg","key":"bot 1/a.jpg"}',
+      );
+    };
+    const kept = await uploadDurableMedia(proxyFetch, 'bot 1', file);
+
+    expect(kept.key).toBe('bot 1/a.jpg');
+    expect(seen).toHaveLength(1);
+    expect(seen[0]!.path).toBe('/publishing/media?botID=bot%201');
+    expect(seen[0]!.init?.method).toBe('POST');
+    const body = seen[0]!.init?.body as FormData;
+    expect((body.get('file') as File).name).toBe('photo.jpg');
+    // The browser writes the boundary; a content-type set here would name one
+    // the body does not use, and the route would find no file in it.
+    expect(seen[0]!.init?.headers).toBeUndefined();
+  });
+
+  it('passes on what the route said when it refuses', async () => {
+    const refusing = answering('{"errors":[{"message":"That file is too large"}]}', { status: 413 });
+    await expect(uploadDurableMedia(refusing, 'bot-1', file)).rejects.toThrow('That file is too large');
   });
 });

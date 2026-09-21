@@ -109,8 +109,8 @@ export const FIELD_META: Record<BusinessField, FieldMeta> = {
   },
   additionalInstructions: {
     id: 'additionalInstructions',
-    label: 'AI instructions',
-    hint: 'How the assistant behaves: role, task, format. Not a place for facts.',
+    label: 'About the business',
+    hint: 'Anything else the assistant should know — how you work, and what you do not do.',
     placeholder: '',
     multiline: true,
     essential: false,

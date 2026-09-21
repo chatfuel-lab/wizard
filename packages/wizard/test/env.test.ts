@@ -2,7 +2,8 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, statSync, wri
 import { execa } from 'execa';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import * as p from '@clack/prompts';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createContext } from '../src/run';
 import { appendEnvMissing, collectEnv, envLine, gitignoreGuard, writeEnv } from '../src/scaffold/env';
 import { scrub } from '../src/log';
@@ -271,10 +272,16 @@ describe('gitignoreGuard, with git as the authority', () => {
     await execa('git', ['add', '.env'], { cwd: dir });
     await execa('git', ['commit', '-qm', 'placeholder'], { cwd: dir });
 
+    const warn = vi.spyOn(p.log, 'warn').mockImplementation(() => undefined);
     const guard = await gitignoreGuard(ctxWith(['core']), dir);
     expect(guard).toEqual({ ok: false, appended: false });
     // And it did not quietly write the line that would have looked like a fix.
     expect(existsSync(join(dir, '.gitignore'))).toBe(false);
+    // The way out is printed to someone already stuck, so it has to paste: the
+    // default package manager is npm, and `npm dev` is not a command.
+    const said = warn.mock.calls.map(([line]) => line).join('\n');
+    warn.mockRestore();
+    expect(said).toContain('CHATFUEL_TOKEN=<your token> npm run dev');
   });
 
   it('takes an ignore rule the text of this .gitignore never mentions', async () => {

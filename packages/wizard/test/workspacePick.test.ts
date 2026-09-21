@@ -119,6 +119,17 @@ describe('workspacePick', () => {
     expect(ctx.answers.env.CHATFUEL_WORKSPACE_ID).toBe('new');
   });
 
+  // A leaked workspace is not free to clean up, and this is the one Chatfuel
+  // mutation a rehearsal on an empty account would otherwise reach.
+  it('creates nothing in a --dry-run, and carries a stand-in id instead', async () => {
+    created.length = 0;
+    const ctx = ctxWith([], { dryRun: true });
+    await workspacePick(ctx);
+    expect(created).toHaveLength(0);
+    expect(ctx.answers.workspace?.id).toBe('dry-run-workspace');
+    expect(ctx.answers.env.CHATFUEL_WORKSPACE_ID).toBe('dry-run-workspace');
+  });
+
   it('says so when the account may not create another workspace', async () => {
     const ctx = ctxWith([]);
     ctx.client = {

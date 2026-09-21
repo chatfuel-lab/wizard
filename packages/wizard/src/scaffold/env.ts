@@ -295,7 +295,7 @@ export async function gitignoreGuard(ctx: WizardContext, target: string): Promis
   if (verdict?.tracked) {
     p.log.warn(`git already tracks ${join(target, '.env')}, so ignoring it now would change nothing:`);
     p.log.warn('the next commit would carry the token. Run  git rm --cached .env  and start again.');
-    p.log.warn(`Until then, run the app with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} dev`);
+    p.log.warn(`Until then, run the app with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} run dev`);
     return { ok: false, appended: false };
   }
   if (verdict?.ignored) return { ok: true, appended: false };
@@ -327,7 +327,7 @@ export async function gitignoreGuard(ctx: WizardContext, target: string): Promis
   });
   if (p.isCancel(ok) || !ok) {
     p.log.warn('Refusing to write the token to disk without a .env gitignore.');
-    p.log.warn(`Run the app with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} dev`);
+    p.log.warn(`Run the app with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} run dev`);
     return { ok: false, appended: false };
   }
   ignoreEnv();
@@ -352,6 +352,8 @@ async function confirmIgnored(
   if (after === undefined || after.ignored) return { ok: true, appended: true };
   p.log.warn(`.env is still not ignored here after the line was added to ${join(target, '.gitignore')}.`);
   p.log.warn('Something else overrides it — a negation (!.env) below, or a rule in a parent directory.');
-  p.log.warn(`Refusing to write the token. Run with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} dev`);
+  p.log.warn(
+    `Refusing to write the token. Run with:  CHATFUEL_TOKEN=<your token> ${ctx.answers.packageManager} run dev`,
+  );
   return { ok: false, appended: true };
 }

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildUrl, legacyHashTarget, migrateLegacyHash, normalizeBase, parseLocation, pathBelow } from './route';
+import {
+  buildUrl,
+  legacyHashTarget,
+  migrateLegacyHash,
+  normalizeBase,
+  parseLocation,
+  pathBelow,
+  resolveRouted,
+} from './route';
 
 const at = (pathname: string, search = '', hash = '') => ({ pathname, search, hash });
 
@@ -122,5 +130,27 @@ describe('migrateLegacyHash', () => {
       throw new DOMException('The operation is insecure.', 'SecurityError');
     };
     expect(() => withWindow('#/livechat?c=1', refuse, migrateLegacyHash)).not.toThrow();
+  });
+});
+
+describe('resolveRouted', () => {
+  const modules = [{ id: 'livechat' }, { id: 'contacts' }];
+
+  it('finds the module the address names', () => {
+    expect(resolveRouted(modules, 'contacts', false)).toEqual({ routed: { id: 'contacts' }, notFound: false });
+  });
+
+  it('calls an address that names no module what it is, rather than the first module', () => {
+    // A module copied into the app and never registered used to open as
+    // `livechat` under its own address, and looked like it worked.
+    expect(resolveRouted(modules, 'deals', false)).toEqual({ routed: undefined, notFound: true });
+  });
+
+  it('leaves `/` alone — it is nobody’s screen, and the app redirects from it', () => {
+    expect(resolveRouted(modules, null, false).notFound).toBe(false);
+  });
+
+  it('leaves the host integration’s own addresses alone', () => {
+    expect(resolveRouted(modules, 'team', true).notFound).toBe(false);
   });
 });

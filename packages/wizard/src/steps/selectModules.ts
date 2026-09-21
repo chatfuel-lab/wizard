@@ -96,5 +96,16 @@ export async function selectModules(ctx: WizardContext): Promise<void> {
     }
   }
 
+  // The publish queue lives in the auth module's Supabase project and the proxy
+  // mounts its routes only behind the gate, so `publishing` on its own composes
+  // and posts on the spot and offers no schedule. That is a fair app to want —
+  // which is why auth is recommended, not required — but not one to find out
+  // about from a missing button.
+  if (closure.includes('publishing') && !closure.includes('auth')) {
+    p.log.warn(
+      'publishing without auth: posts go out on the spot, but nothing can be scheduled — the queue needs the auth module and its Supabase project. Add it with --modules (e.g. --modules publishing,auth).',
+    );
+  }
+
   ctx.answers.modules = closure;
 }

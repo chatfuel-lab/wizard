@@ -10,9 +10,13 @@ workspace and vendored modes.
 `src/` imports exactly these packages, so a scaffolded app must declare them
 as **dependencies**:
 
-- `graphql`
 - `graphql-ws`
 - `@graphql-typed-document-node/core`
+
+`graphql` is a dependency of the scaffolded app too, but not on `src/`'s
+account: the generated documents are strings (`documentMode: 'string'`), so the
+transport has no AST to walk and never imports it. It is there for the codegen
+tree the wizard copies in as `scripts/codegen/`, which does.
 
 Node consumers below Node 22 must pass the `ws` package's `WebSocket` as
 `webSocketImpl` (the browser and Node 22+ have a global one). `ws` is never

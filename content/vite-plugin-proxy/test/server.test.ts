@@ -411,7 +411,6 @@ describe('server lifecycle', () => {
         CHATFUEL_TOKEN: TOKEN,
         VITE_SUPABASE_URL: 'https://example.supabase.co',
         VITE_SUPABASE_ANON_KEY: 'sb_publishable_x',
-        VITE_AUTH_TENANT_ID: '3d1f0d5a-2c31-5f2a-9d51-8f0b8ad0a3f1',
       },
       proxy: { upstream: upstream.url },
       log: () => undefined,

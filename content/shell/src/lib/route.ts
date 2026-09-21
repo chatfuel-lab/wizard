@@ -64,6 +64,24 @@ export function parseLocation(loc: RoutableLocation = window.location, base: str
   return routeOf(pathBelow(loc.pathname, base), new URLSearchParams(loc.search));
 }
 
+/**
+ * Which module an address names, and whether it names nothing at all.
+ *
+ * An unknown first segment used to resolve to the first module, quietly: a
+ * module that was on disk and not in the registry opened as somebody else's
+ * page, under its own address, and looked like it worked. `/` is not unknown —
+ * it is nobody's screen yet, and the app redirects from it — and neither is an
+ * address the host integration owns.
+ */
+export function resolveRouted<T extends { id: string }>(
+  modules: readonly T[],
+  moduleId: string | null,
+  isHostRoute: boolean,
+): { routed: T | undefined; notFound: boolean } {
+  const routed = modules.find((m) => m.id === moduleId);
+  return { routed, notFound: moduleId !== null && routed === undefined && !isHostRoute };
+}
+
 /** '<BASE><path>' for an app-relative path that carries its own query. */
 export const appUrl = (path: string): string => `${BASE}${path.replace(/^\/+/, '')}`;
 

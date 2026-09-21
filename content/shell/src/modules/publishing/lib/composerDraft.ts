@@ -15,7 +15,7 @@
  */
 import { newClientId } from '~api';
 import { FileStatus, FileType } from '~api/generated/publishing/graphql';
-import { CAROUSEL_MAX } from './constants';
+import { CAROUSEL_MAX, DURABLE_IMAGE_TYPES, DURABLE_VIDEO_TYPES } from './constants';
 import { kindOf, thumbnailOf } from './libraryItems';
 import type { MediaItem, MediaNode, NewPost, PostKind, QueuedPost } from '../types';
 
@@ -55,15 +55,21 @@ export function acceptsOf(kind: PostKind): readonly MediaType[] {
  * Every picture format the platform will take, which in practice is every one a
  * browser will offer. The input's `accept` is a filter on a file dialog, not a
  * rule — narrowing it to one format hides files somebody has and can publish.
+ *
+ * A post that waits is the exception. Its files go to the deployment's own
+ * bucket, which takes three picture formats and says 415 to the rest — and the
+ * rest includes HEIC, which is what a phone hands over. There the picker names
+ * the formats, because offering a file the next step refuses is the failure the
+ * paragraph above is about.
  */
 const IMAGE_ACCEPT = 'image/*';
 const VIDEO_ACCEPT = 'video/mp4,video/quicktime';
 
-export function acceptAttribute(kind: PostKind): string {
+export function acceptAttribute(kind: PostKind, durable = false): string {
   const accepts = acceptsOf(kind);
-  return [accepts.includes('image') ? IMAGE_ACCEPT : null, accepts.includes('video') ? VIDEO_ACCEPT : null]
-    .filter(Boolean)
-    .join(',');
+  const image = durable ? DURABLE_IMAGE_TYPES.join(',') : IMAGE_ACCEPT;
+  const video = durable ? DURABLE_VIDEO_TYPES.join(',') : VIDEO_ACCEPT;
+  return [accepts.includes('image') ? image : null, accepts.includes('video') ? video : null].filter(Boolean).join(',');
 }
 
 /** A Story carries no caption, and the composer must not offer the field. */

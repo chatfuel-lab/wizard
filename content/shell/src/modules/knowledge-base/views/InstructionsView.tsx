@@ -119,7 +119,7 @@ export function InstructionsView({ findings, canEditHere, onBusy, onParams }: Kn
   if (!store.state.kb) {
     return (
       <PageBody measure="prose">
-        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading the AI instructions">
+        <div className="flex flex-col gap-4" aria-busy="true" aria-label="Loading About the business">
           <Skeleton variant="block" height="24rem" />
         </div>
       </PageBody>
