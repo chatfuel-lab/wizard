@@ -41,14 +41,15 @@
 - The flag table lists `--version` and `--help`; `.env.example` documents
   `SUPABASE_PROJECT_REF`; the docs say `.env.example` comes with the template
   rather than being written per run; the architecture page says where a module's
-  handoff actually lands, and that `pnpm validate` does check the two vendoring
-  rules; the API client's README no longer claims `src/` imports `graphql`.
+  handoff actually lands, and that this repository's validator does check the
+  two vendoring rules; the API client's README no longer claims `src/` imports
+  `graphql`.
 
 ### Changed
 
-- **`pnpm validate` checks that every module's root is a `React.lazy`
-  component.** The descriptor's type accepts an eager one, and an eager one
-  ships in the first load for everybody who never opens that module.
+- **This repository's validator checks that every module's root is a
+  `React.lazy` component.** The descriptor's type accepts an eager one, and an
+  eager one ships in the first load for everybody who never opens that module.
 - **The module manifest no longer has `app.env[].prompt`.** Nothing read it and
   no module set it. `resolve` stays, described as what it is: the name of the
   step that supplies the value, which nothing dispatches on.
