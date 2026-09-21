@@ -1474,6 +1474,7 @@
     "content/shell/src/modules/publishing/hooks/useComposerSeed.ts": "rroORIBIgmW5kLn12hias3pvfbSv+sH+QwhvfOHQoic=",
     "content/shell/src/modules/publishing/hooks/useLibrary.ts": "MFG/oQTF4esZq862D8L3FExBxdieo+7d9i8+9THGk80=",
     "content/shell/src/modules/publishing/hooks/useLibraryPicker.ts": "YBIEHCNdBpWYYQpIc1BiH/w5xGrLzhoCZfEFAs9a1VA=",
+    "content/shell/src/modules/publishing/hooks/useMediaSources.test.ts": "DiCxnVISteZhRSNweaNgGxFNdjo/HKzzXiKeEfsCu2o=",
     "content/shell/src/modules/publishing/hooks/useMediaSources.ts": "07RjUFrUKACzgGGIVrsEXnaAIOcXbPmDsty+rJnZO0U=",
     "content/shell/src/modules/publishing/hooks/usePostsStore.ts": "UXBGQkgV1Z5tb6SaklaZxCY4jTpvY57opXDZ+w81mW4=",
     "content/shell/src/modules/publishing/hooks/usePublish.ts": "m+ZI42t8xdfJV9Ku8M6oJS2vPvk/nIbEhhlnM2QY1fw=",
