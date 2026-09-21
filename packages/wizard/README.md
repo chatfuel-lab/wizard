@@ -166,7 +166,7 @@ no scaffold directory, no file copied into an embed host, no `.env` or
 | `coworker` | The operator's AI assistant, on a page of its own. |
 | `flow-builder` | Visual flow editor: canvas, inspector, block and connection editing. |
 | `ads-optimization` | Conversion reporting for click-to-WhatsApp ads: which ads each event set covers, and which moments in the chat go back to Meta so it can optimize delivery. |
-| `publishing` | Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, composed against a live preview, published now or queued — with a calendar, retries, and a library of what is already on the account. The scheduling queue needs the deployment's own database; without one, the module still composes and publishes on the spot. |
+| `publishing` | Publishing to a connected Instagram account: feed photos, Reels, Stories and carousels, published now or queued — with a calendar, retries, and a library of what is already on the account. The scheduling queue needs the deployment's own database; without one, the module still composes and publishes on the spot. |
 | `channels` | Every channel connected to the bot, with Disconnect, and the one-shot links that let somebody without dashboard access connect a new WhatsApp, Instagram or TikTok channel or refresh an existing one's permissions — created, copied and revoked from one page. |
 | `auth` | Sign-in for the people who use the app, on your own Supabase project. Every account that signs up gets a bot of its own in your workspace, and can create more; a teammate can be granted some of the account's bots and not others. This is what turns the app into a product other people can buy. |
 | `admin` | The account behind this deployment's own token: every workspace and bot, created, renamed and deleted from inside the app, connected channels, and a health page. Opened by a password in the server environment rather than by any Chatfuel identity, and never in the navigation rail. |
@@ -188,7 +188,8 @@ envelope, pagination, the CORS proxy and the traps worth knowing.
   per module, each with the operations, the guides and the playbooks for it, plus
   `chatfuel-update`, which is about the wizard rather than about any module and
   is installed whatever you picked.
-- `.env` with your token, written `0600`, and `.env.example` beside it.
+- `.env` with your token, written `0600`. The `.env.example` beside it comes with the template as
+  it is, so it lists every module's variables, not only the ones you installed.
 - `.chatfuel/lock.json` — what every file in the app was made of: where it came
   from, the digest it had when it landed, and the commit the content was pinned
   to. It is what makes an update possible without a diff.
