@@ -45,8 +45,8 @@ pinned to one automation.
 
 The **All base (Default · All channels) is not previewable**:
 `PreviewResponsesFuelyAutomationScopeNotPreviewable` (nested, see the guide's
-error section). The panel says so on that source; open any other source and its
-Default rules can be tested there. The other start error is
+error section). The workspace mounts no Test panel on that page; open any other
+source and its Default rules can be tested there. The other start error is
 `PreviewResponsesFuelyAutomationDoesNotExist`. Neither code is in the bundled
 schema; the module's `errorMessage` table carries both.
 

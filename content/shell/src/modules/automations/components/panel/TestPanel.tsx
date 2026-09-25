@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, EmptyState, IconPlay, IconRefresh, IconSparkles, Select, TestChat, Tooltip } from '~ui';
+import { Alert, Button, EmptyState, IconRefresh, IconSparkles, Select, TestChat, Tooltip } from '~ui';
 import { FuelyAutomationScope } from '~api/generated/automations/graphql';
 import { useCatalog } from '../../AutomationsCatalogContext';
 import { useAutomationRecords } from '../../AutomationsStoreContext';
@@ -26,9 +26,8 @@ export interface TestPanelProps {
  * source's Default by default, the rule the reader last opened otherwise, and
  * a `Select` in the header to pick any of them by hand. The header names the
  * target and shows the platform glyph, the "routing is not emulated" note,
- * thread + composer, Restart. Default (All) is not previewable — the panel
- * says so and offers a source instead. Mounted by the workspace only for
- * `Ai: Edit` roles.
+ * thread + composer, Restart. Default (All) is not previewable, so the
+ * workspace mounts no panel there at all. Mounted only for `Ai: Edit` roles.
  */
 export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
   const store = useAutomationRecords();
@@ -117,18 +116,8 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
     </div>
   );
 
-  if (isAll) {
-    return (
-      <div className="flex h-full min-h-0 flex-1 flex-col">
-        {header}
-        <EmptyState
-          icon={<IconPlay />}
-          title="Default cannot be tested on its own"
-          description="Default is what every source starts from — open a source (Instagram · Direct messages, WhatsApp · Direct messages, …) and its Default rules can be tested there."
-        />
-      </div>
-    );
-  }
+  // The workspace mounts no panel on Default · All channels — the All base is not previewable.
+  if (isAll) return null;
 
   if (!record) {
     return (

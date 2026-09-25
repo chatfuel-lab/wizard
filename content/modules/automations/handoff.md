@@ -70,8 +70,9 @@ Things that look like bugs and are not:
 
 - The **Default (All channels)** source cannot be tested on its own — the API
   refuses it (`PreviewResponsesFuelyAutomationScopeNotPreviewable`): it is the
-  root others inherit from, never a message source. Open a source; its Default
-  rules apply there and the panel tests them.
+  root others inherit from, never a message source — so that page has no Test
+  panel at all. Open a source; its Default rules apply there and the panel
+  tests them.
 - A **disabled rule still answers in the Test panel**, and so does one whose
   keywords do not match: the test calls the automation directly, routing is not
   emulated. The panel says so.
