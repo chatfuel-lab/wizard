@@ -83,6 +83,7 @@ export type Scalars = {
   MetaAdCursor: { input: string; output: string; }
   MetaAdID: { input: string; output: string; }
   MetaAdSynthID: { input: string; output: string; }
+  OpenAIModel: { input: string; output: string; }
   PlatformOperationLinkID: { input: string; output: string; }
   PostID: { input: string; output: string; }
   PreVerifiedBusinessPhoneNumberID: { input: string; output: string; }
@@ -673,6 +674,7 @@ export enum DefinedErrorCode {
   NotEnoughPermissions = 'NotEnoughPermissions',
   NumberAlreadyRegisteredInWaba = 'NumberAlreadyRegisteredInWABA',
   OAuthInstagramAccountMismatch = 'OAuthInstagramAccountMismatch',
+  OpenAiModelNotAvailable = 'OpenAIModelNotAvailable',
   PhoneAutoConnectionInProgress = 'PhoneAutoConnectionInProgress',
   PhoneNotVerified = 'PhoneNotVerified',
   PlatformNotSupportedForOperationLink = 'PlatformNotSupportedForOperationLink',

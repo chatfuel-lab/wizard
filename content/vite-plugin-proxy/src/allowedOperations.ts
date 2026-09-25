@@ -52,6 +52,8 @@ export const ALLOWED_ROOT_FIELDS: ReadonlySet<string> = new Set([
   'botPlatformAccessRefreshLinkRevoke',
   'botPlatformConnectionLinkCreate',
   'botPlatformConnectionLinkRevoke',
+  'botSetOpenAIModel',
+  'botUnsetOpenAIModel',
   'botUpdateTimezone',
   'clearContactPropertyCreateInBlock',
   'clearContactPropertyCreateWithBlock',

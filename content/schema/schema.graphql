@@ -322,6 +322,8 @@ type Mutation {
   botConnectWhatsAppPhone(botID: BotID!, waPhoneID: WhatsAppBusinessPhoneID!): Bot!
   botReplaceWhatsAppPhone(botID: BotID!, waPhoneID: WhatsAppBusinessPhoneID!): Bot!
   botDisconnectContactScope(botID: BotID!, contactScopeID: ContactScopeID!): Bot!
+  botSetOpenAIModel(botID: BotID!, openAIModel: OpenAIModel!): Bot!
+  botUnsetOpenAIModel(botID: BotID!): Bot!
   botConnectInstagramAccount(botID: BotID!, instagramAccountID: InstagramAccountID!): Bot!
   instagramOAuthFinishAndConnect(code: String!, botID: BotID!): Bot!
   botConnectTikTokAccount(botID: BotID!, tiktokAccountID: TikTokAccountID!): Bot!
@@ -591,8 +593,22 @@ type CurrentUserAccountRoleInBotUpdate {
 
 scalar BotID
 
+scalar OpenAIModel
+
+type BotOpenAIConfig {
+  hasCustomToken: Boolean!
+  model: OpenAIModel
+}
+
+type OpenAIModelOption {
+  model: OpenAIModel!
+  isDefault: Boolean!
+}
+
 type Bot {
   id: BotID!
+  openAIConfig: BotOpenAIConfig!
+  openAIModelOptions: [OpenAIModelOption!]!
   invites: [Invite!]!
   members: [TeamMember!]!
   member(id: BotTeamMemberID!): TeamMember!
@@ -763,6 +779,7 @@ enum DefinedErrorCode {
   PreviewResponsesFuelyAutomationDoesNotExist
   PreviewResponsesFuelyAutomationScopeNotPreviewable
   BotCreationRateLimit
+  OpenAIModelNotAvailable
   NoPhoneConnectedToBot
   BotAlreadyHasWhatsAppLink
   WhatsAppLinkAlreadyExists

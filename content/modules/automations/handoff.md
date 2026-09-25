@@ -12,6 +12,13 @@ settings to other sources, delete with restore, every rule of a source on / off,
 templates in the New-rule dialog. The Test panel is a preview chat pinned to
 the source's Default or the rule the reader last opened.
 
+The Default · All channels page also carries the **AI model** card: which
+OpenAI model the bot answers with, and its price per million tokens. It is a
+bot setting, not a per-source one — every source, flow and AI agent on the bot
+uses it — so it needs Configure · Edit rather than Ai · Edit to change, and
+going back to the default unsets the choice instead of pinning today's
+default (`lib/aiModels.ts`, `saveAction`).
+
 Everything derives from one store: `FuelyAutomationList` without a scope, kept
 fresh by `fuelyAutomationUpdated` (one edit fans out to every inheritor).
 Deep links: `/automations?scope=…&automation=…&setting=…&new=…`. ⌘K, `?`,

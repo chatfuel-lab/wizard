@@ -162,7 +162,7 @@ no scaffold directory, no file copied into an embed host, no `.env` or
 | `deals` | Board, table and forecast over contacts by sales stage, with drag-and-drop that works on touch. |
 | `bookings` | Day/week/month calendar with drag-and-drop, appointments list, staff and working hours. |
 | `knowledge-base` | Everything the AI knows about the business: business facts, FAQs, a product catalog. |
-| `automations` | The AI's per-scope behaviour: the rules for each channel and entry point, with a test chat. |
+| `automations` | The AI's per-scope behaviour: the rules for each channel and entry point, with a test chat, and the AI model the bot answers with. |
 | `coworker` | The operator's AI assistant, on a page of its own. |
 | `flow-builder` | Visual flow editor: canvas, inspector, block and connection editing. |
 | `ads-optimization` | Conversion reporting for click-to-WhatsApp ads: which ads each event set covers, and which moments in the chat go back to Meta so it can optimize delivery. |
