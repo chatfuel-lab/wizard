@@ -100,10 +100,6 @@ export function AiModelView({ ai, canChange }: { ai: AiModelApi; canChange: bool
               disabled: !selectable.has(model),
             }))}
           />
-          <p className="text-xs text-text-muted">
-            Prices are per million tokens and include Chatfuel&apos;s fee. Estimated usage is based on average benchmark
-            data.
-          </p>
           {!canChange ? (
             <p className="text-xs text-text-muted">Changing the model needs the Configure · Edit permission.</p>
           ) : null}
