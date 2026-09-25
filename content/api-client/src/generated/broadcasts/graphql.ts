@@ -1693,6 +1693,12 @@ export enum InstagramPermissionGroupName {
   Minimal = 'Minimal'
 }
 
+export type InstagramPreviewResponsesPostCommentSendInput = {
+  clientId?: InputMaybe<Scalars['ClientMID']['input']>;
+  postCaption: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+};
+
 export type InstagramPublishCarouselInput = {
   caption?: InputMaybe<Scalars['String']['input']>;
   items: Array<InstagramPublishCarouselItemInput>;

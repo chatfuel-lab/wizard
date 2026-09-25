@@ -10,7 +10,10 @@ selects saving on change with an undo; real pickers for Instagram media,
 Facebook posts and Meta ads, teammates and contact attributes; duplicate, copy
 settings to other sources, delete with restore, every rule of a source on / off,
 templates in the New-rule dialog. The Test panel is a preview chat pinned to
-the source's Default or the rule the reader last opened.
+the source's Default or the rule the reader last opened — on Instagram · Posts
+& Reels and Facebook · Post comments it is a post instead: leave a test
+comment, see the public reply nested under it, then Test DMs for the private
+reply (`components/panel/CommentPreview.tsx`).
 
 The Default · All channels page also carries the **AI model** card: which
 OpenAI model the bot answers with, and its price per million tokens. It is a
@@ -67,8 +70,9 @@ Things that look like bugs and are not:
 
 - The **Default (All channels)** source cannot be tested on its own — the API
   refuses it (`PreviewResponsesFuelyAutomationScopeNotPreviewable`): it is the
-  root others inherit from, never a message source. Open a source; its Default
-  rules apply there and the panel tests them.
+  root others inherit from, never a message source — so that page has no Test
+  panel at all. Open a source; its Default rules apply there and the panel
+  tests them.
 - A **disabled rule still answers in the Test panel**, and so does one whose
   keywords do not match: the test calls the automation directly, routing is not
   emulated. The panel says so.

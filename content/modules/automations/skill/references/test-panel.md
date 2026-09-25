@@ -45,8 +45,8 @@ pinned to one automation.
 
 The **All base (Default · All channels) is not previewable**:
 `PreviewResponsesFuelyAutomationScopeNotPreviewable` (nested, see the guide's
-error section). The panel says so on that source; open any other source and its
-Default rules can be tested there. The other start error is
+error section). The workspace mounts no Test panel on that page; open any other
+source and its Default rules can be tested there. The other start error is
 `PreviewResponsesFuelyAutomationDoesNotExist`. Neither code is in the bundled
 schema; the module's `errorMessage` table carries both.
 
@@ -59,19 +59,40 @@ result is the In message you sent; **its `id` may be null on the wire** — merg
 `clientId`, never by `id`. Generate the `clientId` with `crypto.randomUUID()` per
 send. Text only: no attachments, no templates, no button clicks.
 
-**Facebook · Post comments is the one comment scenario that can be typed in.**
-On that scope every send is `previewResponsesFacebookPostCommentSend(botID,
-conversationID, comment: { text, clientId, postMessage })` instead — a test
-comment on a page post, which the automation answers the way it answers a real
-one: a `FacebookOutPublicCommentReplyMessage` under the comment and/or a private
-reply in the DM. `postMessage` is the text of the post the comment is left on;
-the AI reads it as context, and the panel sends it empty because it is not tied
-to one post (the dashboard sends the picked post's). The result is a
-`FacebookInPostCommentMessage`, merged by `clientId` like any send. The panel
-says so above the thread (`COMMENT_PREVIEW_SCOPES` in `lib/preview.ts`).
-Instagram has a counterpart on the API (`postCaption` instead of `postMessage`)
-that is not in this schema snapshot; every other comment and story scope still
-sends the automation a plain text.
+## The comment test — Instagram · Posts & Reels, Facebook · Post comments
+
+On these two scopes the panel is a **post, not a chat**: the tester leaves a
+comment and the automation answers it the way it answers a real one — a public
+reply under the comment and/or a private reply in the DM. They are the two
+scopes the API can send a comment to; Instagram ad comments, stories and TikTok
+have no such mutation and stay plain-text chats.
+
+- **Sending.** `previewResponsesInstagramPostCommentSend(botID, conversationID,
+  comment: { text, clientId, postCaption })` and
+  `previewResponsesFacebookPostCommentSend(…, comment: { text, clientId,
+  postMessage })` (`COMMENT_PREVIEWS` in `lib/preview.ts`). The server makes a
+  throwaway post carrying `postCaption` / `postMessage` — the AI reads it as
+  context — and delivers the comment to the pinned automation, even when it is
+  off. The result is an `InstagramInFeedCommentMessage` /
+  `FacebookInPostCommentMessage`, merged by `clientId`.
+- **Which post.** One of the posts the automation watches (`ListOfPosts`; on
+  Instagram `ListOfStories` when there are no posts), drawn at random per
+  attempt as the dashboard does (`pickPost`), its caption / message and picture
+  read through the pickers' own reads (`hooks/usePostContext.ts`). Only the text
+  reaches the server; the picture is for the person. An automation that watches
+  every post gets a placeholder and empty text.
+- **The reply.** The public reply arrives as its own
+  `…OutPublicCommentReplyMessage` and inside the comment's
+  `publicReplyMessages`. `readCommentNodes` reads every batch — history,
+  subscription, send result — for the comment and its public reply; the panel
+  nests the reply under the comment and keeps both out of the DM thread
+  (`postRowKeys`).
+- **One comment per attempt.** The field goes once a comment is sent. Restart
+  is a new attempt: a new session, a fresh post drawn, the comment forgotten.
+- **Test DMs.** When `PrivateReply.privateReplyHowToReply` is not `DontReply`,
+  "AI agent sent a direct message" appears once the reply (or the DM) is in,
+  with Test DMs: the panel hands over to the ordinary chat, which holds the
+  private reply and carries on as DMs (`previewResponses{Instagram,Facebook}TextSend`).
 
 ## Receiving — subscribe first, then load
 
@@ -130,11 +151,12 @@ test); the panel is not mounted without it.
 `AutomationsPreviewStartForAutomation`, `AutomationsPreviewMessages`,
 `AutomationsPreviewMessageAdded`, `AutomationsPreviewMessageUpdated`,
 `AutomationsPreview{WhatsApp,Widget,Instagram,TikTok,Facebook}TextSend`,
-`AutomationsPreviewFacebookPostCommentSend`
+`AutomationsPreviewInstagramPostCommentSend`, `AutomationsPreviewFacebookPostCommentSend`
 in `examples/operations.graphql` — own copies of the preview surface (a module may not import
 another module's generated documents); the `AutomationsPvMessage` fragment
-selects text for the nine text typenames plus the Facebook comment and its
-public reply, `until`, `summary` and
+selects text for the nine text typenames plus the two comment types (with
+`publicReplyMessages` through `AutomationsPvReply`) and their public replies,
+`until`, `summary` and
 `originallyDecidedByAI`, and nothing else. Any other typename renders as a muted
 "Unsupported message" row.
 

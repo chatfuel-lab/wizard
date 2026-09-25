@@ -147,7 +147,13 @@ export function AutomationsWorkspace({ rootRef, params, setParams }: WorkspacePr
         onBusy={setBusy}
         onNewRule={openNewRule}
         onRuleOpenChange={onRuleOpenChange}
-        testPanel={role.canEdit ? <TestPanel scope={parsed.scope} automationId={testTarget} onPick={setFocus} /> : null}
+        /* No Test panel on Default · All channels: the All base is not
+           previewable, so there is nothing a test there could do. */
+        testPanel={
+          role.canEdit && parsed.scope !== FuelyAutomationScope.All ? (
+            <TestPanel scope={parsed.scope} automationId={testTarget} onPick={setFocus} />
+          ) : null
+        }
       />
 
       <NewRuleDialog

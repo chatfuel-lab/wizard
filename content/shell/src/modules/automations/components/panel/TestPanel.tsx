@@ -1,12 +1,14 @@
-import { useMemo } from 'react';
-import { Alert, Button, EmptyState, IconPlay, IconRefresh, IconSparkles, Select, TestChat, Tooltip } from '~ui';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Button, EmptyState, IconRefresh, IconSparkles, Select, TestChat, Tooltip } from '~ui';
 import { FuelyAutomationScope } from '~api/generated/automations/graphql';
 import { useCatalog } from '../../AutomationsCatalogContext';
 import { useAutomationRecords } from '../../AutomationsStoreContext';
+import { usePostContext } from '../../hooks/usePostContext';
 import { usePreviewSession } from '../../hooks/usePreviewSession';
 import { selectBase, selectCustoms } from '../../lib/automationsStore';
-import { COMMENT_PREVIEW_SCOPES, platformOfScope, type PreviewTarget } from '../../lib/preview';
+import { commentPreviewFor, platformOfScope, sendsDirectMessage, type PreviewTarget } from '../../lib/preview';
 import { platformOf, scopeLabel } from '../../lib/scopes';
+import { CommentPreview } from './CommentPreview';
 import { PlatformGlyph } from './PlatformGlyph';
 
 export interface TestPanelProps {
@@ -24,9 +26,8 @@ export interface TestPanelProps {
  * source's Default by default, the rule the reader last opened otherwise, and
  * a `Select` in the header to pick any of them by hand. The header names the
  * target and shows the platform glyph, the "routing is not emulated" note,
- * thread + composer, Restart. Default (All) is not previewable — the panel
- * says so and offers a source instead. Mounted by the workspace only for
- * `Ai: Edit` roles.
+ * thread + composer, Restart. Default (All) is not previewable, so the
+ * workspace mounts no panel there at all. Mounted only for `Ai: Edit` roles.
  */
 export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
   const store = useAutomationRecords();
@@ -38,6 +39,24 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
     [record, isAll, scope],
   );
   const preview = usePreviewSession(target);
+
+  /* The comment test (Instagram · Posts & Reels, Facebook · Post comments):
+     the post is what the panel shows until Test DMs hands over to the chat, and
+     a restart is a new attempt — a fresh post drawn, the comment and its reply
+     forgotten, the post shown again. */
+  const commentPreview = commentPreviewFor(target?.scope);
+  const [attempt, setAttempt] = useState(0);
+  const [showPost, setShowPost] = useState(true);
+  const post = usePostContext(commentPreview, record?.settings ?? null, attempt);
+  useEffect(() => {
+    setShowPost(true);
+  }, [target?.id]);
+  const restart = useCallback(() => {
+    preview.restart();
+    preview.resetComment();
+    setAttempt((n) => n + 1);
+    setShowPost(true);
+  }, [preview]);
 
   const base = selectBase(store.state, scope);
   const customs = selectCustoms(store.state, scope);
@@ -76,7 +95,7 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
               variant="ghost"
               size="sm"
               aria-label="Restart the test"
-              onClick={preview.restart}
+              onClick={restart}
               disabled={preview.status === 'starting'}
               data-automations-preview-restart
             >
@@ -97,18 +116,8 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
     </div>
   );
 
-  if (isAll) {
-    return (
-      <div className="flex h-full min-h-0 flex-1 flex-col">
-        {header}
-        <EmptyState
-          icon={<IconPlay />}
-          title="Default cannot be tested on its own"
-          description="Default is what every source starts from — open a source (Instagram · Direct messages, WhatsApp · Direct messages, …) and its Default rules can be tested there."
-        />
-      </div>
-    );
-  }
+  // The workspace mounts no panel on Default · All channels — the All base is not previewable.
+  if (isAll) return null;
 
   if (!record) {
     return (
@@ -135,8 +144,8 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
           this.
         </Alert>
       ) : null}
-      {COMMENT_PREVIEW_SCOPES.has(scope) ? (
-        <Alert tone="info">What you send here arrives as a comment on a page post.</Alert>
+      {commentPreview && !showPost ? (
+        <Alert tone="info">The direct messages the comment opened. Restart to leave another comment.</Alert>
       ) : null}
       {!connected && scopePlatform ? (
         <Alert tone="info">{scopePlatform} is not connected — the test answers, no customer can reach it yet.</Alert>
@@ -144,12 +153,39 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
     </>
   );
 
+  const channel = scopePlatform ? catalog.channels.find((c) => c.platform === scopePlatform) : undefined;
+  const dmRows = commentPreview ? preview.rows.filter((row) => !preview.postRowKeys.has(row.key)) : preview.rows;
+
+  if (commentPreview && showPost) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        {header}
+        {record.enabled && connected ? null : <div className="flex flex-col gap-2 px-3 pt-3">{alerts}</div>}
+        <CommentPreview
+          platform={commentPreview.platform}
+          accountName={channel?.handle ?? (commentPreview.platform === 'instagram' ? 'Instagram' : 'Facebook page')}
+          post={post}
+          ready={preview.ready}
+          starting={preview.status === 'starting'}
+          startError={preview.error}
+          onStart={preview.start}
+          comment={preview.comment}
+          publicReply={preview.publicReply}
+          sendsDirectMessage={sendsDirectMessage(record.settings)}
+          directMessageArrived={dmRows.some((row) => row.fromBot && row.kind === 'out')}
+          onSend={(text) => void preview.sendComment(text, post.text)}
+          onTestDMs={() => setShowPost(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
       {header}
       <TestChat
         status={preview.status}
-        rows={preview.rows}
+        rows={dmRows}
         typing={preview.typing}
         error={preview.error}
         threadError={preview.threadError}

@@ -19,13 +19,16 @@ import { anonymousKey, TESTER_LABEL, type TestChatRow } from '~ui';
 import {
   AutomationsPreviewFacebookPostCommentSendDocument,
   AutomationsPreviewFacebookTextSendDocument,
+  AutomationsPreviewInstagramPostCommentSendDocument,
   AutomationsPreviewInstagramTextSendDocument,
   AutomationsPreviewTikTokTextSendDocument,
   AutomationsPreviewWhatsAppTextSendDocument,
   AutomationsPreviewWidgetTextSendDocument,
   FuelyAutomationScope,
+  FuelySettingPrivateReplyHowToReply,
 } from '~api/generated/automations/graphql';
-import type { PreviewMessageNode } from '../types';
+import type { PreviewMessageNode, SettingInfo } from '../types';
+import { settingOf } from './settingValue';
 import { PREVIEW_PLATFORMS, type PreviewPlatform } from './automationsParams';
 import { PLATFORM_KEYS, platformOf } from './scopes';
 
@@ -73,18 +76,116 @@ const SEND: Record<PreviewPlatform, SendDocument> = {
 
 export const sendDocumentFor = (platform: PreviewPlatform): SendDocument => SEND[platform];
 
+// ---------------------------------------------------------------------------
+// Test comments
+// ---------------------------------------------------------------------------
+
+export interface SendCommentVars {
+  botID: string;
+  conversationID: string;
+  comment: { text: string; clientId: string } & ({ postCaption: string } | { postMessage: string });
+}
+
+export type SendCommentDocument = TypedDoc<Record<string, PreviewMessageNode | null | undefined>, SendCommentVars>;
+
+export interface CommentPreview {
+  platform: 'instagram' | 'facebook';
+  document: SendCommentDocument;
+  /** The field the sent comment comes back under. */
+  resultKey: string;
+  /** What the post's text is called in the input. */
+  postField: 'postCaption' | 'postMessage';
+}
+
 /**
- * The scopes whose test messages go in as a COMMENT on a page post rather than
- * as a DM, and the document that sends one. Facebook only: the schema has
- * `previewResponsesFacebookPostCommentSend` and no Instagram or TikTok
- * counterpart. The automation answers with its public reply and/or its
- * private reply, which is what a comment scope exists to test.
+ * The scopes whose test is a COMMENT on a post rather than a DM — the two the
+ * dashboard offers it on, because they are the two the API can send one to.
+ * The server makes a throwaway post carrying the text sent with the comment,
+ * and the pinned automation answers the comment the way it answers a real
+ * one: a public reply under it and/or a private reply in the DM. Instagram ad
+ * comments, stories and TikTok have no such mutation.
  */
-export const COMMENT_PREVIEW_SCOPES: ReadonlySet<FuelyAutomationScope> = new Set([
-  FuelyAutomationScope.FacebookPostComments,
+export const COMMENT_PREVIEWS: ReadonlyMap<FuelyAutomationScope, CommentPreview> = new Map([
+  [
+    FuelyAutomationScope.InstagramPostComments,
+    {
+      platform: 'instagram',
+      document: AutomationsPreviewInstagramPostCommentSendDocument as unknown as SendCommentDocument,
+      resultKey: 'previewResponsesInstagramPostCommentSend',
+      postField: 'postCaption',
+    },
+  ],
+  [
+    FuelyAutomationScope.FacebookPostComments,
+    {
+      platform: 'facebook',
+      document: AutomationsPreviewFacebookPostCommentSendDocument as unknown as SendCommentDocument,
+      resultKey: 'previewResponsesFacebookPostCommentSend',
+      postField: 'postMessage',
+    },
+  ],
 ]);
 
-export const commentSendDocument = AutomationsPreviewFacebookPostCommentSendDocument;
+export const commentPreviewFor = (scope: FuelyAutomationScope | undefined): CommentPreview | null =>
+  (scope && COMMENT_PREVIEWS.get(scope)) || null;
+
+/** The post ids an automation watches — its posts, else (Instagram) its stories. Empty = every post. */
+export function watchedPostIds(settings: readonly SettingInfo[], platform: CommentPreview['platform']): string[] {
+  const posts = settingOf(settings, 'FuelySettingListOfPosts')?.posts.map((post) => post.postID) ?? [];
+  if (posts.length > 0 || platform === 'facebook') return posts;
+  return settingOf(settings, 'FuelySettingListOfStories')?.stories.map((story) => story.storyID) ?? [];
+}
+
+/** One of them at random, as the dashboard does — a fresh draw per attempt. Null when there is none. */
+export const pickPost = (ids: readonly string[], rnd: () => number = Math.random): string | null =>
+  ids.length === 0 ? null : (ids[Math.min(ids.length - 1, Math.floor(rnd() * ids.length))] ?? null);
+
+/** Whether the automation answers a comment in the DM as well. */
+export const sendsDirectMessage = (settings: readonly SettingInfo[]): boolean => {
+  const reply = settingOf(settings, 'FuelySettingPrivateReply');
+  return reply !== undefined && reply.privateReplyHowToReply !== FuelySettingPrivateReplyHowToReply.DontReply;
+};
+
+const COMMENT_TYPENAMES = new Set(['InstagramInFeedCommentMessage', 'FacebookInPostCommentMessage']);
+const PUBLIC_REPLY_TYPENAMES = new Set([
+  'InstagramOutPublicCommentReplyMessage',
+  'FacebookOutPublicCommentReplyMessage',
+]);
+
+export interface CommentNodes {
+  /** Row keys that belong on the post, not in the DM thread: comments and public replies. */
+  keys: string[];
+  /** The newest public reply's text, from its own message or from a comment's `publicReplyMessages`. */
+  reply: string | null;
+}
+
+const rowKey = (node: { clientId?: string | null; id?: string | null; sentTime?: string }): string =>
+  node.clientId || node.id || anonymousKey(node.sentTime ?? '');
+
+/**
+ * What a batch of wire messages says about the comment on the post. The
+ * thread draws everything else as the DM conversation the private reply
+ * opened; these rows move to the post, where the dashboard shows them.
+ */
+export function readCommentNodes(nodes: readonly PreviewMessageNode[]): CommentNodes {
+  const keys: string[] = [];
+  let reply: string | null = null;
+  for (const node of nodes) {
+    if (COMMENT_TYPENAMES.has(node.__typename)) {
+      keys.push(rowKey(node));
+      if ('publicReplyMessages' in node) {
+        for (const answer of node.publicReplyMessages) {
+          keys.push(rowKey(answer));
+          if ('text' in answer && answer.text) reply = answer.text;
+        }
+      }
+    } else if (PUBLIC_REPLY_TYPENAMES.has(node.__typename)) {
+      keys.push(rowKey(node));
+      if ('text' in node && node.text) reply = node.text;
+    }
+  }
+  return { keys, reply };
+}
 
 /** The wire value of `session.platform` is the enum's string; anything else is unknown. */
 export const parsePreviewPlatform = (raw: string | null | undefined): PreviewPlatform | null =>
@@ -122,6 +223,7 @@ const IN_TEXT = new Set([
   'TikTokInTextMessage',
   'FacebookInTextMessage',
   'FacebookInPostCommentMessage',
+  'InstagramInFeedCommentMessage',
 ]);
 const OUT_TEXT = new Set([
   'WhatsAppOutTextMessage',
@@ -129,6 +231,7 @@ const OUT_TEXT = new Set([
   'TikTokOutTextMessage',
   'FacebookOutTextMessage',
   'FacebookOutPublicCommentReplyMessage',
+  'InstagramOutPublicCommentReplyMessage',
 ]);
 
 /**

@@ -391,6 +391,7 @@ type Mutation {
   facebookTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput!): FacebookOutTextMessage!
   facebookAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookAttachmentMessageSendInput!): FacebookOutAttachment
   previewResponsesFacebookTextSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput): FacebookInTextMessage
+  previewResponsesInstagramPostCommentSend(botID: BotID!, conversationID: ConversationID!, comment: InstagramPreviewResponsesPostCommentSendInput!): InstagramInFeedCommentMessage
   previewResponsesFacebookPostCommentSend(botID: BotID!, conversationID: ConversationID!, comment: FacebookPreviewResponsesPostCommentSendInput!): FacebookInPostCommentMessage
   instagramTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramTextMessageSendInput!): InstagramOutTextMessage!
   instagramAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramAttachmentMessageSendInput!): InstagramOutAttachment
@@ -2799,6 +2800,12 @@ enum FacebookSendMessageAttachmentType {
   image
   audio
   video
+}
+
+input InstagramPreviewResponsesPostCommentSendInput {
+  text: String!
+  clientId: ClientMID
+  postCaption: String!
 }
 
 input FacebookPreviewResponsesPostCommentSendInput {

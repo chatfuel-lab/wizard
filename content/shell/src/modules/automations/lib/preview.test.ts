@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getDocMeta } from '~api';
-import { FuelyAutomationScope } from '~api/generated/automations/graphql';
-import type { PreviewMessageNode } from '../types';
+import { FuelyAutomationScope, FuelySettingPrivateReplyHowToReply } from '~api/generated/automations/graphql';
+import type { PreviewMessageNode, SettingInfo } from '../types';
 import {
-  COMMENT_PREVIEW_SCOPES,
-  commentSendDocument,
+  COMMENT_PREVIEWS,
+  commentPreviewFor,
   parsePreviewPlatform,
+  pickPost,
+  readCommentNodes,
+  sendsDirectMessage,
+  watchedPostIds,
   platformOfScope,
   sendDocumentFor,
   targetKey,
@@ -55,9 +59,20 @@ describe('platform → send document', () => {
     expect(parsePreviewPlatform('threads')).toBeNull();
     expect(parsePreviewPlatform(null)).toBeNull();
   });
-  it('sends a comment, not a DM, only in the Facebook post comments scope', () => {
-    expect([...COMMENT_PREVIEW_SCOPES]).toEqual([FuelyAutomationScope.FacebookPostComments]);
-    expect(getDocMeta(commentSendDocument as never).name).toBe('AutomationsPreviewFacebookPostCommentSend');
+  it('tests with a comment on Instagram posts and Facebook posts, and nowhere else', () => {
+    expect([...COMMENT_PREVIEWS.keys()]).toEqual([
+      FuelyAutomationScope.InstagramPostComments,
+      FuelyAutomationScope.FacebookPostComments,
+    ]);
+    const ig = commentPreviewFor(FuelyAutomationScope.InstagramPostComments)!;
+    expect(getDocMeta(ig.document as never).name).toBe('AutomationsPreviewInstagramPostCommentSend');
+    expect(ig).toMatchObject({ resultKey: 'previewResponsesInstagramPostCommentSend', postField: 'postCaption' });
+    const fb = commentPreviewFor(FuelyAutomationScope.FacebookPostComments)!;
+    expect(getDocMeta(fb.document as never).name).toBe('AutomationsPreviewFacebookPostCommentSend');
+    expect(fb).toMatchObject({ resultKey: 'previewResponsesFacebookPostCommentSend', postField: 'postMessage' });
+    expect(commentPreviewFor(FuelyAutomationScope.InstagramAdComments)).toBeNull();
+    expect(commentPreviewFor(FuelyAutomationScope.FacebookDirectMessages)).toBeNull();
+    expect(commentPreviewFor(undefined)).toBeNull();
   });
   it('targetKey names the automation, empty for none', () => {
     expect(targetKey({ kind: 'automation', id: 'a' })).toBe('automation:a');
@@ -139,5 +154,68 @@ describe('row model', () => {
   });
   it('a bad sentTime sorts first rather than throwing', () => {
     expect(toRow(node({ sentTime: 'garbage' })).at).toBe(0);
+  });
+});
+
+describe('the comment test', () => {
+  const settings = (list: Record<string, unknown>[]): SettingInfo[] => list as unknown as SettingInfo[];
+  const posts = (...ids: string[]) => ({
+    __typename: 'FuelySettingListOfPosts',
+    posts: ids.map((postID) => ({ postID, contactScopeID: 's' })),
+  });
+  const stories = (...ids: string[]) => ({
+    __typename: 'FuelySettingListOfStories',
+    stories: ids.map((storyID) => ({ storyID, contactScopeID: 's' })),
+  });
+
+  it('comments on a watched post, and on Instagram falls back to a watched story', () => {
+    expect(watchedPostIds(settings([posts('p1', 'p2'), stories('s1')]), 'instagram')).toEqual(['p1', 'p2']);
+    expect(watchedPostIds(settings([posts(), stories('s1')]), 'instagram')).toEqual(['s1']);
+    expect(watchedPostIds(settings([stories('s1')]), 'facebook')).toEqual([]);
+    expect(watchedPostIds(settings([]), 'instagram')).toEqual([]);
+  });
+
+  it('draws one post at random, and none from an empty list', () => {
+    expect(pickPost(['a', 'b', 'c'], () => 0)).toBe('a');
+    expect(pickPost(['a', 'b', 'c'], () => 0.99)).toBe('c');
+    expect(pickPost(['a', 'b', 'c'], () => 1)).toBe('c');
+    expect(pickPost([], () => 0.5)).toBeNull();
+  });
+
+  it('expects a DM unless the private reply is off', () => {
+    const reply = (how: FuelySettingPrivateReplyHowToReply) =>
+      settings([{ __typename: 'FuelySettingPrivateReply', privateReplyHowToReply: how }]);
+    expect(sendsDirectMessage(reply(FuelySettingPrivateReplyHowToReply.UsingAi))).toBe(true);
+    expect(sendsDirectMessage(reply(FuelySettingPrivateReplyHowToReply.ExactText))).toBe(true);
+    expect(sendsDirectMessage(reply(FuelySettingPrivateReplyHowToReply.DontReply))).toBe(false);
+    expect(sendsDirectMessage(settings([]))).toBe(false);
+  });
+
+  it('moves the comment and its public reply to the post, and leaves the DMs', () => {
+    const found = readCommentNodes([
+      node({
+        __typename: 'InstagramInFeedCommentMessage',
+        clientId: 'cmt',
+        text: 'price?',
+        publicReplyMessages: [
+          { __typename: 'InstagramOutPublicCommentReplyMessage', id: 'r1', clientId: null, text: 'Sent you a DM' },
+        ],
+      }),
+      node({ __typename: 'InstagramOutTextMessage', clientId: null, id: 'dm1', sender: mia, text: 'Hi! It is $20' }),
+    ]);
+    expect(found).toEqual({ keys: ['cmt', 'r1'], reply: 'Sent you a DM' });
+
+    expect(
+      readCommentNodes([
+        node({
+          __typename: 'FacebookOutPublicCommentReplyMessage',
+          clientId: null,
+          id: 'r2',
+          sender: mia,
+          text: 'Yes',
+        }),
+      ]),
+    ).toEqual({ keys: ['r2'], reply: 'Yes' });
+    expect(readCommentNodes([node({})])).toEqual({ keys: [], reply: null });
   });
 });
