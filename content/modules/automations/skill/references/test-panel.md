@@ -57,9 +57,21 @@ conversationID, message: { text, clientId })` — pick by the session's `platfor
 (`lib/preview.ts` `sendDocumentFor`). Note the casing (`Whatsapp`, `TikTok`). The
 result is the In message you sent; **its `id` may be null on the wire** — merge by
 `clientId`, never by `id`. Generate the `clientId` with `crypto.randomUUID()` per
-send. Text only: no attachments, no templates, no button clicks (comment and
-story scenarios cannot be typed in — the pinned session sends the automation a
-plain text).
+send. Text only: no attachments, no templates, no button clicks.
+
+**Facebook · Post comments is the one comment scenario that can be typed in.**
+On that scope every send is `previewResponsesFacebookPostCommentSend(botID,
+conversationID, comment: { text, clientId, postMessage })` instead — a test
+comment on a page post, which the automation answers the way it answers a real
+one: a `FacebookOutPublicCommentReplyMessage` under the comment and/or a private
+reply in the DM. `postMessage` is the text of the post the comment is left on;
+the AI reads it as context, and the panel sends it empty because it is not tied
+to one post (the dashboard sends the picked post's). The result is a
+`FacebookInPostCommentMessage`, merged by `clientId` like any send. The panel
+says so above the thread (`COMMENT_PREVIEW_SCOPES` in `lib/preview.ts`).
+Instagram has a counterpart on the API (`postCaption` instead of `postMessage`)
+that is not in this schema snapshot; every other comment and story scope still
+sends the automation a plain text.
 
 ## Receiving — subscribe first, then load
 
@@ -117,10 +129,12 @@ test); the panel is not mounted without it.
 
 `AutomationsPreviewStartForAutomation`, `AutomationsPreviewMessages`,
 `AutomationsPreviewMessageAdded`, `AutomationsPreviewMessageUpdated`,
-`AutomationsPreview{WhatsApp,Widget,Instagram,TikTok,Facebook}TextSend`
+`AutomationsPreview{WhatsApp,Widget,Instagram,TikTok,Facebook}TextSend`,
+`AutomationsPreviewFacebookPostCommentSend`
 in `examples/operations.graphql` — own copies of the preview surface (a module may not import
 another module's generated documents); the `AutomationsPvMessage` fragment
-selects text for the nine text typenames, `until`, `summary` and
+selects text for the nine text typenames plus the Facebook comment and its
+public reply, `until`, `summary` and
 `originallyDecidedByAI`, and nothing else. Any other typename renders as a muted
 "Unsupported message" row.
 

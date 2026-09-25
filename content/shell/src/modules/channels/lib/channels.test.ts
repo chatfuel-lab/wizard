@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { channelsOf } from './channels';
+import { channelsOf, facebookLinkAction } from './channels';
 import type { ChannelScopes } from '../types';
 
 const scopes = (list: ChannelScopes): ChannelScopes => list;
@@ -71,5 +71,15 @@ describe('channelsOf', () => {
     expect(channels.facebook.map((a) => a.label)).toEqual(['Alpha', 'Zed']);
     expect(channels.instagram?.scopeId).toBe('first');
     expect(channels.whatsapp).toBeNull();
+  });
+});
+
+describe('facebookLinkAction', () => {
+  const page = (id: string) => ({ scopeId: id, label: id, detail: null });
+
+  it('connects with no page, refreshes exactly one, and offers nothing for two or more', () => {
+    expect(facebookLinkAction([])).toBe('connect');
+    expect(facebookLinkAction([page('a')])).toBe('refresh');
+    expect(facebookLinkAction([page('a'), page('b')])).toBeNull();
   });
 });

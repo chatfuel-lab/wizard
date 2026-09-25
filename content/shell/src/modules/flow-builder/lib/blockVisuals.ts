@@ -78,6 +78,7 @@ const ELEMENT_VISUALS: Record<string, Visual> = {
   WhatsAppSwitchToChatWithHumanAgentBlockElement: { tone: 'logic', glyph: 'users' },
   InstagramSwitchToChatWithHumanAgentBlockElement: { tone: 'logic', glyph: 'users' },
   TikTokSwitchToChatWithHumanAgentBlockElement: { tone: 'logic', glyph: 'users' },
+  FacebookSwitchToChatWithHumanAgentBlockElement: { tone: 'logic', glyph: 'users' },
 
   // Where a conversation enters this flow.
   WidgetEntryPointBlockElement: { tone: 'entry', glyph: 'monitor' },
@@ -139,6 +140,7 @@ const PLUGIN_VISUALS: Record<string, Visual> = {
   whatsAppScheduledMessage: ELEMENT_VISUALS.WhatsAppScheduledMessageBlockElement!,
   instagramSwitchToHuman: ELEMENT_VISUALS.InstagramSwitchToChatWithHumanAgentBlockElement!,
   tiktokSwitchToHuman: ELEMENT_VISUALS.TikTokSwitchToChatWithHumanAgentBlockElement!,
+  facebookSwitchToHuman: ELEMENT_VISUALS.FacebookSwitchToChatWithHumanAgentBlockElement!,
   setCondition: ELEMENT_VISUALS.SetConditionBlockElement!,
   setContactProperty: ELEMENT_VISUALS.SetContactPropertyBlockElement!,
   clearContactProperty: ELEMENT_VISUALS.ClearContactPropertyBlockElement!,

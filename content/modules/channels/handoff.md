@@ -9,7 +9,11 @@ For WhatsApp, Instagram and TikTok the card carries **Connect** — one press,
 and the browser leaves for the page Chatfuel serves for that platform's OAuth,
 coming back here with the channel connected. Once something is connected the
 same card offers **Refresh access**, which re-grants its permissions and
-touches nothing else.
+touches nothing else. Facebook works the same way with one twist: a link
+deals in one page, so the Facebook card offers Connect while the bot has no
+page and Refresh access while it has exactly one (on Chatfuel's page the
+person signs in to Facebook and then picks the page). With two or more pages
+— connected in the Chatfuel dashboard — it offers Disconnect per page only.
 
 Two things are worth knowing before changing anything. First, **connecting is a
 hand-off, not a form**: nothing in this API carries somebody through a
@@ -38,7 +42,9 @@ Things that look like bugs and are not: **on `npm run dev` the hand-off does not
 come back**, because the API refuses a redirect that is not https and the page
 is on http — finish on Chatfuel's page and press Back; `contactScopes` comes
 back in no fixed order, so the page sorts by platform itself; a bot can carry
-several Facebook pages and they all list under one card; TikTok's `username`
+several Facebook pages and they all list under one card, with no Connect or
+Refresh access once there are two (a link cannot add a second page or pick
+which one to refresh — see `facebookLinkAction`); TikTok's `username`
 and `name` are both nullable and the card falls back to the account id; the web
 widget has no Disconnect because the server refuses it, and prints no name
 because `WebWidget.name` is empty on every bot; a channel disconnected in

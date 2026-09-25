@@ -31,7 +31,11 @@ describe('readHandOff', () => {
       ok: true,
     });
     expect(readHandOff(new URLSearchParams('result=failed&channel=tiktok'))).toEqual({ platform: 'tiktok', ok: false });
-    expect(readHandOff(new URLSearchParams('result=connected&channel=facebook'))).toBeNull();
+    expect(readHandOff(new URLSearchParams('result=connected&channel=facebook'))).toEqual({
+      platform: 'facebook',
+      ok: true,
+    });
+    expect(readHandOff(new URLSearchParams('result=connected&channel=widget'))).toBeNull();
     expect(readHandOff(new URLSearchParams('result=maybe&channel=whatsapp'))).toBeNull();
     expect(readHandOff(new URLSearchParams(''))).toBeNull();
   });

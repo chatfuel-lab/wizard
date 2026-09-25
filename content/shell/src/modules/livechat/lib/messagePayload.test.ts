@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   AudioTranscriptionStatus,
+  FacebookMessageReferralSourceType,
   FacebookMessageStatus,
   FileStatus,
   InstagramMessageStatus,
@@ -11,7 +12,14 @@ import {
 } from '~api/generated/livechat/graphql';
 import type { LastMessageNode, MessageNode } from '../types';
 import { MESSAGE_KINDS } from './messageKinds';
-import { NO_PAYLOAD_SHAPES, PAYLOAD_ON_WIRE, deliveryStatus, platformStatus, readPayload } from './messagePayload';
+import {
+  NO_PAYLOAD_SHAPES,
+  PAYLOAD_ON_WIRE,
+  adReferral,
+  deliveryStatus,
+  platformStatus,
+  readPayload,
+} from './messagePayload';
 
 const SENTINEL = 'SENTINEL';
 
@@ -73,7 +81,20 @@ const nodeOf = (typename: string, over: Record<string, unknown> = {}): MessageNo
     transcriptionStatus: AudioTranscriptionStatus.Finished,
     transcribedText: `${SENTINEL}-transcript`,
     mediaContainer: { __typename: 'InstagramMediaContainer', id: 'mc1', media },
-    post: { __typename: 'TikTokPost', id: 'p1', isUnknown: false, url: `${SENTINEL}-post-url` },
+    /* One object for both platforms' posts: TikTok reads `url`, Facebook reads
+       `message`, `permalinkURL` and `image`. */
+    post: {
+      __typename: 'TikTokPost',
+      id: 'p1',
+      isUnknown: false,
+      url: `${SENTINEL}-post-url`,
+      message: `${SENTINEL}-post-message`,
+      permalinkURL: `${SENTINEL}-post-permalink`,
+      image: { ...file, url: `${SENTINEL}-post-image` },
+    },
+    title: `${SENTINEL}-fb-button`,
+    ref: `${SENTINEL}-ref`,
+    fbReferral: null,
     // Buttons, rows, template parts
     whatsappButtons: [
       { __typename: 'WhatsAppContinueFlowMessageButton', title: `${SENTINEL}-wa-reply` },
@@ -548,13 +569,26 @@ describe('readPayload comments and taps', () => {
     expect(readPayload(tiktok)).toMatchObject({ source: { kind: 'unknown', url: null } });
   });
 
-  it('reads a Facebook comment as a bare post and a TikTok one with its URL', () => {
+  it('reads a Facebook comment with the page post it was left on, and a TikTok one with its URL', () => {
     expect(readPayload(nodeOf('FacebookInPostCommentMessage'))).toEqual({
       kind: 'comment',
       text: `${SENTINEL}-text`,
-      source: { kind: 'post', owner: null, caption: null, url: null, thumbnailUrl: null },
+      source: {
+        kind: 'post',
+        owner: null,
+        caption: `${SENTINEL}-post-message`,
+        url: `${SENTINEL}-post-permalink`,
+        thumbnailUrl: `${SENTINEL}-post-image`,
+      },
       label: 'Comment on a post',
     });
+    expect(
+      readPayload(
+        nodeOf('FacebookInPostCommentMessage', {
+          post: { __typename: 'FbPagePost', id: 'p2', isUnknown: true, message: '', permalinkURL: '', image: null },
+        }),
+      ),
+    ).toMatchObject({ kind: 'comment', source: { kind: 'unknown', caption: null, url: null } });
     expect(readPayload(nodeOf('TikTokInTextPostCommentMessage'))).toMatchObject({
       kind: 'comment',
       source: { kind: 'post', url: `${SENTINEL}-post-url` },
@@ -574,6 +608,41 @@ describe('readPayload comments and taps', () => {
         label: 'Public reply to a comment',
       });
     }
+  });
+
+  it('reads a Messenger button tap and an m.me link open', () => {
+    expect(readPayload(nodeOf('FacebookInButtonClickMessage'))).toEqual({
+      kind: 'tap',
+      title: `${SENTINEL}-fb-button`,
+      description: null,
+    });
+    expect(readPayload(nodeOf('FacebookInRefLinkOpenMessage'))).toEqual({
+      kind: 'tap',
+      title: 'Opened an m.me link',
+      description: `ref: ${SENTINEL}-ref`,
+    });
+    expect(readPayload(nodeOf('FacebookInRefLinkOpenMessage', { ref: '  ' }))).toMatchObject({ description: null });
+  });
+
+  it('says which Click-to-Messenger ad a Facebook message came from, and nothing otherwise', () => {
+    const ad = (adTitle: string | null) => ({
+      __typename: 'FacebookMessageReferral',
+      sourceType: FacebookMessageReferralSourceType.Ad,
+      adTitle,
+    });
+    expect(adReferral(nodeOf('FacebookInTextMessage', { fbReferral: ad('Summer sale') }))).toBe(
+      'From an ad: Summer sale',
+    );
+    expect(adReferral(nodeOf('FacebookInImageMessage', { fbReferral: ad(null) }))).toBe('From an ad');
+    expect(
+      adReferral(
+        nodeOf('FacebookInTextMessage', {
+          fbReferral: { ...ad('x'), sourceType: FacebookMessageReferralSourceType.Unknown },
+        }),
+      ),
+    ).toBeNull();
+    expect(adReferral(nodeOf('FacebookInTextMessage'))).toBeNull();
+    expect(adReferral(nodeOf('InstagramInTextMessage', { fbReferral: ad('x') }))).toBeNull();
   });
 
   it('reads what the contact tapped', () => {

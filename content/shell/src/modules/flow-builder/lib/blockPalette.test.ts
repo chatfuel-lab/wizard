@@ -20,8 +20,9 @@ describe('paletteEntries', () => {
   it("groups by role — the flow's platform first, then Actions, then AI", () => {
     expect(groupsInOrder(paletteEntries(flow('whatsapp')))).toEqual(['WhatsApp', 'Actions', 'AI']);
     expect(groupsInOrder(paletteEntries(flow('widget')))).toEqual(['Widget', 'Actions', 'AI']);
+    expect(groupsInOrder(paletteEntries(flow('facebook')))).toEqual(['Facebook', 'Actions', 'AI']);
     /* A platform with no families of its own gets the neutral set alone. */
-    expect(groupsInOrder(paletteEntries(flow('facebook')))).toEqual(['Actions', 'AI']);
+    expect(groupsInOrder(paletteEntries(flow('brand-new-platform')))).toEqual(['Actions', 'AI']);
   });
 
   it('keeps the catalog order inside a group', () => {

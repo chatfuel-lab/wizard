@@ -72,6 +72,8 @@ const FACEBOOK = [
   'FacebookInAudioMessage',
   'FacebookInFileMessage',
   'FacebookInPostCommentMessage',
+  'FacebookInButtonClickMessage',
+  'FacebookInRefLinkOpenMessage',
   'FacebookInUnknownMessage',
   'FacebookOutTextMessage',
   'FacebookOutImageMessage',
@@ -125,8 +127,8 @@ describe('message kind coverage', () => {
     expect(Object.keys(MESSAGE_KINDS).sort()).toEqual([...listed].sort());
   });
 
-  it('covers all 74 of them', () => {
-    expect(Object.keys(MESSAGE_KINDS)).toHaveLength(74);
+  it('covers all 76 of them', () => {
+    expect(Object.keys(MESSAGE_KINDS)).toHaveLength(76);
   });
 
   it('files each typename under the platform it arrived on', () => {

@@ -1,6 +1,6 @@
 # Platform links — connecting a channel without dashboard access
 
-A **platform link** is a URL a bot member mints and hands to somebody who has no dashboard account — the client whose WhatsApp number, Instagram account or TikTok account should be wired to the bot. The person opens it, signs in to the platform, grants access, and the asset lands on the bot as a `ContactScope`. Two kinds exist: a **connection link** connects a new asset; an **access-refresh link** re-grants permissions on the asset already connected and touches nothing else. The page the recipient sees, the OAuth round trip and the provider redirect URIs are all Chatfuel's, on `panel.chatfuel.com`: an app mints the link, shows `url`, reads the active links back and revokes — it never hosts the consume side.
+A **platform link** is a URL a bot member mints and hands to somebody who has no dashboard account — the client whose WhatsApp number, Instagram account, TikTok account or Facebook page should be wired to the bot. The person opens it, signs in to the platform, grants access, and the asset lands on the bot as a `ContactScope`. Two kinds exist: a **connection link** connects a new asset; an **access-refresh link** re-grants permissions on the asset already connected and touches nothing else. The page the recipient sees, the OAuth round trip and the provider redirect URIs are all Chatfuel's, on `panel.chatfuel.com`: an app mints the link, shows `url`, reads the active links back and revokes — it never hosts the consume side.
 
 Not to be confused with the bookings skill's Google Calendar connection link, which invites a specialist's calendar rather than a channel.
 
@@ -8,12 +8,21 @@ Not to be confused with the bookings skill's Google Calendar connection link, wh
 
 | Kind | What the recipient does | Root field | Precondition |
 |---|---|---|---|
-| Connection | connects a new WhatsApp phone / Instagram account / TikTok account to the bot | `botPlatformConnectionLinkCreate` | nothing of that platform connected yet — otherwise the page tells them so and stops |
+| Connection | connects a new WhatsApp phone / Instagram account / TikTok account / Facebook page to the bot | `botPlatformConnectionLinkCreate` | nothing of that platform connected yet — otherwise the page tells them so and stops |
 | Access refresh | re-grants permissions on the asset already connected; connects and disconnects nothing | `botPlatformAccessRefreshLinkCreate` | a connected scope of that platform, else `NoConnectedContactScopeForPlatform`; the link is bound to it (`connectedContactScope`) |
 
 ## Platforms
 
-`PlatformOperationLinkPlatform` has three values: `whatsapp`, `instagram`, `tiktok`. There is no `facebook` member — a Facebook page cannot be connected by link (`PlatformNotSupportedForOperationLink`); it goes through the signed-in OAuth route in `references/misc.md`. The web widget needs no connection at all.
+`PlatformOperationLinkPlatform` has four values: `whatsapp`, `instagram`, `tiktok`, `facebook`. The web widget needs no connection at all.
+
+### Facebook: one page per link
+
+A bot can hold any number of Facebook pages (the signed-in route in `references/misc.md` connects them one by one), but a link deals in exactly one:
+
+- **Two steps on Chatfuel's page.** The recipient signs in with Facebook Login for Business, which grants access to a *business*, not a page; Chatfuel syncs that business's pages and the recipient then picks one. The page is connected asynchronously — the recipient's screen waits for the result. None of this reaches your app: you mint, hand over and re-read, exactly as for the other platforms.
+- ⚠ **A connection link only connects the bot's first page.** The server checks "nothing of that platform connected yet" when the link is used: a bot that already has a Facebook page gets `ContactScopeAlreadyConnected` on Chatfuel's page. To add a second page, use the signed-in route.
+- ⚠ **An access-refresh link is bound to one page** — whichever Facebook page the server finds first on the bot, shown in `connectedContactScope` (`PublicFacebookContactScope.facebookPage`). With two or more pages connected you cannot choose which; the `channels` module offers Refresh access only while the bot has exactly one page.
+- The page picked must belong to the business the recipient signed in with; a page they cannot manage is not listed.
 
 ## Lifecycle
 
@@ -22,7 +31,7 @@ Rules:
 1. **Creating and revoking need the `Configure` / `Edit` permission on the bot** (`MyBotRole`). The link records who made it; when the recipient uses it, the connection runs **as that creator**, whose permission is checked again at that moment.
 2. **A link expires 24 hours after `createdAt`** (`expiresAt` says exactly when) **and is used once**: a successful connection consumes it. Failed attempts do not consume it; a long run of failures revokes it.
 3. ⚠ **One active link per (bot, platform, kind). Creating another replaces the first silently** — the old URL stops working, no error is raised and no field says so. Read the active map before minting; if a link is already out, offer to copy that one rather than issue a second to the same person.
-4. ⚠ **The API exposes active links only.** `Bot.activePlatformConnectionLinks` and `Bot.activePlatformAccessRefreshLinks` are maps `{ whatsapp, instagram, tiktok }`, each slot a link or null. A link that was used, expired, replaced or revoked simply vanishes from the map — there is no status field and no history. "Did they finish?" = the slot is empty **and** (connection kind) a scope of that platform is now in `bot.contactScopes`.
+4. ⚠ **The API exposes active links only.** `Bot.activePlatformConnectionLinks` and `Bot.activePlatformAccessRefreshLinks` are maps `{ whatsapp, instagram, tiktok, facebook }`, each slot a link or null. A link that was used, expired, replaced or revoked simply vanishes from the map — there is no status field and no history. "Did they finish?" = the slot is empty **and** (connection kind) a scope of that platform is now in `bot.contactScopes`.
 5. Links are also revoked without anyone asking: when the creator loses `Configure` / `Edit` on the bot, when the creator's account is deleted, when the bot is deleted, and — access-refresh only — when the scope it was bound to is disconnected or deleted.
 6. Revoke with `botPlatformConnectionLinkRevoke` / `botPlatformAccessRefreshLinkRevoke(botID, linkID)`. Both answer `Bot!` — select the maps off it, no refetch. A link that is no longer active answers `PlatformOperationLinkNotFound`; treat it as "already gone" and re-read.
 7. No subscription covers links or scopes. Re-read on focus, on reconnect, and whenever a redirect lands.
@@ -42,7 +51,7 @@ Rules:
 
 ## Access refresh: the bound scope
 
-`PlatformAccessRefreshLink.connectedContactScope` is a `PublicContactScope` — the trimmed public projection of the connected asset, because a bot admin may hold the bot and not the asset. Select the three concrete types the enum allows, and `__typename` to tell them apart (the excerpt omits it):
+`PlatformAccessRefreshLink.connectedContactScope` is a `PublicContactScope` — the trimmed public projection of the connected asset, because a bot admin may hold the bot and not the asset. Select the four concrete types the enum allows, and `__typename` to tell them apart (the excerpt omits it):
 
 ```graphql
 connectedContactScope {
@@ -61,6 +70,12 @@ connectedContactScope {
   ... on PublicTikTokAccountContactScope {
     tiktokAccount {
       username
+      name
+    }
+  }
+  ... on PublicFacebookContactScope {
+    facebookPage {
+      id
       name
     }
   }
@@ -86,7 +101,7 @@ Writes: a create answers the new link — set it into its slot (the server just 
 
 | Code | When | What to do |
 |---|---|---|
-| `PlatformNotSupportedForOperationLink` | platform outside the three | do not offer the control |
+| `PlatformNotSupportedForOperationLink` | platform outside the four | do not offer the control |
 | `PlatformOperationLinkInvalidRedirectURL` | a redirect is not `https://` with a host | say so under the field |
 | `NoConnectedContactScopeForPlatform` | access-refresh create with nothing of that platform connected | offer a connection link instead |
 | `PlatformOperationLinkNotFound` | revoking a link that is no longer active | treat as done, re-read |
@@ -99,7 +114,7 @@ Envelope and the nested-code rule: `references/transport-auth.md`.
 
 ## Exists, not for you: the public side
 
-The page the recipient opens calls `publicPlatformConnectionLinkGet`, `publicPlatformAccessRefreshLinkGet`, and ten mutations — `publicPlatformConnectionInstagramOAuthMakeUrl`, `publicPlatformConnectionInstagramOAuthFinishAndConnect`, `publicPlatformConnectionTiktokOAuthMakeUrl`, `publicPlatformConnectionTiktokOAuthFinishAndConnect`, `publicPlatformConnectionWaEmbeddedSignUpFinishAndConnect`, and their five `publicPlatformAccessRefresh*` twins. They are in `references/schema.graphql` and they are unauthenticated: keyed by the link id alone, no `botID`, no token. They are deliberately absent from `examples/operations.graphql`: nothing an app can finish with them — the OAuth callbacks belong to Chatfuel's host — and behind a proxy they would run under the deployment's token with nothing for the bot fence to check. Do not add them to an allowlist.
+The page the recipient opens calls `publicPlatformConnectionLinkGet`, `publicPlatformAccessRefreshLinkGet`, and ten mutations — `publicPlatformConnectionInstagramOAuthMakeUrl`, `publicPlatformConnectionInstagramOAuthFinishAndConnect`, `publicPlatformConnectionTiktokOAuthMakeUrl`, `publicPlatformConnectionTiktokOAuthFinishAndConnect`, `publicPlatformConnectionWaEmbeddedSignUpFinishAndConnect`, and their five `publicPlatformAccessRefresh*` twins. Facebook's page has its own (an OAuth finish that grants the business, then a page connect, and a subscription for the pages as they sync); those are not in this schema snapshot at all. The ones above are in `references/schema.graphql` and they are unauthenticated: keyed by the link id alone, no `botID`, no token. They are deliberately absent from `examples/operations.graphql`: nothing an app can finish with them — the OAuth callbacks belong to Chatfuel's host — and behind a proxy they would run under the deployment's token with nothing for the bot fence to check. Do not add them to an allowlist.
 
 ## Two shapes, and the one an app usually wants
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **Facebook is a channel like the others.** The Facebook card on Channels
+  connects a page in one press — the browser leaves for Chatfuel's page, you
+  sign in to Facebook, pick the page, and come back with it connected — and
+  offers Refresh access once the bot has one. A link deals in one page, so a
+  bot that already has two or more (connected in the Chatfuel dashboard) keeps
+  Disconnect per page and no link.
+- **Messenger in the inbox reads the whole conversation.** A comment shows the
+  page post it was left on, with its text, picture and link; a button the
+  contact tapped and an m.me link they opened are their own rows, the ref
+  included; a message that came from a Click-to-Messenger ad says which ad; and
+  a contact the page may not write to first says so on the contact card.
+- **Facebook flows have a block of their own:** Human agent (Facebook), created
+  on the canvas or added inside a block, like the other four platforms'.
+- **The Facebook post picker refreshes from Facebook**, and waits for the new
+  posts to land before it re-reads.
+- The Facebook · Post comments test chat sends what you type as a comment on a
+  page post, so the automation answers it the way it answers a real one.
+
 ## 0.4.3 — 2026-09-21
 
 ### Fixed

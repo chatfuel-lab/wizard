@@ -34,7 +34,18 @@ WhatsApp, Instagram and TikTok each hold one asset, and the card offers the one 
 
 Connect mints a connection link; Refresh access mints an access refresh link, which re-grants permissions on the asset already connected and touches nothing else. Both leave the app the same way.
 
-Facebook pages come in any number and the web widget is one per bot; neither takes a link. They are listed with Disconnect where the server allows it — which for the widget it does not (`CannotDisconnectWidgetScope`), so that row has no control at all.
+Facebook pages come in any number and the web widget is one per bot; both are lists, with Disconnect per row where the server allows it — which for the widget it does not (`CannotDisconnectWidgetScope`), so that row has no control at all.
+
+Facebook also takes a link, but a link deals in exactly one page (`../chatfuel-core/references/platform-links.md`, "Facebook: one page per link"). `facebookLinkAction` in `lib/channels.ts` decides:
+
+| Pages connected | May manage? | The Facebook card shows |
+|---|---|---|
+| 0 | yes | Not connected · **Connect** |
+| 1 | yes | the page · **Refresh access** · **Disconnect** |
+| 2+ | yes | every page · **Disconnect** each — no link |
+| any | no | the pages, no control |
+
+A connection link on a bot that already has a page is refused on Chatfuel's page (`ContactScopeAlreadyConnected`), and an access refresh link binds to whichever page the server finds first — so with two pages neither button would do what it says. The web widget takes no link at all.
 
 ## What a scope prints as
 

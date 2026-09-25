@@ -10,7 +10,15 @@ import {
 import { useAutomations } from '../AutomationsContext';
 import type { PreviewPlatform } from '../lib/automationsParams';
 import { errorMessage } from '../lib/errors';
-import { parsePreviewPlatform, sendDocumentFor, targetKey, toRow, type PreviewTarget } from '../lib/preview';
+import {
+  COMMENT_PREVIEW_SCOPES,
+  commentSendDocument,
+  parsePreviewPlatform,
+  sendDocumentFor,
+  targetKey,
+  toRow,
+  type PreviewTarget,
+} from '../lib/preview';
 import type { PreviewMessageNode, PreviewSession } from '../types';
 
 export interface PreviewSessionApi extends TestChatApi<PreviewSession> {
@@ -80,6 +88,16 @@ export function usePreviewSession(target: PreviewTarget | null): PreviewSessionA
       sendText: async (session, text, clientId) => {
         const platform = parsePreviewPlatform(session.platform);
         if (!platform) return null;
+        if (platform === 'facebook' && target?.scope && COMMENT_PREVIEW_SCOPES.has(target.scope)) {
+          /* No post text: the panel is not tied to one post, and the server
+             accepts an empty one. The dashboard passes the picked post's. */
+          const data = await client.mutate(commentSendDocument, {
+            botID: botId,
+            conversationID: session.conversationID,
+            comment: { text, clientId, postMessage: '' },
+          });
+          return data.previewResponsesFacebookPostCommentSend ?? null;
+        }
         const { document, resultKey } = sendDocumentFor(platform);
         const data = await client.mutate(document, {
           botID: botId,

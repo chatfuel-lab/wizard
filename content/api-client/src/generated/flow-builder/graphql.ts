@@ -868,6 +868,12 @@ export enum FacebookPermissionGroupName {
   WhatsApp = 'WhatsApp'
 }
 
+export type FacebookPreviewResponsesPostCommentSendInput = {
+  clientId?: InputMaybe<Scalars['ClientMID']['input']>;
+  postMessage: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+};
+
 export enum FacebookSendMessageAttachmentType {
   Audio = 'audio',
   Image = 'image',
@@ -1848,6 +1854,7 @@ export enum Platform {
 }
 
 export enum PlatformOperationLinkPlatform {
+  Facebook = 'facebook',
   Instagram = 'instagram',
   Tiktok = 'tiktok',
   Whatsapp = 'whatsapp'
@@ -2296,6 +2303,8 @@ type ElementErrors_ClearContactPropertyBlockElement_Fragment = { __typename?: 'C
 
 type ElementErrors_DefaultReplyBlockElement_Fragment = { __typename?: 'DefaultReplyBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', ruleID: string, code: string, message?: string | null } | { __typename: 'ButtonValidationError', buttonID: string, code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', headerID: string, code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', responseParsingRuleID: string, code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', urlParamID: string, code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', entryID: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
+type ElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment = { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', ruleID: string, code: string, message?: string | null } | { __typename: 'ButtonValidationError', buttonID: string, code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', headerID: string, code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', responseParsingRuleID: string, code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', urlParamID: string, code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', entryID: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
+
 type ElementErrors_FuelyAiAgentBlockElement_Fragment = { __typename?: 'FuelyAIAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', ruleID: string, code: string, message?: string | null } | { __typename: 'ButtonValidationError', buttonID: string, code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', headerID: string, code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', responseParsingRuleID: string, code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', urlParamID: string, code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', entryID: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
 type ElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment = { __typename?: 'InstagramSwitchToChatWithHumanAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', ruleID: string, code: string, message?: string | null } | { __typename: 'ButtonValidationError', buttonID: string, code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', headerID: string, code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', responseParsingRuleID: string, code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', urlParamID: string, code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', entryID: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
@@ -2346,7 +2355,7 @@ type ElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment = { __t
 
 type ElementErrors_WidgetTextAndButtonBlockElement_Fragment = { __typename?: 'WidgetTextAndButtonBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', ruleID: string, code: string, message?: string | null } | { __typename: 'ButtonValidationError', buttonID: string, code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', headerID: string, code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', responseParsingRuleID: string, code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', urlParamID: string, code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', entryID: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
-export type ElementErrorsFragment = ElementErrors_AiAgentBlockElement_Fragment | ElementErrors_AiAgentCustomBlockElement_Fragment | ElementErrors_ClearContactPropertyBlockElement_Fragment | ElementErrors_DefaultReplyBlockElement_Fragment | ElementErrors_FuelyAiAgentBlockElement_Fragment | ElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_RedirectToFlowBlockElement_Fragment | ElementErrors_SendJsonBlockElement_Fragment | ElementErrors_SetConditionBlockElement_Fragment | ElementErrors_SetContactPropertyBlockElement_Fragment | ElementErrors_SummarizeChatBlockElement_Fragment | ElementErrors_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_TriggeredMessageBlockElement_Fragment | ElementErrors_WhatsAppAudioBlockElement_Fragment | ElementErrors_WhatsAppDocumentBlockElement_Fragment | ElementErrors_WhatsAppImageBlockElement_Fragment | ElementErrors_WhatsAppListBlockElement_Fragment | ElementErrors_WhatsAppOneTimeNotificationBlockElement_Fragment | ElementErrors_WhatsAppScheduledMessageBlockElement_Fragment | ElementErrors_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_WhatsAppTemplateBlockElement_Fragment | ElementErrors_WhatsAppTextAndButtonsBlockElement_Fragment | ElementErrors_WhatsAppTextAndUrlBlockElement_Fragment | ElementErrors_WhatsAppTextBlockElement_Fragment | ElementErrors_WhatsAppVideoBlockElement_Fragment | ElementErrors_WidgetEntryPointBlockElement_Fragment | ElementErrors_WidgetImageBlockElement_Fragment | ElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_WidgetTextAndButtonBlockElement_Fragment;
+export type ElementErrorsFragment = ElementErrors_AiAgentBlockElement_Fragment | ElementErrors_AiAgentCustomBlockElement_Fragment | ElementErrors_ClearContactPropertyBlockElement_Fragment | ElementErrors_DefaultReplyBlockElement_Fragment | ElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_FuelyAiAgentBlockElement_Fragment | ElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_RedirectToFlowBlockElement_Fragment | ElementErrors_SendJsonBlockElement_Fragment | ElementErrors_SetConditionBlockElement_Fragment | ElementErrors_SetContactPropertyBlockElement_Fragment | ElementErrors_SummarizeChatBlockElement_Fragment | ElementErrors_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_TriggeredMessageBlockElement_Fragment | ElementErrors_WhatsAppAudioBlockElement_Fragment | ElementErrors_WhatsAppDocumentBlockElement_Fragment | ElementErrors_WhatsAppImageBlockElement_Fragment | ElementErrors_WhatsAppListBlockElement_Fragment | ElementErrors_WhatsAppOneTimeNotificationBlockElement_Fragment | ElementErrors_WhatsAppScheduledMessageBlockElement_Fragment | ElementErrors_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_WhatsAppTemplateBlockElement_Fragment | ElementErrors_WhatsAppTextAndButtonsBlockElement_Fragment | ElementErrors_WhatsAppTextAndUrlBlockElement_Fragment | ElementErrors_WhatsAppTextBlockElement_Fragment | ElementErrors_WhatsAppVideoBlockElement_Fragment | ElementErrors_WidgetEntryPointBlockElement_Fragment | ElementErrors_WidgetImageBlockElement_Fragment | ElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | ElementErrors_WidgetTextAndButtonBlockElement_Fragment;
 
 export type SegmentFilterPartsFragment = { __typename?: 'Filter', id: string, byAttribute?: { __typename?: 'AttrFilter', attribute: (
       { __typename?: 'BotAttribute' }
@@ -2427,6 +2436,11 @@ type ElementParts_ClearContactPropertyBlockElement_Fragment = (
 type ElementParts_DefaultReplyBlockElement_Fragment = (
   { __typename: 'DefaultReplyBlockElement', nextBlockHandleID: string, replyFrequency: DefaultReplyFrequency, id: string, platform: Platform }
   & ElementErrors_DefaultReplyBlockElement_Fragment
+);
+
+type ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment = (
+  { __typename: 'FacebookSwitchToChatWithHumanAgentBlockElement', id: string, platform: Platform }
+  & ElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
 );
 
 type ElementParts_FuelyAiAgentBlockElement_Fragment = (
@@ -2734,7 +2748,7 @@ type ElementParts_WidgetTextAndButtonBlockElement_Fragment = (
   & ElementErrors_WidgetTextAndButtonBlockElement_Fragment
 );
 
-export type ElementPartsFragment = ElementParts_AiAgentBlockElement_Fragment | ElementParts_AiAgentCustomBlockElement_Fragment | ElementParts_ClearContactPropertyBlockElement_Fragment | ElementParts_DefaultReplyBlockElement_Fragment | ElementParts_FuelyAiAgentBlockElement_Fragment | ElementParts_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_RedirectToFlowBlockElement_Fragment | ElementParts_SendJsonBlockElement_Fragment | ElementParts_SetConditionBlockElement_Fragment | ElementParts_SetContactPropertyBlockElement_Fragment | ElementParts_SummarizeChatBlockElement_Fragment | ElementParts_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_TriggeredMessageBlockElement_Fragment | ElementParts_WhatsAppAudioBlockElement_Fragment | ElementParts_WhatsAppDocumentBlockElement_Fragment | ElementParts_WhatsAppImageBlockElement_Fragment | ElementParts_WhatsAppListBlockElement_Fragment | ElementParts_WhatsAppOneTimeNotificationBlockElement_Fragment | ElementParts_WhatsAppScheduledMessageBlockElement_Fragment | ElementParts_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_WhatsAppTemplateBlockElement_Fragment | ElementParts_WhatsAppTextAndButtonsBlockElement_Fragment | ElementParts_WhatsAppTextAndUrlBlockElement_Fragment | ElementParts_WhatsAppTextBlockElement_Fragment | ElementParts_WhatsAppVideoBlockElement_Fragment | ElementParts_WidgetEntryPointBlockElement_Fragment | ElementParts_WidgetImageBlockElement_Fragment | ElementParts_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_WidgetTextAndButtonBlockElement_Fragment;
+export type ElementPartsFragment = ElementParts_AiAgentBlockElement_Fragment | ElementParts_AiAgentCustomBlockElement_Fragment | ElementParts_ClearContactPropertyBlockElement_Fragment | ElementParts_DefaultReplyBlockElement_Fragment | ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_FuelyAiAgentBlockElement_Fragment | ElementParts_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_RedirectToFlowBlockElement_Fragment | ElementParts_SendJsonBlockElement_Fragment | ElementParts_SetConditionBlockElement_Fragment | ElementParts_SetContactPropertyBlockElement_Fragment | ElementParts_SummarizeChatBlockElement_Fragment | ElementParts_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_TriggeredMessageBlockElement_Fragment | ElementParts_WhatsAppAudioBlockElement_Fragment | ElementParts_WhatsAppDocumentBlockElement_Fragment | ElementParts_WhatsAppImageBlockElement_Fragment | ElementParts_WhatsAppListBlockElement_Fragment | ElementParts_WhatsAppOneTimeNotificationBlockElement_Fragment | ElementParts_WhatsAppScheduledMessageBlockElement_Fragment | ElementParts_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_WhatsAppTemplateBlockElement_Fragment | ElementParts_WhatsAppTextAndButtonsBlockElement_Fragment | ElementParts_WhatsAppTextAndUrlBlockElement_Fragment | ElementParts_WhatsAppTextBlockElement_Fragment | ElementParts_WhatsAppVideoBlockElement_Fragment | ElementParts_WidgetEntryPointBlockElement_Fragment | ElementParts_WidgetImageBlockElement_Fragment | ElementParts_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | ElementParts_WidgetTextAndButtonBlockElement_Fragment;
 
 type BlockParts_AiAgentBlock_Fragment = { __typename: 'AiAgentBlock', isStartingPoint: boolean, id: string, name: string, positionX: number, positionY: number, platform: Platform, blockElements: Array<(
     { __typename?: 'AiAgentBlockElement' }
@@ -2748,6 +2762,9 @@ type BlockParts_AiAgentBlock_Fragment = { __typename: 'AiAgentBlock', isStarting
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -2838,6 +2855,9 @@ type BlockParts_ClearContactPropertyBlock_Fragment = { __typename: 'ClearContact
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -2926,6 +2946,9 @@ type BlockParts_DefaultReplyBlock_Fragment = { __typename: 'DefaultReplyBlock', 
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3016,6 +3039,9 @@ type BlockParts_RedirectToFlowBlock_Fragment = { __typename: 'RedirectToFlowBloc
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3104,6 +3130,9 @@ type BlockParts_RegularActionBlock_Fragment = { __typename: 'RegularActionBlock'
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3194,6 +3223,9 @@ type BlockParts_RegularContentBlock_Fragment = { __typename: 'RegularContentBloc
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3282,6 +3314,9 @@ type BlockParts_SetConditionBlock_Fragment = { __typename: 'SetConditionBlock', 
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3372,6 +3407,9 @@ type BlockParts_SetContactPropertyBlock_Fragment = { __typename: 'SetContactProp
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3460,6 +3498,9 @@ type BlockParts_TriggeredMessageBlock_Fragment = { __typename: 'TriggeredMessage
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3550,6 +3591,9 @@ type BlockParts_WhatsAppListBlock_Fragment = { __typename: 'WhatsAppListBlock', 
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3638,6 +3682,9 @@ type BlockParts_WhatsAppOneTimeNotificationBlock_Fragment = { __typename: 'Whats
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3728,6 +3775,9 @@ type BlockParts_WhatsAppScheduledMessageBlock_Fragment = { __typename: 'WhatsApp
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3816,6 +3866,9 @@ type BlockParts_WhatsAppTemplateBlock_Fragment = { __typename: 'WhatsAppTemplate
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -3906,6 +3959,9 @@ type BlockParts_WhatsAppTextAndButtonsBlock_Fragment = { __typename: 'WhatsAppTe
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3995,6 +4051,9 @@ type BlockParts_WhatsAppTextAndUrlBlock_Fragment = { __typename: 'WhatsAppTextAn
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -4083,6 +4142,9 @@ type BlockParts_WidgetEntryPointBlock_Fragment = { __typename: 'WidgetEntryPoint
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & ElementParts_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & ElementParts_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & ElementParts_FuelyAiAgentBlockElement_Fragment
@@ -4874,6 +4936,25 @@ export type AddInstagramSwitchToHumanToBlockMutation = { __typename?: 'Mutation'
     & BlockParts_SetContactPropertyBlock_Fragment
   ) };
 
+export type AddFacebookSwitchToHumanToBlockMutationVariables = Exact<{
+  blockID: Scalars['BlockID']['input'];
+}>;
+
+
+export type AddFacebookSwitchToHumanToBlockMutation = { __typename?: 'Mutation', facebookSwitchToChatWithHumanAgentCreateInBlock: (
+    { __typename?: 'ClearContactPropertyBlock' }
+    & BlockParts_ClearContactPropertyBlock_Fragment
+  ) | (
+    { __typename?: 'RegularActionBlock' }
+    & BlockParts_RegularActionBlock_Fragment
+  ) | (
+    { __typename?: 'SetConditionBlock' }
+    & BlockParts_SetConditionBlock_Fragment
+  ) | (
+    { __typename?: 'SetContactPropertyBlock' }
+    & BlockParts_SetContactPropertyBlock_Fragment
+  ) };
+
 export type AddTikTokSwitchToHumanToBlockMutationVariables = Exact<{
   blockID: Scalars['BlockID']['input'];
 }>;
@@ -5238,6 +5319,21 @@ export type CreateInstagramSwitchToHumanBlockMutation = { __typename?: 'Mutation
     & FlowBlocksSlim_RegularFlow_Fragment
   ) };
 
+export type CreateFacebookSwitchToHumanBlockMutationVariables = Exact<{
+  flowID: Scalars['FlowID']['input'];
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
+}>;
+
+
+export type CreateFacebookSwitchToHumanBlockMutation = { __typename?: 'Mutation', facebookSwitchToChatWithHumanAgentCreateWithBlock: (
+    { __typename?: 'DefaultReplyFlow' }
+    & FlowBlocksSlim_DefaultReplyFlow_Fragment
+  ) | (
+    { __typename?: 'RegularFlow' }
+    & FlowBlocksSlim_RegularFlow_Fragment
+  ) };
+
 export type CreateTikTokSwitchToHumanBlockMutationVariables = Exact<{
   flowID: Scalars['FlowID']['input'];
   x: Scalars['Int']['input'];
@@ -5589,6 +5685,22 @@ export type CreateInstagramSwitchToHumanBlockConnectedMutationVariables = Exact<
 
 
 export type CreateInstagramSwitchToHumanBlockConnectedMutation = { __typename?: 'Mutation', instagramSwitchToChatWithHumanAgentCreateWithBlockAndConnection: (
+    { __typename?: 'DefaultReplyFlow' }
+    & FlowBlocksSlim_DefaultReplyFlow_Fragment
+  ) | (
+    { __typename?: 'RegularFlow' }
+    & FlowBlocksSlim_RegularFlow_Fragment
+  ) };
+
+export type CreateFacebookSwitchToHumanBlockConnectedMutationVariables = Exact<{
+  flowID: Scalars['FlowID']['input'];
+  request: UndefinedTargetBlockConnectionCreateRequest;
+  x: Scalars['Int']['input'];
+  y: Scalars['Int']['input'];
+}>;
+
+
+export type CreateFacebookSwitchToHumanBlockConnectedMutation = { __typename?: 'Mutation', facebookSwitchToChatWithHumanAgentCreateWithBlockAndConnection: (
     { __typename?: 'DefaultReplyFlow' }
     & FlowBlocksSlim_DefaultReplyFlow_Fragment
   ) | (
@@ -8374,11 +8486,15 @@ export type FtFileFragment = { __typename?: 'File', id: string, url: string, typ
 
 type FtMessageCommon_FacebookInAudioMessage_Fragment = { __typename: 'FacebookInAudioMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
+type FtMessageCommon_FacebookInButtonClickMessage_Fragment = { __typename: 'FacebookInButtonClickMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
+
 type FtMessageCommon_FacebookInFileMessage_Fragment = { __typename: 'FacebookInFileMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
 type FtMessageCommon_FacebookInImageMessage_Fragment = { __typename: 'FacebookInImageMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
 type FtMessageCommon_FacebookInPostCommentMessage_Fragment = { __typename: 'FacebookInPostCommentMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
+
+type FtMessageCommon_FacebookInRefLinkOpenMessage_Fragment = { __typename: 'FacebookInRefLinkOpenMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
 type FtMessageCommon_FacebookInTextMessage_Fragment = { __typename: 'FacebookInTextMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
@@ -8520,15 +8636,19 @@ type FtMessageCommon_WhatsAppOutUnknownMessage_Fragment = { __typename: 'WhatsAp
 
 type FtMessageCommon_WhatsAppOutVideoMessage_Fragment = { __typename: 'WhatsAppOutVideoMessage', id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> };
 
-export type FtMessageCommonFragment = FtMessageCommon_FacebookInAudioMessage_Fragment | FtMessageCommon_FacebookInFileMessage_Fragment | FtMessageCommon_FacebookInImageMessage_Fragment | FtMessageCommon_FacebookInPostCommentMessage_Fragment | FtMessageCommon_FacebookInTextMessage_Fragment | FtMessageCommon_FacebookInUnknownMessage_Fragment | FtMessageCommon_FacebookInVideoMessage_Fragment | FtMessageCommon_FacebookOutAudioMessage_Fragment | FtMessageCommon_FacebookOutImageMessage_Fragment | FtMessageCommon_FacebookOutPublicCommentReplyMessage_Fragment | FtMessageCommon_FacebookOutTextMessage_Fragment | FtMessageCommon_FacebookOutUnknownMessage_Fragment | FtMessageCommon_FacebookOutVideoMessage_Fragment | FtMessageCommon_InstagramInAdCommentMessage_Fragment | FtMessageCommon_InstagramInAudioMessage_Fragment | FtMessageCommon_InstagramInFeedCommentMessage_Fragment | FtMessageCommon_InstagramInImageMessage_Fragment | FtMessageCommon_InstagramInReelCommentMessage_Fragment | FtMessageCommon_InstagramInStoryReplyMessage_Fragment | FtMessageCommon_InstagramInTextMessage_Fragment | FtMessageCommon_InstagramInUnknownMessage_Fragment | FtMessageCommon_InstagramInVideoMessage_Fragment | FtMessageCommon_InstagramOutAudioMessage_Fragment | FtMessageCommon_InstagramOutImageMessage_Fragment | FtMessageCommon_InstagramOutPublicCommentReplyMessage_Fragment | FtMessageCommon_InstagramOutTextMessage_Fragment | FtMessageCommon_InstagramOutUnknownMessage_Fragment | FtMessageCommon_InstagramOutVideoMessage_Fragment | FtMessageCommon_SystemConversationSummaryMessage_Fragment | FtMessageCommon_SystemLivechatClosedByAutoClosingMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByBooking_Fragment | FtMessageCommon_SystemLivechatOpenedByCoexMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByComponentMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedManuallyMessage_Fragment | FtMessageCommon_SystemMetaConversionEventSentMessage_Fragment | FtMessageCommon_SystemTypingMessage_Fragment | FtMessageCommon_TikTokInImageMessage_Fragment | FtMessageCommon_TikTokInTextMessage_Fragment | FtMessageCommon_TikTokInTextPostCommentMessage_Fragment | FtMessageCommon_TikTokInUnknownMessage_Fragment | FtMessageCommon_TikTokOutImageMessage_Fragment | FtMessageCommon_TikTokOutPublicCommentReplyMessage_Fragment | FtMessageCommon_TikTokOutTextMessage_Fragment | FtMessageCommon_TikTokOutUnknownMessage_Fragment | FtMessageCommon_WebWidgetAttachmentMessage_Fragment | FtMessageCommon_WebWidgetCallPhoneButtonClickMessage_Fragment | FtMessageCommon_WebWidgetContinueFlowButtonClickMessage_Fragment | FtMessageCommon_WebWidgetOpenUrlButtonClickMessage_Fragment | FtMessageCommon_WebWidgetTextAndButtonsMessage_Fragment | FtMessageCommon_WebWidgetTextMessage_Fragment | FtMessageCommon_WhatsAppInAudioMessage_Fragment | FtMessageCommon_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtMessageCommon_WhatsAppInDocumentMessage_Fragment | FtMessageCommon_WhatsAppInImageMessage_Fragment | FtMessageCommon_WhatsAppInListRowClickMessage_Fragment | FtMessageCommon_WhatsAppInMediaPlaceholderMessage_Fragment | FtMessageCommon_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtMessageCommon_WhatsAppInTextMessage_Fragment | FtMessageCommon_WhatsAppInUnknownMessage_Fragment | FtMessageCommon_WhatsAppInVideoMessage_Fragment | FtMessageCommon_WhatsAppOutAudioMessage_Fragment | FtMessageCommon_WhatsAppOutDocumentMessage_Fragment | FtMessageCommon_WhatsAppOutImageMessage_Fragment | FtMessageCommon_WhatsAppOutListMessage_Fragment | FtMessageCommon_WhatsAppOutMediaPlaceholderMessage_Fragment | FtMessageCommon_WhatsAppOutTemplateMessage_Fragment | FtMessageCommon_WhatsAppOutTextAndButtonsMessage_Fragment | FtMessageCommon_WhatsAppOutTextAndUrlMessage_Fragment | FtMessageCommon_WhatsAppOutTextMessage_Fragment | FtMessageCommon_WhatsAppOutUnknownMessage_Fragment | FtMessageCommon_WhatsAppOutVideoMessage_Fragment;
+export type FtMessageCommonFragment = FtMessageCommon_FacebookInAudioMessage_Fragment | FtMessageCommon_FacebookInButtonClickMessage_Fragment | FtMessageCommon_FacebookInFileMessage_Fragment | FtMessageCommon_FacebookInImageMessage_Fragment | FtMessageCommon_FacebookInPostCommentMessage_Fragment | FtMessageCommon_FacebookInRefLinkOpenMessage_Fragment | FtMessageCommon_FacebookInTextMessage_Fragment | FtMessageCommon_FacebookInUnknownMessage_Fragment | FtMessageCommon_FacebookInVideoMessage_Fragment | FtMessageCommon_FacebookOutAudioMessage_Fragment | FtMessageCommon_FacebookOutImageMessage_Fragment | FtMessageCommon_FacebookOutPublicCommentReplyMessage_Fragment | FtMessageCommon_FacebookOutTextMessage_Fragment | FtMessageCommon_FacebookOutUnknownMessage_Fragment | FtMessageCommon_FacebookOutVideoMessage_Fragment | FtMessageCommon_InstagramInAdCommentMessage_Fragment | FtMessageCommon_InstagramInAudioMessage_Fragment | FtMessageCommon_InstagramInFeedCommentMessage_Fragment | FtMessageCommon_InstagramInImageMessage_Fragment | FtMessageCommon_InstagramInReelCommentMessage_Fragment | FtMessageCommon_InstagramInStoryReplyMessage_Fragment | FtMessageCommon_InstagramInTextMessage_Fragment | FtMessageCommon_InstagramInUnknownMessage_Fragment | FtMessageCommon_InstagramInVideoMessage_Fragment | FtMessageCommon_InstagramOutAudioMessage_Fragment | FtMessageCommon_InstagramOutImageMessage_Fragment | FtMessageCommon_InstagramOutPublicCommentReplyMessage_Fragment | FtMessageCommon_InstagramOutTextMessage_Fragment | FtMessageCommon_InstagramOutUnknownMessage_Fragment | FtMessageCommon_InstagramOutVideoMessage_Fragment | FtMessageCommon_SystemConversationSummaryMessage_Fragment | FtMessageCommon_SystemLivechatClosedByAutoClosingMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByBooking_Fragment | FtMessageCommon_SystemLivechatOpenedByCoexMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByComponentMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtMessageCommon_SystemLivechatOpenedManuallyMessage_Fragment | FtMessageCommon_SystemMetaConversionEventSentMessage_Fragment | FtMessageCommon_SystemTypingMessage_Fragment | FtMessageCommon_TikTokInImageMessage_Fragment | FtMessageCommon_TikTokInTextMessage_Fragment | FtMessageCommon_TikTokInTextPostCommentMessage_Fragment | FtMessageCommon_TikTokInUnknownMessage_Fragment | FtMessageCommon_TikTokOutImageMessage_Fragment | FtMessageCommon_TikTokOutPublicCommentReplyMessage_Fragment | FtMessageCommon_TikTokOutTextMessage_Fragment | FtMessageCommon_TikTokOutUnknownMessage_Fragment | FtMessageCommon_WebWidgetAttachmentMessage_Fragment | FtMessageCommon_WebWidgetCallPhoneButtonClickMessage_Fragment | FtMessageCommon_WebWidgetContinueFlowButtonClickMessage_Fragment | FtMessageCommon_WebWidgetOpenUrlButtonClickMessage_Fragment | FtMessageCommon_WebWidgetTextAndButtonsMessage_Fragment | FtMessageCommon_WebWidgetTextMessage_Fragment | FtMessageCommon_WhatsAppInAudioMessage_Fragment | FtMessageCommon_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtMessageCommon_WhatsAppInDocumentMessage_Fragment | FtMessageCommon_WhatsAppInImageMessage_Fragment | FtMessageCommon_WhatsAppInListRowClickMessage_Fragment | FtMessageCommon_WhatsAppInMediaPlaceholderMessage_Fragment | FtMessageCommon_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtMessageCommon_WhatsAppInTextMessage_Fragment | FtMessageCommon_WhatsAppInUnknownMessage_Fragment | FtMessageCommon_WhatsAppInVideoMessage_Fragment | FtMessageCommon_WhatsAppOutAudioMessage_Fragment | FtMessageCommon_WhatsAppOutDocumentMessage_Fragment | FtMessageCommon_WhatsAppOutImageMessage_Fragment | FtMessageCommon_WhatsAppOutListMessage_Fragment | FtMessageCommon_WhatsAppOutMediaPlaceholderMessage_Fragment | FtMessageCommon_WhatsAppOutTemplateMessage_Fragment | FtMessageCommon_WhatsAppOutTextAndButtonsMessage_Fragment | FtMessageCommon_WhatsAppOutTextAndUrlMessage_Fragment | FtMessageCommon_WhatsAppOutTextMessage_Fragment | FtMessageCommon_WhatsAppOutUnknownMessage_Fragment | FtMessageCommon_WhatsAppOutVideoMessage_Fragment;
 
 type FtWhatsAppParts_FacebookInAudioMessage_Fragment = { __typename?: 'FacebookInAudioMessage' };
+
+type FtWhatsAppParts_FacebookInButtonClickMessage_Fragment = { __typename?: 'FacebookInButtonClickMessage' };
 
 type FtWhatsAppParts_FacebookInFileMessage_Fragment = { __typename?: 'FacebookInFileMessage' };
 
 type FtWhatsAppParts_FacebookInImageMessage_Fragment = { __typename?: 'FacebookInImageMessage' };
 
 type FtWhatsAppParts_FacebookInPostCommentMessage_Fragment = { __typename?: 'FacebookInPostCommentMessage' };
+
+type FtWhatsAppParts_FacebookInRefLinkOpenMessage_Fragment = { __typename?: 'FacebookInRefLinkOpenMessage' };
 
 type FtWhatsAppParts_FacebookInTextMessage_Fragment = { __typename?: 'FacebookInTextMessage' };
 
@@ -8691,15 +8811,19 @@ type FtWhatsAppParts_WhatsAppOutVideoMessage_Fragment = { __typename?: 'WhatsApp
     & FtFileFragment
   ) };
 
-export type FtWhatsAppPartsFragment = FtWhatsAppParts_FacebookInAudioMessage_Fragment | FtWhatsAppParts_FacebookInFileMessage_Fragment | FtWhatsAppParts_FacebookInImageMessage_Fragment | FtWhatsAppParts_FacebookInPostCommentMessage_Fragment | FtWhatsAppParts_FacebookInTextMessage_Fragment | FtWhatsAppParts_FacebookInUnknownMessage_Fragment | FtWhatsAppParts_FacebookInVideoMessage_Fragment | FtWhatsAppParts_FacebookOutAudioMessage_Fragment | FtWhatsAppParts_FacebookOutImageMessage_Fragment | FtWhatsAppParts_FacebookOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_FacebookOutTextMessage_Fragment | FtWhatsAppParts_FacebookOutUnknownMessage_Fragment | FtWhatsAppParts_FacebookOutVideoMessage_Fragment | FtWhatsAppParts_InstagramInAdCommentMessage_Fragment | FtWhatsAppParts_InstagramInAudioMessage_Fragment | FtWhatsAppParts_InstagramInFeedCommentMessage_Fragment | FtWhatsAppParts_InstagramInImageMessage_Fragment | FtWhatsAppParts_InstagramInReelCommentMessage_Fragment | FtWhatsAppParts_InstagramInStoryReplyMessage_Fragment | FtWhatsAppParts_InstagramInTextMessage_Fragment | FtWhatsAppParts_InstagramInUnknownMessage_Fragment | FtWhatsAppParts_InstagramInVideoMessage_Fragment | FtWhatsAppParts_InstagramOutAudioMessage_Fragment | FtWhatsAppParts_InstagramOutImageMessage_Fragment | FtWhatsAppParts_InstagramOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_InstagramOutTextMessage_Fragment | FtWhatsAppParts_InstagramOutUnknownMessage_Fragment | FtWhatsAppParts_InstagramOutVideoMessage_Fragment | FtWhatsAppParts_SystemConversationSummaryMessage_Fragment | FtWhatsAppParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByBooking_Fragment | FtWhatsAppParts_SystemLivechatOpenedByCoexMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByComponentMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedManuallyMessage_Fragment | FtWhatsAppParts_SystemMetaConversionEventSentMessage_Fragment | FtWhatsAppParts_SystemTypingMessage_Fragment | FtWhatsAppParts_TikTokInImageMessage_Fragment | FtWhatsAppParts_TikTokInTextMessage_Fragment | FtWhatsAppParts_TikTokInTextPostCommentMessage_Fragment | FtWhatsAppParts_TikTokInUnknownMessage_Fragment | FtWhatsAppParts_TikTokOutImageMessage_Fragment | FtWhatsAppParts_TikTokOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_TikTokOutTextMessage_Fragment | FtWhatsAppParts_TikTokOutUnknownMessage_Fragment | FtWhatsAppParts_WebWidgetAttachmentMessage_Fragment | FtWhatsAppParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetTextAndButtonsMessage_Fragment | FtWhatsAppParts_WebWidgetTextMessage_Fragment | FtWhatsAppParts_WhatsAppInAudioMessage_Fragment | FtWhatsAppParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtWhatsAppParts_WhatsAppInDocumentMessage_Fragment | FtWhatsAppParts_WhatsAppInImageMessage_Fragment | FtWhatsAppParts_WhatsAppInListRowClickMessage_Fragment | FtWhatsAppParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtWhatsAppParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtWhatsAppParts_WhatsAppInTextMessage_Fragment | FtWhatsAppParts_WhatsAppInUnknownMessage_Fragment | FtWhatsAppParts_WhatsAppInVideoMessage_Fragment | FtWhatsAppParts_WhatsAppOutAudioMessage_Fragment | FtWhatsAppParts_WhatsAppOutDocumentMessage_Fragment | FtWhatsAppParts_WhatsAppOutImageMessage_Fragment | FtWhatsAppParts_WhatsAppOutListMessage_Fragment | FtWhatsAppParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtWhatsAppParts_WhatsAppOutTemplateMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextAndUrlMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextMessage_Fragment | FtWhatsAppParts_WhatsAppOutUnknownMessage_Fragment | FtWhatsAppParts_WhatsAppOutVideoMessage_Fragment;
+export type FtWhatsAppPartsFragment = FtWhatsAppParts_FacebookInAudioMessage_Fragment | FtWhatsAppParts_FacebookInButtonClickMessage_Fragment | FtWhatsAppParts_FacebookInFileMessage_Fragment | FtWhatsAppParts_FacebookInImageMessage_Fragment | FtWhatsAppParts_FacebookInPostCommentMessage_Fragment | FtWhatsAppParts_FacebookInRefLinkOpenMessage_Fragment | FtWhatsAppParts_FacebookInTextMessage_Fragment | FtWhatsAppParts_FacebookInUnknownMessage_Fragment | FtWhatsAppParts_FacebookInVideoMessage_Fragment | FtWhatsAppParts_FacebookOutAudioMessage_Fragment | FtWhatsAppParts_FacebookOutImageMessage_Fragment | FtWhatsAppParts_FacebookOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_FacebookOutTextMessage_Fragment | FtWhatsAppParts_FacebookOutUnknownMessage_Fragment | FtWhatsAppParts_FacebookOutVideoMessage_Fragment | FtWhatsAppParts_InstagramInAdCommentMessage_Fragment | FtWhatsAppParts_InstagramInAudioMessage_Fragment | FtWhatsAppParts_InstagramInFeedCommentMessage_Fragment | FtWhatsAppParts_InstagramInImageMessage_Fragment | FtWhatsAppParts_InstagramInReelCommentMessage_Fragment | FtWhatsAppParts_InstagramInStoryReplyMessage_Fragment | FtWhatsAppParts_InstagramInTextMessage_Fragment | FtWhatsAppParts_InstagramInUnknownMessage_Fragment | FtWhatsAppParts_InstagramInVideoMessage_Fragment | FtWhatsAppParts_InstagramOutAudioMessage_Fragment | FtWhatsAppParts_InstagramOutImageMessage_Fragment | FtWhatsAppParts_InstagramOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_InstagramOutTextMessage_Fragment | FtWhatsAppParts_InstagramOutUnknownMessage_Fragment | FtWhatsAppParts_InstagramOutVideoMessage_Fragment | FtWhatsAppParts_SystemConversationSummaryMessage_Fragment | FtWhatsAppParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByBooking_Fragment | FtWhatsAppParts_SystemLivechatOpenedByCoexMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByComponentMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtWhatsAppParts_SystemLivechatOpenedManuallyMessage_Fragment | FtWhatsAppParts_SystemMetaConversionEventSentMessage_Fragment | FtWhatsAppParts_SystemTypingMessage_Fragment | FtWhatsAppParts_TikTokInImageMessage_Fragment | FtWhatsAppParts_TikTokInTextMessage_Fragment | FtWhatsAppParts_TikTokInTextPostCommentMessage_Fragment | FtWhatsAppParts_TikTokInUnknownMessage_Fragment | FtWhatsAppParts_TikTokOutImageMessage_Fragment | FtWhatsAppParts_TikTokOutPublicCommentReplyMessage_Fragment | FtWhatsAppParts_TikTokOutTextMessage_Fragment | FtWhatsAppParts_TikTokOutUnknownMessage_Fragment | FtWhatsAppParts_WebWidgetAttachmentMessage_Fragment | FtWhatsAppParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtWhatsAppParts_WebWidgetTextAndButtonsMessage_Fragment | FtWhatsAppParts_WebWidgetTextMessage_Fragment | FtWhatsAppParts_WhatsAppInAudioMessage_Fragment | FtWhatsAppParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtWhatsAppParts_WhatsAppInDocumentMessage_Fragment | FtWhatsAppParts_WhatsAppInImageMessage_Fragment | FtWhatsAppParts_WhatsAppInListRowClickMessage_Fragment | FtWhatsAppParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtWhatsAppParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtWhatsAppParts_WhatsAppInTextMessage_Fragment | FtWhatsAppParts_WhatsAppInUnknownMessage_Fragment | FtWhatsAppParts_WhatsAppInVideoMessage_Fragment | FtWhatsAppParts_WhatsAppOutAudioMessage_Fragment | FtWhatsAppParts_WhatsAppOutDocumentMessage_Fragment | FtWhatsAppParts_WhatsAppOutImageMessage_Fragment | FtWhatsAppParts_WhatsAppOutListMessage_Fragment | FtWhatsAppParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtWhatsAppParts_WhatsAppOutTemplateMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextAndUrlMessage_Fragment | FtWhatsAppParts_WhatsAppOutTextMessage_Fragment | FtWhatsAppParts_WhatsAppOutUnknownMessage_Fragment | FtWhatsAppParts_WhatsAppOutVideoMessage_Fragment;
 
 type FtWidgetParts_FacebookInAudioMessage_Fragment = { __typename?: 'FacebookInAudioMessage' };
+
+type FtWidgetParts_FacebookInButtonClickMessage_Fragment = { __typename?: 'FacebookInButtonClickMessage' };
 
 type FtWidgetParts_FacebookInFileMessage_Fragment = { __typename?: 'FacebookInFileMessage' };
 
 type FtWidgetParts_FacebookInImageMessage_Fragment = { __typename?: 'FacebookInImageMessage' };
 
 type FtWidgetParts_FacebookInPostCommentMessage_Fragment = { __typename?: 'FacebookInPostCommentMessage' };
+
+type FtWidgetParts_FacebookInRefLinkOpenMessage_Fragment = { __typename?: 'FacebookInRefLinkOpenMessage' };
 
 type FtWidgetParts_FacebookInTextMessage_Fragment = { __typename?: 'FacebookInTextMessage' };
 
@@ -8841,15 +8965,19 @@ type FtWidgetParts_WhatsAppOutUnknownMessage_Fragment = { __typename?: 'WhatsApp
 
 type FtWidgetParts_WhatsAppOutVideoMessage_Fragment = { __typename?: 'WhatsAppOutVideoMessage' };
 
-export type FtWidgetPartsFragment = FtWidgetParts_FacebookInAudioMessage_Fragment | FtWidgetParts_FacebookInFileMessage_Fragment | FtWidgetParts_FacebookInImageMessage_Fragment | FtWidgetParts_FacebookInPostCommentMessage_Fragment | FtWidgetParts_FacebookInTextMessage_Fragment | FtWidgetParts_FacebookInUnknownMessage_Fragment | FtWidgetParts_FacebookInVideoMessage_Fragment | FtWidgetParts_FacebookOutAudioMessage_Fragment | FtWidgetParts_FacebookOutImageMessage_Fragment | FtWidgetParts_FacebookOutPublicCommentReplyMessage_Fragment | FtWidgetParts_FacebookOutTextMessage_Fragment | FtWidgetParts_FacebookOutUnknownMessage_Fragment | FtWidgetParts_FacebookOutVideoMessage_Fragment | FtWidgetParts_InstagramInAdCommentMessage_Fragment | FtWidgetParts_InstagramInAudioMessage_Fragment | FtWidgetParts_InstagramInFeedCommentMessage_Fragment | FtWidgetParts_InstagramInImageMessage_Fragment | FtWidgetParts_InstagramInReelCommentMessage_Fragment | FtWidgetParts_InstagramInStoryReplyMessage_Fragment | FtWidgetParts_InstagramInTextMessage_Fragment | FtWidgetParts_InstagramInUnknownMessage_Fragment | FtWidgetParts_InstagramInVideoMessage_Fragment | FtWidgetParts_InstagramOutAudioMessage_Fragment | FtWidgetParts_InstagramOutImageMessage_Fragment | FtWidgetParts_InstagramOutPublicCommentReplyMessage_Fragment | FtWidgetParts_InstagramOutTextMessage_Fragment | FtWidgetParts_InstagramOutUnknownMessage_Fragment | FtWidgetParts_InstagramOutVideoMessage_Fragment | FtWidgetParts_SystemConversationSummaryMessage_Fragment | FtWidgetParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByBooking_Fragment | FtWidgetParts_SystemLivechatOpenedByCoexMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByComponentMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedManuallyMessage_Fragment | FtWidgetParts_SystemMetaConversionEventSentMessage_Fragment | FtWidgetParts_SystemTypingMessage_Fragment | FtWidgetParts_TikTokInImageMessage_Fragment | FtWidgetParts_TikTokInTextMessage_Fragment | FtWidgetParts_TikTokInTextPostCommentMessage_Fragment | FtWidgetParts_TikTokInUnknownMessage_Fragment | FtWidgetParts_TikTokOutImageMessage_Fragment | FtWidgetParts_TikTokOutPublicCommentReplyMessage_Fragment | FtWidgetParts_TikTokOutTextMessage_Fragment | FtWidgetParts_TikTokOutUnknownMessage_Fragment | FtWidgetParts_WebWidgetAttachmentMessage_Fragment | FtWidgetParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtWidgetParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtWidgetParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtWidgetParts_WebWidgetTextAndButtonsMessage_Fragment | FtWidgetParts_WebWidgetTextMessage_Fragment | FtWidgetParts_WhatsAppInAudioMessage_Fragment | FtWidgetParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtWidgetParts_WhatsAppInDocumentMessage_Fragment | FtWidgetParts_WhatsAppInImageMessage_Fragment | FtWidgetParts_WhatsAppInListRowClickMessage_Fragment | FtWidgetParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtWidgetParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtWidgetParts_WhatsAppInTextMessage_Fragment | FtWidgetParts_WhatsAppInUnknownMessage_Fragment | FtWidgetParts_WhatsAppInVideoMessage_Fragment | FtWidgetParts_WhatsAppOutAudioMessage_Fragment | FtWidgetParts_WhatsAppOutDocumentMessage_Fragment | FtWidgetParts_WhatsAppOutImageMessage_Fragment | FtWidgetParts_WhatsAppOutListMessage_Fragment | FtWidgetParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtWidgetParts_WhatsAppOutTemplateMessage_Fragment | FtWidgetParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtWidgetParts_WhatsAppOutTextAndUrlMessage_Fragment | FtWidgetParts_WhatsAppOutTextMessage_Fragment | FtWidgetParts_WhatsAppOutUnknownMessage_Fragment | FtWidgetParts_WhatsAppOutVideoMessage_Fragment;
+export type FtWidgetPartsFragment = FtWidgetParts_FacebookInAudioMessage_Fragment | FtWidgetParts_FacebookInButtonClickMessage_Fragment | FtWidgetParts_FacebookInFileMessage_Fragment | FtWidgetParts_FacebookInImageMessage_Fragment | FtWidgetParts_FacebookInPostCommentMessage_Fragment | FtWidgetParts_FacebookInRefLinkOpenMessage_Fragment | FtWidgetParts_FacebookInTextMessage_Fragment | FtWidgetParts_FacebookInUnknownMessage_Fragment | FtWidgetParts_FacebookInVideoMessage_Fragment | FtWidgetParts_FacebookOutAudioMessage_Fragment | FtWidgetParts_FacebookOutImageMessage_Fragment | FtWidgetParts_FacebookOutPublicCommentReplyMessage_Fragment | FtWidgetParts_FacebookOutTextMessage_Fragment | FtWidgetParts_FacebookOutUnknownMessage_Fragment | FtWidgetParts_FacebookOutVideoMessage_Fragment | FtWidgetParts_InstagramInAdCommentMessage_Fragment | FtWidgetParts_InstagramInAudioMessage_Fragment | FtWidgetParts_InstagramInFeedCommentMessage_Fragment | FtWidgetParts_InstagramInImageMessage_Fragment | FtWidgetParts_InstagramInReelCommentMessage_Fragment | FtWidgetParts_InstagramInStoryReplyMessage_Fragment | FtWidgetParts_InstagramInTextMessage_Fragment | FtWidgetParts_InstagramInUnknownMessage_Fragment | FtWidgetParts_InstagramInVideoMessage_Fragment | FtWidgetParts_InstagramOutAudioMessage_Fragment | FtWidgetParts_InstagramOutImageMessage_Fragment | FtWidgetParts_InstagramOutPublicCommentReplyMessage_Fragment | FtWidgetParts_InstagramOutTextMessage_Fragment | FtWidgetParts_InstagramOutUnknownMessage_Fragment | FtWidgetParts_InstagramOutVideoMessage_Fragment | FtWidgetParts_SystemConversationSummaryMessage_Fragment | FtWidgetParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByBooking_Fragment | FtWidgetParts_SystemLivechatOpenedByCoexMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByComponentMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtWidgetParts_SystemLivechatOpenedManuallyMessage_Fragment | FtWidgetParts_SystemMetaConversionEventSentMessage_Fragment | FtWidgetParts_SystemTypingMessage_Fragment | FtWidgetParts_TikTokInImageMessage_Fragment | FtWidgetParts_TikTokInTextMessage_Fragment | FtWidgetParts_TikTokInTextPostCommentMessage_Fragment | FtWidgetParts_TikTokInUnknownMessage_Fragment | FtWidgetParts_TikTokOutImageMessage_Fragment | FtWidgetParts_TikTokOutPublicCommentReplyMessage_Fragment | FtWidgetParts_TikTokOutTextMessage_Fragment | FtWidgetParts_TikTokOutUnknownMessage_Fragment | FtWidgetParts_WebWidgetAttachmentMessage_Fragment | FtWidgetParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtWidgetParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtWidgetParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtWidgetParts_WebWidgetTextAndButtonsMessage_Fragment | FtWidgetParts_WebWidgetTextMessage_Fragment | FtWidgetParts_WhatsAppInAudioMessage_Fragment | FtWidgetParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtWidgetParts_WhatsAppInDocumentMessage_Fragment | FtWidgetParts_WhatsAppInImageMessage_Fragment | FtWidgetParts_WhatsAppInListRowClickMessage_Fragment | FtWidgetParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtWidgetParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtWidgetParts_WhatsAppInTextMessage_Fragment | FtWidgetParts_WhatsAppInUnknownMessage_Fragment | FtWidgetParts_WhatsAppInVideoMessage_Fragment | FtWidgetParts_WhatsAppOutAudioMessage_Fragment | FtWidgetParts_WhatsAppOutDocumentMessage_Fragment | FtWidgetParts_WhatsAppOutImageMessage_Fragment | FtWidgetParts_WhatsAppOutListMessage_Fragment | FtWidgetParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtWidgetParts_WhatsAppOutTemplateMessage_Fragment | FtWidgetParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtWidgetParts_WhatsAppOutTextAndUrlMessage_Fragment | FtWidgetParts_WhatsAppOutTextMessage_Fragment | FtWidgetParts_WhatsAppOutUnknownMessage_Fragment | FtWidgetParts_WhatsAppOutVideoMessage_Fragment;
 
 type FtOtherPlatformParts_FacebookInAudioMessage_Fragment = { __typename?: 'FacebookInAudioMessage' };
+
+type FtOtherPlatformParts_FacebookInButtonClickMessage_Fragment = { __typename?: 'FacebookInButtonClickMessage' };
 
 type FtOtherPlatformParts_FacebookInFileMessage_Fragment = { __typename?: 'FacebookInFileMessage' };
 
 type FtOtherPlatformParts_FacebookInImageMessage_Fragment = { __typename?: 'FacebookInImageMessage' };
 
 type FtOtherPlatformParts_FacebookInPostCommentMessage_Fragment = { __typename?: 'FacebookInPostCommentMessage' };
+
+type FtOtherPlatformParts_FacebookInRefLinkOpenMessage_Fragment = { __typename?: 'FacebookInRefLinkOpenMessage' };
 
 type FtOtherPlatformParts_FacebookInTextMessage_Fragment = { __typename?: 'FacebookInTextMessage', text: string };
 
@@ -8991,15 +9119,19 @@ type FtOtherPlatformParts_WhatsAppOutUnknownMessage_Fragment = { __typename?: 'W
 
 type FtOtherPlatformParts_WhatsAppOutVideoMessage_Fragment = { __typename?: 'WhatsAppOutVideoMessage' };
 
-export type FtOtherPlatformPartsFragment = FtOtherPlatformParts_FacebookInAudioMessage_Fragment | FtOtherPlatformParts_FacebookInFileMessage_Fragment | FtOtherPlatformParts_FacebookInImageMessage_Fragment | FtOtherPlatformParts_FacebookInPostCommentMessage_Fragment | FtOtherPlatformParts_FacebookInTextMessage_Fragment | FtOtherPlatformParts_FacebookInUnknownMessage_Fragment | FtOtherPlatformParts_FacebookInVideoMessage_Fragment | FtOtherPlatformParts_FacebookOutAudioMessage_Fragment | FtOtherPlatformParts_FacebookOutImageMessage_Fragment | FtOtherPlatformParts_FacebookOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_FacebookOutTextMessage_Fragment | FtOtherPlatformParts_FacebookOutUnknownMessage_Fragment | FtOtherPlatformParts_FacebookOutVideoMessage_Fragment | FtOtherPlatformParts_InstagramInAdCommentMessage_Fragment | FtOtherPlatformParts_InstagramInAudioMessage_Fragment | FtOtherPlatformParts_InstagramInFeedCommentMessage_Fragment | FtOtherPlatformParts_InstagramInImageMessage_Fragment | FtOtherPlatformParts_InstagramInReelCommentMessage_Fragment | FtOtherPlatformParts_InstagramInStoryReplyMessage_Fragment | FtOtherPlatformParts_InstagramInTextMessage_Fragment | FtOtherPlatformParts_InstagramInUnknownMessage_Fragment | FtOtherPlatformParts_InstagramInVideoMessage_Fragment | FtOtherPlatformParts_InstagramOutAudioMessage_Fragment | FtOtherPlatformParts_InstagramOutImageMessage_Fragment | FtOtherPlatformParts_InstagramOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_InstagramOutTextMessage_Fragment | FtOtherPlatformParts_InstagramOutUnknownMessage_Fragment | FtOtherPlatformParts_InstagramOutVideoMessage_Fragment | FtOtherPlatformParts_SystemConversationSummaryMessage_Fragment | FtOtherPlatformParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByBooking_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByCoexMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByComponentMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedManuallyMessage_Fragment | FtOtherPlatformParts_SystemMetaConversionEventSentMessage_Fragment | FtOtherPlatformParts_SystemTypingMessage_Fragment | FtOtherPlatformParts_TikTokInImageMessage_Fragment | FtOtherPlatformParts_TikTokInTextMessage_Fragment | FtOtherPlatformParts_TikTokInTextPostCommentMessage_Fragment | FtOtherPlatformParts_TikTokInUnknownMessage_Fragment | FtOtherPlatformParts_TikTokOutImageMessage_Fragment | FtOtherPlatformParts_TikTokOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_TikTokOutTextMessage_Fragment | FtOtherPlatformParts_TikTokOutUnknownMessage_Fragment | FtOtherPlatformParts_WebWidgetAttachmentMessage_Fragment | FtOtherPlatformParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetTextAndButtonsMessage_Fragment | FtOtherPlatformParts_WebWidgetTextMessage_Fragment | FtOtherPlatformParts_WhatsAppInAudioMessage_Fragment | FtOtherPlatformParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInDocumentMessage_Fragment | FtOtherPlatformParts_WhatsAppInImageMessage_Fragment | FtOtherPlatformParts_WhatsAppInListRowClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtOtherPlatformParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInTextMessage_Fragment | FtOtherPlatformParts_WhatsAppInUnknownMessage_Fragment | FtOtherPlatformParts_WhatsAppInVideoMessage_Fragment | FtOtherPlatformParts_WhatsAppOutAudioMessage_Fragment | FtOtherPlatformParts_WhatsAppOutDocumentMessage_Fragment | FtOtherPlatformParts_WhatsAppOutImageMessage_Fragment | FtOtherPlatformParts_WhatsAppOutListMessage_Fragment | FtOtherPlatformParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTemplateMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextAndUrlMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextMessage_Fragment | FtOtherPlatformParts_WhatsAppOutUnknownMessage_Fragment | FtOtherPlatformParts_WhatsAppOutVideoMessage_Fragment;
+export type FtOtherPlatformPartsFragment = FtOtherPlatformParts_FacebookInAudioMessage_Fragment | FtOtherPlatformParts_FacebookInButtonClickMessage_Fragment | FtOtherPlatformParts_FacebookInFileMessage_Fragment | FtOtherPlatformParts_FacebookInImageMessage_Fragment | FtOtherPlatformParts_FacebookInPostCommentMessage_Fragment | FtOtherPlatformParts_FacebookInRefLinkOpenMessage_Fragment | FtOtherPlatformParts_FacebookInTextMessage_Fragment | FtOtherPlatformParts_FacebookInUnknownMessage_Fragment | FtOtherPlatformParts_FacebookInVideoMessage_Fragment | FtOtherPlatformParts_FacebookOutAudioMessage_Fragment | FtOtherPlatformParts_FacebookOutImageMessage_Fragment | FtOtherPlatformParts_FacebookOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_FacebookOutTextMessage_Fragment | FtOtherPlatformParts_FacebookOutUnknownMessage_Fragment | FtOtherPlatformParts_FacebookOutVideoMessage_Fragment | FtOtherPlatformParts_InstagramInAdCommentMessage_Fragment | FtOtherPlatformParts_InstagramInAudioMessage_Fragment | FtOtherPlatformParts_InstagramInFeedCommentMessage_Fragment | FtOtherPlatformParts_InstagramInImageMessage_Fragment | FtOtherPlatformParts_InstagramInReelCommentMessage_Fragment | FtOtherPlatformParts_InstagramInStoryReplyMessage_Fragment | FtOtherPlatformParts_InstagramInTextMessage_Fragment | FtOtherPlatformParts_InstagramInUnknownMessage_Fragment | FtOtherPlatformParts_InstagramInVideoMessage_Fragment | FtOtherPlatformParts_InstagramOutAudioMessage_Fragment | FtOtherPlatformParts_InstagramOutImageMessage_Fragment | FtOtherPlatformParts_InstagramOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_InstagramOutTextMessage_Fragment | FtOtherPlatformParts_InstagramOutUnknownMessage_Fragment | FtOtherPlatformParts_InstagramOutVideoMessage_Fragment | FtOtherPlatformParts_SystemConversationSummaryMessage_Fragment | FtOtherPlatformParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByBooking_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByCoexMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByComponentMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtOtherPlatformParts_SystemLivechatOpenedManuallyMessage_Fragment | FtOtherPlatformParts_SystemMetaConversionEventSentMessage_Fragment | FtOtherPlatformParts_SystemTypingMessage_Fragment | FtOtherPlatformParts_TikTokInImageMessage_Fragment | FtOtherPlatformParts_TikTokInTextMessage_Fragment | FtOtherPlatformParts_TikTokInTextPostCommentMessage_Fragment | FtOtherPlatformParts_TikTokInUnknownMessage_Fragment | FtOtherPlatformParts_TikTokOutImageMessage_Fragment | FtOtherPlatformParts_TikTokOutPublicCommentReplyMessage_Fragment | FtOtherPlatformParts_TikTokOutTextMessage_Fragment | FtOtherPlatformParts_TikTokOutUnknownMessage_Fragment | FtOtherPlatformParts_WebWidgetAttachmentMessage_Fragment | FtOtherPlatformParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtOtherPlatformParts_WebWidgetTextAndButtonsMessage_Fragment | FtOtherPlatformParts_WebWidgetTextMessage_Fragment | FtOtherPlatformParts_WhatsAppInAudioMessage_Fragment | FtOtherPlatformParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInDocumentMessage_Fragment | FtOtherPlatformParts_WhatsAppInImageMessage_Fragment | FtOtherPlatformParts_WhatsAppInListRowClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtOtherPlatformParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtOtherPlatformParts_WhatsAppInTextMessage_Fragment | FtOtherPlatformParts_WhatsAppInUnknownMessage_Fragment | FtOtherPlatformParts_WhatsAppInVideoMessage_Fragment | FtOtherPlatformParts_WhatsAppOutAudioMessage_Fragment | FtOtherPlatformParts_WhatsAppOutDocumentMessage_Fragment | FtOtherPlatformParts_WhatsAppOutImageMessage_Fragment | FtOtherPlatformParts_WhatsAppOutListMessage_Fragment | FtOtherPlatformParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTemplateMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextAndUrlMessage_Fragment | FtOtherPlatformParts_WhatsAppOutTextMessage_Fragment | FtOtherPlatformParts_WhatsAppOutUnknownMessage_Fragment | FtOtherPlatformParts_WhatsAppOutVideoMessage_Fragment;
 
 type FtSystemParts_FacebookInAudioMessage_Fragment = { __typename?: 'FacebookInAudioMessage' };
+
+type FtSystemParts_FacebookInButtonClickMessage_Fragment = { __typename?: 'FacebookInButtonClickMessage' };
 
 type FtSystemParts_FacebookInFileMessage_Fragment = { __typename?: 'FacebookInFileMessage' };
 
 type FtSystemParts_FacebookInImageMessage_Fragment = { __typename?: 'FacebookInImageMessage' };
 
 type FtSystemParts_FacebookInPostCommentMessage_Fragment = { __typename?: 'FacebookInPostCommentMessage' };
+
+type FtSystemParts_FacebookInRefLinkOpenMessage_Fragment = { __typename?: 'FacebookInRefLinkOpenMessage' };
 
 type FtSystemParts_FacebookInTextMessage_Fragment = { __typename?: 'FacebookInTextMessage' };
 
@@ -9141,7 +9273,7 @@ type FtSystemParts_WhatsAppOutUnknownMessage_Fragment = { __typename?: 'WhatsApp
 
 type FtSystemParts_WhatsAppOutVideoMessage_Fragment = { __typename?: 'WhatsAppOutVideoMessage' };
 
-export type FtSystemPartsFragment = FtSystemParts_FacebookInAudioMessage_Fragment | FtSystemParts_FacebookInFileMessage_Fragment | FtSystemParts_FacebookInImageMessage_Fragment | FtSystemParts_FacebookInPostCommentMessage_Fragment | FtSystemParts_FacebookInTextMessage_Fragment | FtSystemParts_FacebookInUnknownMessage_Fragment | FtSystemParts_FacebookInVideoMessage_Fragment | FtSystemParts_FacebookOutAudioMessage_Fragment | FtSystemParts_FacebookOutImageMessage_Fragment | FtSystemParts_FacebookOutPublicCommentReplyMessage_Fragment | FtSystemParts_FacebookOutTextMessage_Fragment | FtSystemParts_FacebookOutUnknownMessage_Fragment | FtSystemParts_FacebookOutVideoMessage_Fragment | FtSystemParts_InstagramInAdCommentMessage_Fragment | FtSystemParts_InstagramInAudioMessage_Fragment | FtSystemParts_InstagramInFeedCommentMessage_Fragment | FtSystemParts_InstagramInImageMessage_Fragment | FtSystemParts_InstagramInReelCommentMessage_Fragment | FtSystemParts_InstagramInStoryReplyMessage_Fragment | FtSystemParts_InstagramInTextMessage_Fragment | FtSystemParts_InstagramInUnknownMessage_Fragment | FtSystemParts_InstagramInVideoMessage_Fragment | FtSystemParts_InstagramOutAudioMessage_Fragment | FtSystemParts_InstagramOutImageMessage_Fragment | FtSystemParts_InstagramOutPublicCommentReplyMessage_Fragment | FtSystemParts_InstagramOutTextMessage_Fragment | FtSystemParts_InstagramOutUnknownMessage_Fragment | FtSystemParts_InstagramOutVideoMessage_Fragment | FtSystemParts_SystemConversationSummaryMessage_Fragment | FtSystemParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtSystemParts_SystemLivechatOpenedByBooking_Fragment | FtSystemParts_SystemLivechatOpenedByCoexMessage_Fragment | FtSystemParts_SystemLivechatOpenedByComponentMessage_Fragment | FtSystemParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedManuallyMessage_Fragment | FtSystemParts_SystemMetaConversionEventSentMessage_Fragment | FtSystemParts_SystemTypingMessage_Fragment | FtSystemParts_TikTokInImageMessage_Fragment | FtSystemParts_TikTokInTextMessage_Fragment | FtSystemParts_TikTokInTextPostCommentMessage_Fragment | FtSystemParts_TikTokInUnknownMessage_Fragment | FtSystemParts_TikTokOutImageMessage_Fragment | FtSystemParts_TikTokOutPublicCommentReplyMessage_Fragment | FtSystemParts_TikTokOutTextMessage_Fragment | FtSystemParts_TikTokOutUnknownMessage_Fragment | FtSystemParts_WebWidgetAttachmentMessage_Fragment | FtSystemParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtSystemParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtSystemParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtSystemParts_WebWidgetTextAndButtonsMessage_Fragment | FtSystemParts_WebWidgetTextMessage_Fragment | FtSystemParts_WhatsAppInAudioMessage_Fragment | FtSystemParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtSystemParts_WhatsAppInDocumentMessage_Fragment | FtSystemParts_WhatsAppInImageMessage_Fragment | FtSystemParts_WhatsAppInListRowClickMessage_Fragment | FtSystemParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtSystemParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtSystemParts_WhatsAppInTextMessage_Fragment | FtSystemParts_WhatsAppInUnknownMessage_Fragment | FtSystemParts_WhatsAppInVideoMessage_Fragment | FtSystemParts_WhatsAppOutAudioMessage_Fragment | FtSystemParts_WhatsAppOutDocumentMessage_Fragment | FtSystemParts_WhatsAppOutImageMessage_Fragment | FtSystemParts_WhatsAppOutListMessage_Fragment | FtSystemParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtSystemParts_WhatsAppOutTemplateMessage_Fragment | FtSystemParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtSystemParts_WhatsAppOutTextAndUrlMessage_Fragment | FtSystemParts_WhatsAppOutTextMessage_Fragment | FtSystemParts_WhatsAppOutUnknownMessage_Fragment | FtSystemParts_WhatsAppOutVideoMessage_Fragment;
+export type FtSystemPartsFragment = FtSystemParts_FacebookInAudioMessage_Fragment | FtSystemParts_FacebookInButtonClickMessage_Fragment | FtSystemParts_FacebookInFileMessage_Fragment | FtSystemParts_FacebookInImageMessage_Fragment | FtSystemParts_FacebookInPostCommentMessage_Fragment | FtSystemParts_FacebookInRefLinkOpenMessage_Fragment | FtSystemParts_FacebookInTextMessage_Fragment | FtSystemParts_FacebookInUnknownMessage_Fragment | FtSystemParts_FacebookInVideoMessage_Fragment | FtSystemParts_FacebookOutAudioMessage_Fragment | FtSystemParts_FacebookOutImageMessage_Fragment | FtSystemParts_FacebookOutPublicCommentReplyMessage_Fragment | FtSystemParts_FacebookOutTextMessage_Fragment | FtSystemParts_FacebookOutUnknownMessage_Fragment | FtSystemParts_FacebookOutVideoMessage_Fragment | FtSystemParts_InstagramInAdCommentMessage_Fragment | FtSystemParts_InstagramInAudioMessage_Fragment | FtSystemParts_InstagramInFeedCommentMessage_Fragment | FtSystemParts_InstagramInImageMessage_Fragment | FtSystemParts_InstagramInReelCommentMessage_Fragment | FtSystemParts_InstagramInStoryReplyMessage_Fragment | FtSystemParts_InstagramInTextMessage_Fragment | FtSystemParts_InstagramInUnknownMessage_Fragment | FtSystemParts_InstagramInVideoMessage_Fragment | FtSystemParts_InstagramOutAudioMessage_Fragment | FtSystemParts_InstagramOutImageMessage_Fragment | FtSystemParts_InstagramOutPublicCommentReplyMessage_Fragment | FtSystemParts_InstagramOutTextMessage_Fragment | FtSystemParts_InstagramOutUnknownMessage_Fragment | FtSystemParts_InstagramOutVideoMessage_Fragment | FtSystemParts_SystemConversationSummaryMessage_Fragment | FtSystemParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtSystemParts_SystemLivechatOpenedByBooking_Fragment | FtSystemParts_SystemLivechatOpenedByCoexMessage_Fragment | FtSystemParts_SystemLivechatOpenedByComponentMessage_Fragment | FtSystemParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtSystemParts_SystemLivechatOpenedManuallyMessage_Fragment | FtSystemParts_SystemMetaConversionEventSentMessage_Fragment | FtSystemParts_SystemTypingMessage_Fragment | FtSystemParts_TikTokInImageMessage_Fragment | FtSystemParts_TikTokInTextMessage_Fragment | FtSystemParts_TikTokInTextPostCommentMessage_Fragment | FtSystemParts_TikTokInUnknownMessage_Fragment | FtSystemParts_TikTokOutImageMessage_Fragment | FtSystemParts_TikTokOutPublicCommentReplyMessage_Fragment | FtSystemParts_TikTokOutTextMessage_Fragment | FtSystemParts_TikTokOutUnknownMessage_Fragment | FtSystemParts_WebWidgetAttachmentMessage_Fragment | FtSystemParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtSystemParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtSystemParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtSystemParts_WebWidgetTextAndButtonsMessage_Fragment | FtSystemParts_WebWidgetTextMessage_Fragment | FtSystemParts_WhatsAppInAudioMessage_Fragment | FtSystemParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtSystemParts_WhatsAppInDocumentMessage_Fragment | FtSystemParts_WhatsAppInImageMessage_Fragment | FtSystemParts_WhatsAppInListRowClickMessage_Fragment | FtSystemParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtSystemParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtSystemParts_WhatsAppInTextMessage_Fragment | FtSystemParts_WhatsAppInUnknownMessage_Fragment | FtSystemParts_WhatsAppInVideoMessage_Fragment | FtSystemParts_WhatsAppOutAudioMessage_Fragment | FtSystemParts_WhatsAppOutDocumentMessage_Fragment | FtSystemParts_WhatsAppOutImageMessage_Fragment | FtSystemParts_WhatsAppOutListMessage_Fragment | FtSystemParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtSystemParts_WhatsAppOutTemplateMessage_Fragment | FtSystemParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtSystemParts_WhatsAppOutTextAndUrlMessage_Fragment | FtSystemParts_WhatsAppOutTextMessage_Fragment | FtSystemParts_WhatsAppOutUnknownMessage_Fragment | FtSystemParts_WhatsAppOutVideoMessage_Fragment;
 
 type FtMessageParts_FacebookInAudioMessage_Fragment = (
   { __typename?: 'FacebookInAudioMessage' }
@@ -9150,6 +9282,15 @@ type FtMessageParts_FacebookInAudioMessage_Fragment = (
   & FtWidgetParts_FacebookInAudioMessage_Fragment
   & FtOtherPlatformParts_FacebookInAudioMessage_Fragment
   & FtSystemParts_FacebookInAudioMessage_Fragment
+);
+
+type FtMessageParts_FacebookInButtonClickMessage_Fragment = (
+  { __typename?: 'FacebookInButtonClickMessage' }
+  & FtMessageCommon_FacebookInButtonClickMessage_Fragment
+  & FtWhatsAppParts_FacebookInButtonClickMessage_Fragment
+  & FtWidgetParts_FacebookInButtonClickMessage_Fragment
+  & FtOtherPlatformParts_FacebookInButtonClickMessage_Fragment
+  & FtSystemParts_FacebookInButtonClickMessage_Fragment
 );
 
 type FtMessageParts_FacebookInFileMessage_Fragment = (
@@ -9177,6 +9318,15 @@ type FtMessageParts_FacebookInPostCommentMessage_Fragment = (
   & FtWidgetParts_FacebookInPostCommentMessage_Fragment
   & FtOtherPlatformParts_FacebookInPostCommentMessage_Fragment
   & FtSystemParts_FacebookInPostCommentMessage_Fragment
+);
+
+type FtMessageParts_FacebookInRefLinkOpenMessage_Fragment = (
+  { __typename?: 'FacebookInRefLinkOpenMessage' }
+  & FtMessageCommon_FacebookInRefLinkOpenMessage_Fragment
+  & FtWhatsAppParts_FacebookInRefLinkOpenMessage_Fragment
+  & FtWidgetParts_FacebookInRefLinkOpenMessage_Fragment
+  & FtOtherPlatformParts_FacebookInRefLinkOpenMessage_Fragment
+  & FtSystemParts_FacebookInRefLinkOpenMessage_Fragment
 );
 
 type FtMessageParts_FacebookInTextMessage_Fragment = (
@@ -9809,7 +9959,7 @@ type FtMessageParts_WhatsAppOutVideoMessage_Fragment = (
   & FtSystemParts_WhatsAppOutVideoMessage_Fragment
 );
 
-export type FtMessagePartsFragment = FtMessageParts_FacebookInAudioMessage_Fragment | FtMessageParts_FacebookInFileMessage_Fragment | FtMessageParts_FacebookInImageMessage_Fragment | FtMessageParts_FacebookInPostCommentMessage_Fragment | FtMessageParts_FacebookInTextMessage_Fragment | FtMessageParts_FacebookInUnknownMessage_Fragment | FtMessageParts_FacebookInVideoMessage_Fragment | FtMessageParts_FacebookOutAudioMessage_Fragment | FtMessageParts_FacebookOutImageMessage_Fragment | FtMessageParts_FacebookOutPublicCommentReplyMessage_Fragment | FtMessageParts_FacebookOutTextMessage_Fragment | FtMessageParts_FacebookOutUnknownMessage_Fragment | FtMessageParts_FacebookOutVideoMessage_Fragment | FtMessageParts_InstagramInAdCommentMessage_Fragment | FtMessageParts_InstagramInAudioMessage_Fragment | FtMessageParts_InstagramInFeedCommentMessage_Fragment | FtMessageParts_InstagramInImageMessage_Fragment | FtMessageParts_InstagramInReelCommentMessage_Fragment | FtMessageParts_InstagramInStoryReplyMessage_Fragment | FtMessageParts_InstagramInTextMessage_Fragment | FtMessageParts_InstagramInUnknownMessage_Fragment | FtMessageParts_InstagramInVideoMessage_Fragment | FtMessageParts_InstagramOutAudioMessage_Fragment | FtMessageParts_InstagramOutImageMessage_Fragment | FtMessageParts_InstagramOutPublicCommentReplyMessage_Fragment | FtMessageParts_InstagramOutTextMessage_Fragment | FtMessageParts_InstagramOutUnknownMessage_Fragment | FtMessageParts_InstagramOutVideoMessage_Fragment | FtMessageParts_SystemConversationSummaryMessage_Fragment | FtMessageParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtMessageParts_SystemLivechatOpenedByBooking_Fragment | FtMessageParts_SystemLivechatOpenedByCoexMessage_Fragment | FtMessageParts_SystemLivechatOpenedByComponentMessage_Fragment | FtMessageParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedManuallyMessage_Fragment | FtMessageParts_SystemMetaConversionEventSentMessage_Fragment | FtMessageParts_SystemTypingMessage_Fragment | FtMessageParts_TikTokInImageMessage_Fragment | FtMessageParts_TikTokInTextMessage_Fragment | FtMessageParts_TikTokInTextPostCommentMessage_Fragment | FtMessageParts_TikTokInUnknownMessage_Fragment | FtMessageParts_TikTokOutImageMessage_Fragment | FtMessageParts_TikTokOutPublicCommentReplyMessage_Fragment | FtMessageParts_TikTokOutTextMessage_Fragment | FtMessageParts_TikTokOutUnknownMessage_Fragment | FtMessageParts_WebWidgetAttachmentMessage_Fragment | FtMessageParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtMessageParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtMessageParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtMessageParts_WebWidgetTextAndButtonsMessage_Fragment | FtMessageParts_WebWidgetTextMessage_Fragment | FtMessageParts_WhatsAppInAudioMessage_Fragment | FtMessageParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtMessageParts_WhatsAppInDocumentMessage_Fragment | FtMessageParts_WhatsAppInImageMessage_Fragment | FtMessageParts_WhatsAppInListRowClickMessage_Fragment | FtMessageParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtMessageParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtMessageParts_WhatsAppInTextMessage_Fragment | FtMessageParts_WhatsAppInUnknownMessage_Fragment | FtMessageParts_WhatsAppInVideoMessage_Fragment | FtMessageParts_WhatsAppOutAudioMessage_Fragment | FtMessageParts_WhatsAppOutDocumentMessage_Fragment | FtMessageParts_WhatsAppOutImageMessage_Fragment | FtMessageParts_WhatsAppOutListMessage_Fragment | FtMessageParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtMessageParts_WhatsAppOutTemplateMessage_Fragment | FtMessageParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtMessageParts_WhatsAppOutTextAndUrlMessage_Fragment | FtMessageParts_WhatsAppOutTextMessage_Fragment | FtMessageParts_WhatsAppOutUnknownMessage_Fragment | FtMessageParts_WhatsAppOutVideoMessage_Fragment;
+export type FtMessagePartsFragment = FtMessageParts_FacebookInAudioMessage_Fragment | FtMessageParts_FacebookInButtonClickMessage_Fragment | FtMessageParts_FacebookInFileMessage_Fragment | FtMessageParts_FacebookInImageMessage_Fragment | FtMessageParts_FacebookInPostCommentMessage_Fragment | FtMessageParts_FacebookInRefLinkOpenMessage_Fragment | FtMessageParts_FacebookInTextMessage_Fragment | FtMessageParts_FacebookInUnknownMessage_Fragment | FtMessageParts_FacebookInVideoMessage_Fragment | FtMessageParts_FacebookOutAudioMessage_Fragment | FtMessageParts_FacebookOutImageMessage_Fragment | FtMessageParts_FacebookOutPublicCommentReplyMessage_Fragment | FtMessageParts_FacebookOutTextMessage_Fragment | FtMessageParts_FacebookOutUnknownMessage_Fragment | FtMessageParts_FacebookOutVideoMessage_Fragment | FtMessageParts_InstagramInAdCommentMessage_Fragment | FtMessageParts_InstagramInAudioMessage_Fragment | FtMessageParts_InstagramInFeedCommentMessage_Fragment | FtMessageParts_InstagramInImageMessage_Fragment | FtMessageParts_InstagramInReelCommentMessage_Fragment | FtMessageParts_InstagramInStoryReplyMessage_Fragment | FtMessageParts_InstagramInTextMessage_Fragment | FtMessageParts_InstagramInUnknownMessage_Fragment | FtMessageParts_InstagramInVideoMessage_Fragment | FtMessageParts_InstagramOutAudioMessage_Fragment | FtMessageParts_InstagramOutImageMessage_Fragment | FtMessageParts_InstagramOutPublicCommentReplyMessage_Fragment | FtMessageParts_InstagramOutTextMessage_Fragment | FtMessageParts_InstagramOutUnknownMessage_Fragment | FtMessageParts_InstagramOutVideoMessage_Fragment | FtMessageParts_SystemConversationSummaryMessage_Fragment | FtMessageParts_SystemLivechatClosedByAutoClosingMessage_Fragment | FtMessageParts_SystemLivechatOpenedByBooking_Fragment | FtMessageParts_SystemLivechatOpenedByCoexMessage_Fragment | FtMessageParts_SystemLivechatOpenedByComponentMessage_Fragment | FtMessageParts_SystemLivechatOpenedByFacebookAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedByInstagramAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedByTikTokAppMessage_Fragment | FtMessageParts_SystemLivechatOpenedManuallyMessage_Fragment | FtMessageParts_SystemMetaConversionEventSentMessage_Fragment | FtMessageParts_SystemTypingMessage_Fragment | FtMessageParts_TikTokInImageMessage_Fragment | FtMessageParts_TikTokInTextMessage_Fragment | FtMessageParts_TikTokInTextPostCommentMessage_Fragment | FtMessageParts_TikTokInUnknownMessage_Fragment | FtMessageParts_TikTokOutImageMessage_Fragment | FtMessageParts_TikTokOutPublicCommentReplyMessage_Fragment | FtMessageParts_TikTokOutTextMessage_Fragment | FtMessageParts_TikTokOutUnknownMessage_Fragment | FtMessageParts_WebWidgetAttachmentMessage_Fragment | FtMessageParts_WebWidgetCallPhoneButtonClickMessage_Fragment | FtMessageParts_WebWidgetContinueFlowButtonClickMessage_Fragment | FtMessageParts_WebWidgetOpenUrlButtonClickMessage_Fragment | FtMessageParts_WebWidgetTextAndButtonsMessage_Fragment | FtMessageParts_WebWidgetTextMessage_Fragment | FtMessageParts_WhatsAppInAudioMessage_Fragment | FtMessageParts_WhatsAppInContinueFlowButtonClickMessage_Fragment | FtMessageParts_WhatsAppInDocumentMessage_Fragment | FtMessageParts_WhatsAppInImageMessage_Fragment | FtMessageParts_WhatsAppInListRowClickMessage_Fragment | FtMessageParts_WhatsAppInMediaPlaceholderMessage_Fragment | FtMessageParts_WhatsAppInTemplateQuickReplyButtonClickMessage_Fragment | FtMessageParts_WhatsAppInTextMessage_Fragment | FtMessageParts_WhatsAppInUnknownMessage_Fragment | FtMessageParts_WhatsAppInVideoMessage_Fragment | FtMessageParts_WhatsAppOutAudioMessage_Fragment | FtMessageParts_WhatsAppOutDocumentMessage_Fragment | FtMessageParts_WhatsAppOutImageMessage_Fragment | FtMessageParts_WhatsAppOutListMessage_Fragment | FtMessageParts_WhatsAppOutMediaPlaceholderMessage_Fragment | FtMessageParts_WhatsAppOutTemplateMessage_Fragment | FtMessageParts_WhatsAppOutTextAndButtonsMessage_Fragment | FtMessageParts_WhatsAppOutTextAndUrlMessage_Fragment | FtMessageParts_WhatsAppOutTextMessage_Fragment | FtMessageParts_WhatsAppOutUnknownMessage_Fragment | FtMessageParts_WhatsAppOutVideoMessage_Fragment;
 
 export type FtSessionPartsFragment = { __typename?: 'PreviewResponsesFlowSession', id: string, conversationID: string, startedAt: string, startingBlock?: { __typename?: 'AiAgentBlock', id: string, name: string } | { __typename?: 'ClearContactPropertyBlock', id: string, name: string } | { __typename?: 'DefaultReplyBlock', id: string, name: string } | { __typename?: 'RedirectToFlowBlock', id: string, name: string } | { __typename?: 'RegularActionBlock', id: string, name: string } | { __typename?: 'RegularContentBlock', id: string, name: string } | { __typename?: 'SetConditionBlock', id: string, name: string } | { __typename?: 'SetContactPropertyBlock', id: string, name: string } | { __typename?: 'TriggeredMessageBlock', id: string, name: string } | { __typename?: 'WhatsAppListBlock', id: string, name: string } | { __typename?: 'WhatsAppOneTimeNotificationBlock', id: string, name: string } | { __typename?: 'WhatsAppScheduledMessageBlock', id: string, name: string } | { __typename?: 'WhatsAppTemplateBlock', id: string, name: string } | { __typename?: 'WhatsAppTextAndButtonsBlock', id: string, name: string } | { __typename?: 'WhatsAppTextAndURLBlock', id: string, name: string } | { __typename?: 'WidgetEntryPointBlock', id: string, name: string } | null };
 
@@ -9849,6 +9999,9 @@ export type FlowTestMessagesQuery = { __typename?: 'Query', bot: { __typename?: 
             { __typename?: 'FacebookInAudioMessage' }
             & FtMessageParts_FacebookInAudioMessage_Fragment
           ) | (
+            { __typename?: 'FacebookInButtonClickMessage' }
+            & FtMessageParts_FacebookInButtonClickMessage_Fragment
+          ) | (
             { __typename?: 'FacebookInFileMessage' }
             & FtMessageParts_FacebookInFileMessage_Fragment
           ) | (
@@ -9857,6 +10010,9 @@ export type FlowTestMessagesQuery = { __typename?: 'Query', bot: { __typename?: 
           ) | (
             { __typename?: 'FacebookInPostCommentMessage' }
             & FtMessageParts_FacebookInPostCommentMessage_Fragment
+          ) | (
+            { __typename?: 'FacebookInRefLinkOpenMessage' }
+            & FtMessageParts_FacebookInRefLinkOpenMessage_Fragment
           ) | (
             { __typename?: 'FacebookInTextMessage' }
             & FtMessageParts_FacebookInTextMessage_Fragment
@@ -10079,6 +10235,9 @@ export type FlowTestMessageAddedSubscription = { __typename?: 'Subscription', me
     { __typename?: 'FacebookInAudioMessage' }
     & FtMessageParts_FacebookInAudioMessage_Fragment
   ) | (
+    { __typename?: 'FacebookInButtonClickMessage' }
+    & FtMessageParts_FacebookInButtonClickMessage_Fragment
+  ) | (
     { __typename?: 'FacebookInFileMessage' }
     & FtMessageParts_FacebookInFileMessage_Fragment
   ) | (
@@ -10087,6 +10246,9 @@ export type FlowTestMessageAddedSubscription = { __typename?: 'Subscription', me
   ) | (
     { __typename?: 'FacebookInPostCommentMessage' }
     & FtMessageParts_FacebookInPostCommentMessage_Fragment
+  ) | (
+    { __typename?: 'FacebookInRefLinkOpenMessage' }
+    & FtMessageParts_FacebookInRefLinkOpenMessage_Fragment
   ) | (
     { __typename?: 'FacebookInTextMessage' }
     & FtMessageParts_FacebookInTextMessage_Fragment
@@ -10309,6 +10471,9 @@ export type FlowTestMessageUpdatedSubscription = { __typename?: 'Subscription', 
     { __typename?: 'FacebookInAudioMessage' }
     & FtMessageParts_FacebookInAudioMessage_Fragment
   ) | (
+    { __typename?: 'FacebookInButtonClickMessage' }
+    & FtMessageParts_FacebookInButtonClickMessage_Fragment
+  ) | (
     { __typename?: 'FacebookInFileMessage' }
     & FtMessageParts_FacebookInFileMessage_Fragment
   ) | (
@@ -10317,6 +10482,9 @@ export type FlowTestMessageUpdatedSubscription = { __typename?: 'Subscription', 
   ) | (
     { __typename?: 'FacebookInPostCommentMessage' }
     & FtMessageParts_FacebookInPostCommentMessage_Fragment
+  ) | (
+    { __typename?: 'FacebookInRefLinkOpenMessage' }
+    & FtMessageParts_FacebookInRefLinkOpenMessage_Fragment
   ) | (
     { __typename?: 'FacebookInTextMessage' }
     & FtMessageParts_FacebookInTextMessage_Fragment
@@ -12184,6 +12352,24 @@ ${WaBtnFragmentDoc}
 ${WaTplTextFragmentDoc}
 ${ElementPartsFragmentDoc}
 ${BlockPartsFragmentDoc}`) as unknown as TypedDocumentString<AddInstagramSwitchToHumanToBlockMutation, AddInstagramSwitchToHumanToBlockMutationVariables>;
+export const AddFacebookSwitchToHumanToBlockDocument = new TypedDocumentString(`
+mutation AddFacebookSwitchToHumanToBlock($blockID: BlockID!) {
+  facebookSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+${AttrNameFragmentDoc}
+${TStrFragmentDoc}
+${FileRefFragmentDoc}
+${ElementErrorsFragmentDoc}
+${SegmentFilterPartsFragmentDoc}
+${SegmentPartsFragmentDoc}
+${TriggerPartsFragmentDoc}
+${WidgetBtnFragmentDoc}
+${WaBtnFragmentDoc}
+${WaTplTextFragmentDoc}
+${ElementPartsFragmentDoc}
+${BlockPartsFragmentDoc}`) as unknown as TypedDocumentString<AddFacebookSwitchToHumanToBlockMutation, AddFacebookSwitchToHumanToBlockMutationVariables>;
 export const AddTikTokSwitchToHumanToBlockDocument = new TypedDocumentString(`
 mutation AddTikTokSwitchToHumanToBlock($blockID: BlockID!) {
   tiktokSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
@@ -12518,6 +12704,17 @@ mutation CreateInstagramSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!)
   }
 }
 ${FlowBlocksSlimFragmentDoc}`) as unknown as TypedDocumentString<CreateInstagramSwitchToHumanBlockMutation, CreateInstagramSwitchToHumanBlockMutationVariables>;
+export const CreateFacebookSwitchToHumanBlockDocument = new TypedDocumentString(`
+mutation CreateFacebookSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  facebookSwitchToChatWithHumanAgentCreateWithBlock(
+    flowID: $flowID
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+${FlowBlocksSlimFragmentDoc}`) as unknown as TypedDocumentString<CreateFacebookSwitchToHumanBlockMutation, CreateFacebookSwitchToHumanBlockMutationVariables>;
 export const CreateTikTokSwitchToHumanBlockDocument = new TypedDocumentString(`
 mutation CreateTikTokSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
   tiktokSwitchToChatWithHumanAgentCreateWithBlock(
@@ -12760,6 +12957,18 @@ mutation CreateInstagramSwitchToHumanBlockConnected($flowID: FlowID!, $request: 
   }
 }
 ${FlowBlocksSlimFragmentDoc}`) as unknown as TypedDocumentString<CreateInstagramSwitchToHumanBlockConnectedMutation, CreateInstagramSwitchToHumanBlockConnectedMutationVariables>;
+export const CreateFacebookSwitchToHumanBlockConnectedDocument = new TypedDocumentString(`
+mutation CreateFacebookSwitchToHumanBlockConnected($flowID: FlowID!, $request: UndefinedTargetBlockConnectionCreateRequest!, $x: Int!, $y: Int!) {
+  facebookSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+${FlowBlocksSlimFragmentDoc}`) as unknown as TypedDocumentString<CreateFacebookSwitchToHumanBlockConnectedMutation, CreateFacebookSwitchToHumanBlockConnectedMutationVariables>;
 export const CreateTikTokSwitchToHumanBlockConnectedDocument = new TypedDocumentString(`
 mutation CreateTikTokSwitchToHumanBlockConnected($flowID: FlowID!, $request: UndefinedTargetBlockConnectionCreateRequest!, $x: Int!, $y: Int!) {
   tiktokSwitchToChatWithHumanAgentCreateWithBlockAndConnection(

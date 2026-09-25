@@ -34,6 +34,7 @@ const PLATFORM_GROUP: Record<Exclude<PluginPlatform, null>, string> = {
   whatsapp: 'WhatsApp',
   instagram: 'Instagram',
   tiktok: 'TikTok',
+  facebook: 'Facebook',
 };
 
 /**
@@ -61,6 +62,7 @@ const KEYWORDS: Record<string, readonly string[]> = {
   whatsAppScheduledMessage: ['wa', 'start', 'trigger', 'schedule', 'later', 'delay'],
   instagramSwitchToHuman: ['ig', 'operator', 'live chat', 'agent', 'handoff'],
   tiktokSwitchToHuman: ['operator', 'live chat', 'agent', 'handoff'],
+  facebookSwitchToHuman: ['fb', 'messenger', 'operator', 'live chat', 'agent', 'handoff'],
   setCondition: ['if', 'branch', 'filter', 'logic', 'segment'],
   setContactProperty: ['attribute', 'variable', 'save', 'field'],
   clearContactProperty: ['attribute', 'variable', 'unset', 'remove', 'field'],

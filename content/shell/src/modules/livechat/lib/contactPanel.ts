@@ -4,9 +4,9 @@ import type { InboxContactDetailFragment } from '~api/generated/livechat/graphql
  * Who this contact is, per platform, and who is answering them.
  *
  * There is no common handle on the `Contact` interface. `phone` exists only on
- * `WhatsappContact`, `username` and `availableForDMs` only on Instagram and
- * TikTok, and `WidgetContact`, `FacebookContact` and `UnavailableContact` have
- * neither — so the card branches on `__typename` and cannot do otherwise. A
+ * `WhatsappContact`, `username` only on Instagram and TikTok,
+ * `availableForDMs` on those two and Facebook, and `WidgetContact` and
+ * `UnavailableContact` have none of them — so the card branches on `__typename` and cannot do otherwise. A
  * version that reads `'phone' in contact` is the same mistake in TypeScript
  * clothing: it works for the platform whose field somebody remembered and
  * silently shows nothing for the rest.
@@ -65,6 +65,13 @@ export function contactIdentity(contact: ContactDetail): IdentityRow[] {
       /* Explicit false only. `availableForDMs` is nullable and a null is the
          platform declining to say, which is not the same as "no" — and "no" is
          the answer that would stop an operator writing at all. */
+      if (contact.availableForDMs === false) {
+        rows.push({ label: 'Direct messages', value: 'Closed' });
+      }
+      break;
+    /* No handle on Messenger — the name is the contact's. `false` means the
+       page may not write first: wait for the contact to message. */
+    case 'FacebookContact':
       if (contact.availableForDMs === false) {
         rows.push({ label: 'Direct messages', value: 'Closed' });
       }

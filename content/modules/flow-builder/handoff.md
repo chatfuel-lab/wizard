@@ -66,9 +66,10 @@ First-task ideas:
    Set contact property → pick an attribute; watch the error badge disappear.
 2. Prettier auto-layout: `lib/layout.ts` is a deliberately simple layered
    BFS — swap in dagre/elkjs for edge-crossing minimization.
-3. A Facebook-platform test: `facebook` has no flow-builder blocks at all
-   (guide.md) — the picker shows such flows, the canvas will just be empty,
-   and Facebook preview sessions are refused.
+3. A Facebook-platform flow: its one block of its own is Human agent
+   (Facebook); everything else on it is a platform-neutral action or AI
+   block. The test dock previews it with `FlowTestFacebookTextSend`, text
+   only, like Instagram and TikTok.
 4. Flow groups: the rail reads `flowGroups`, but the group CRUD
    (`createFlowGroup`, `updateFlowGroupName`, `deleteFlowGroup`,
    `moveFlowToGroup`) is generated in `examples/operations.graphql` with no

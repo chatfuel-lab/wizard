@@ -17,6 +17,7 @@
 import type { TypedDoc } from '~api';
 import { anonymousKey, TESTER_LABEL, type TestChatRow } from '~ui';
 import {
+  AutomationsPreviewFacebookPostCommentSendDocument,
   AutomationsPreviewFacebookTextSendDocument,
   AutomationsPreviewInstagramTextSendDocument,
   AutomationsPreviewTikTokTextSendDocument,
@@ -72,6 +73,19 @@ const SEND: Record<PreviewPlatform, SendDocument> = {
 
 export const sendDocumentFor = (platform: PreviewPlatform): SendDocument => SEND[platform];
 
+/**
+ * The scopes whose test messages go in as a COMMENT on a page post rather than
+ * as a DM, and the document that sends one. Facebook only: the schema has
+ * `previewResponsesFacebookPostCommentSend` and no Instagram or TikTok
+ * counterpart. The automation answers with its public reply and/or its
+ * private reply, which is what a comment scope exists to test.
+ */
+export const COMMENT_PREVIEW_SCOPES: ReadonlySet<FuelyAutomationScope> = new Set([
+  FuelyAutomationScope.FacebookPostComments,
+]);
+
+export const commentSendDocument = AutomationsPreviewFacebookPostCommentSendDocument;
+
 /** The wire value of `session.platform` is the enum's string; anything else is unknown. */
 export const parsePreviewPlatform = (raw: string | null | undefined): PreviewPlatform | null =>
   PREVIEW_PLATFORMS.find((platform) => platform === raw) ?? null;
@@ -107,12 +121,14 @@ const IN_TEXT = new Set([
   'InstagramInTextMessage',
   'TikTokInTextMessage',
   'FacebookInTextMessage',
+  'FacebookInPostCommentMessage',
 ]);
 const OUT_TEXT = new Set([
   'WhatsAppOutTextMessage',
   'InstagramOutTextMessage',
   'TikTokOutTextMessage',
   'FacebookOutTextMessage',
+  'FacebookOutPublicCommentReplyMessage',
 ]);
 
 /**
@@ -173,7 +189,10 @@ export function toRow(node: PreviewMessageNode): TestChatRow {
 // The target
 // ---------------------------------------------------------------------------
 
-/** The session is pinned to one automation (`previewResponsesStartForFuelyAutomation`) or to nothing. */
-export type PreviewTarget = { kind: 'automation'; id: string };
+/**
+ * The session is pinned to one automation (`previewResponsesStartForFuelyAutomation`) or to nothing.
+ * `scope` picks how a test message is sent — see `COMMENT_PREVIEW_SCOPES`.
+ */
+export type PreviewTarget = { kind: 'automation'; id: string; scope?: FuelyAutomationScope };
 
 export const targetKey = (target: PreviewTarget | null): string => (target === null ? '' : `automation:${target.id}`);

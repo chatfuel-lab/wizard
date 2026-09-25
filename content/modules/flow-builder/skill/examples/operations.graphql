@@ -1089,6 +1089,12 @@ mutation AddInstagramSwitchToHumanToBlock($blockID: BlockID!) {
   }
 }
 
+mutation AddFacebookSwitchToHumanToBlock($blockID: BlockID!) {
+  facebookSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
+    ...BlockParts
+  }
+}
+
 mutation AddTikTokSwitchToHumanToBlock($blockID: BlockID!) {
   tiktokSwitchToChatWithHumanAgentCreateInBlock(blockID: $blockID) {
     ...BlockParts
@@ -1283,6 +1289,12 @@ mutation CreateWhatsAppSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) 
 
 mutation CreateInstagramSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
   instagramSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateFacebookSwitchToHumanBlock($flowID: FlowID!, $x: Int!, $y: Int!) {
+  facebookSwitchToChatWithHumanAgentCreateWithBlock(flowID: $flowID, positionX: $x, positionY: $y) {
     ...FlowBlocksSlim
   }
 }
@@ -1508,6 +1520,22 @@ mutation CreateInstagramSwitchToHumanBlockConnected(
   $y: Int!
 ) {
   instagramSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
+    flowID: $flowID
+    request: $request
+    positionX: $x
+    positionY: $y
+  ) {
+    ...FlowBlocksSlim
+  }
+}
+
+mutation CreateFacebookSwitchToHumanBlockConnected(
+  $flowID: FlowID!
+  $request: UndefinedTargetBlockConnectionCreateRequest!
+  $x: Int!
+  $y: Int!
+) {
+  facebookSwitchToChatWithHumanAgentCreateWithBlockAndConnection(
     flowID: $flowID
     request: $request
     positionX: $x

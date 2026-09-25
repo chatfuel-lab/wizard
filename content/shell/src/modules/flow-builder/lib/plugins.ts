@@ -5,9 +5,10 @@
  *
  * Platform gating mirrors the server's: platform-specific plugins stack only
  * into blocks of the same platform; platform-neutral action plugins (send
- * JSON, condition, contact-property ops, summarize chat) stack anywhere. An
- * unknown/foreign platform (e.g. `facebook`, which has no flow-builder
- * blocks of its own) offers the neutral set only — never crash, never guess.
+ * JSON, condition, contact-property ops, summarize chat) stack anywhere.
+ * `facebook` has one plugin of its own, the switch to a human agent. An
+ * unknown/foreign platform offers the neutral set only — never crash, never
+ * guess.
  */
 import type { TypedDoc } from '~api';
 import {
@@ -17,6 +18,7 @@ import {
   AddSetConditionToBlockDocument,
   AddSetContactPropertyToBlockDocument,
   AddSummarizeChatToBlockDocument,
+  AddFacebookSwitchToHumanToBlockDocument,
   AddTikTokSwitchToHumanToBlockDocument,
   AddWhatsAppAudioToBlockDocument,
   AddWhatsAppDocumentToBlockDocument,
@@ -32,7 +34,7 @@ import type { BlockT } from '../types';
 import { findNewId } from './pickBlock';
 
 /** null = platform-neutral: offered on every block regardless of platform. */
-export type PluginPlatform = 'widget' | 'whatsapp' | 'instagram' | 'tiktok' | null;
+export type PluginPlatform = 'widget' | 'whatsapp' | 'instagram' | 'tiktok' | 'facebook' | null;
 
 /**
  * Every Add*ToBlock document erased to the common shape: one root field
@@ -111,6 +113,12 @@ export const PLUGIN_CATALOG: readonly PluginDef[] = [
     label: 'Human agent (TikTok)',
     document: AddTikTokSwitchToHumanToBlockDocument,
     platform: 'tiktok',
+  },
+  {
+    key: 'facebookSwitchToHuman',
+    label: 'Human agent (Facebook)',
+    document: AddFacebookSwitchToHumanToBlockDocument,
+    platform: 'facebook',
   },
 ];
 

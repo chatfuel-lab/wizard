@@ -41,6 +41,7 @@ const ALL_ELEMENT_TYPENAMES = [
   'WhatsAppSwitchToChatWithHumanAgentBlockElement',
   'InstagramSwitchToChatWithHumanAgentBlockElement',
   'TikTokSwitchToChatWithHumanAgentBlockElement',
+  'FacebookSwitchToChatWithHumanAgentBlockElement',
   'FuelyAIAgentBlockElement',
   'AiAgentBlockElement',
   'AiAgentCustomBlockElement',

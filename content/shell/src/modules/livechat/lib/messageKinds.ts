@@ -4,7 +4,7 @@ import type { MessageNode } from '../types';
  * Every concrete `Message` typename the schema can put in a thread, and what
  * the thread is supposed to do with it.
  *
- * `Message` is an interface with 73 implementers across five platforms plus a
+ * `Message` is an interface with 76 implementers across five platforms plus a
  * System pseudo-platform. Until now four bubble types covered thirteen of them
  * and the other sixty fell through to a component that printed a de-camel-cased
  * `__typename` followed by "(not rendered yet)" — so an operator reading a
@@ -172,6 +172,8 @@ export const MESSAGE_KINDS: Record<MessageNode['__typename'], MessageKind> = {
   FacebookInAudioMessage: bubble('facebook', 'audio', 'Voice message'),
   FacebookInFileMessage: bubble('facebook', 'document', 'File'),
   FacebookInPostCommentMessage: bubble('facebook', 'comment', 'Comment on a post'),
+  FacebookInButtonClickMessage: bubble('facebook', 'tap', 'Tapped a button'),
+  FacebookInRefLinkOpenMessage: bubble('facebook', 'tap', 'Opened an m.me link'),
   FacebookInUnknownMessage: unsupported('facebook', 'Facebook'),
   FacebookOutTextMessage: bubble('facebook', 'text', 'Text'),
   FacebookOutImageMessage: bubble('facebook', 'image', 'Photo'),

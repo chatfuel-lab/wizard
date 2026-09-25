@@ -399,21 +399,39 @@ fragment InstagramMessageParts on Message {
   }
 }
 
+# The ad a Messenger thread was opened from. `mediaType` says which file
+# carries the picture; the wizard's thread only prints the title.
+fragment FacebookReferralParts on FacebookMessageReferral {
+  sourceType
+  adTitle
+}
+
 # `facebookStatus` on every Out type; FacebookMessageStatus is
-# Sending | Sent | Read | Failed. `FacebookPost` has only an id, and a
-# `FacebookInFileMessage` has no fileName.
+# Sending | Sent | Read | Failed. A `FacebookInFileMessage` has no fileName.
+# `fbReferral` is set on an inbound message that came from a Click-to-Messenger
+# ad (`sourceType: Ad`); `post` on a comment is the page post it was left on,
+# `isUnknown` when the page no longer serves it.
 fragment FacebookMessageParts on Message {
   ... on FacebookInTextMessage {
     text
+    fbReferral {
+      ...FacebookReferralParts
+    }
   }
   ... on FacebookInImageMessage {
     file {
       ...FileInfo
     }
+    fbReferral {
+      ...FacebookReferralParts
+    }
   }
   ... on FacebookInVideoMessage {
     file {
       ...FileInfo
+    }
+    fbReferral {
+      ...FacebookReferralParts
     }
   }
   ... on FacebookInAudioMessage {
@@ -422,15 +440,36 @@ fragment FacebookMessageParts on Message {
     }
     transcriptionStatus
     transcribedText
+    fbReferral {
+      ...FacebookReferralParts
+    }
   }
   ... on FacebookInFileMessage {
     file {
       ...FileInfo
     }
+    fbReferral {
+      ...FacebookReferralParts
+    }
+  }
+  ... on FacebookInRefLinkOpenMessage {
+    ref
+  }
+  ... on FacebookInButtonClickMessage {
+    title
   }
   ... on FacebookInPostCommentMessage {
     text
     commentID
+    post {
+      id
+      isUnknown
+      message
+      permalinkURL
+      image {
+        ...FileInfo
+      }
+    }
   }
   ... on FacebookOutTextMessage {
     facebookStatus
@@ -660,6 +699,12 @@ fragment LastMessagePreview on Message {
   ... on FacebookInPostCommentMessage {
     text
   }
+  ... on FacebookInButtonClickMessage {
+    title
+  }
+  ... on FacebookInRefLinkOpenMessage {
+    ref
+  }
   ... on FacebookOutTextMessage {
     text
     facebookStatus
@@ -743,6 +788,9 @@ fragment ChatListContact on Contact {
     availableForDMs
   }
   ... on TikTokContact {
+    availableForDMs
+  }
+  ... on FacebookContact {
     availableForDMs
   }
 }
@@ -1185,9 +1233,9 @@ fragment InboxContactAttribute on ContactAttribute {
 # that spreads its fragment; this one deliberately does not.
 #
 # The identity fields are per-platform and there is no common "handle" on the
-# Contact interface: `phone` exists only on WhatsappContact, `username` and
-# `availableForDMs` only on Instagram/TikTok, and UnavailableContact/
-# WidgetContact/FacebookContact have neither. The header must branch on
+# Contact interface: `phone` exists only on WhatsappContact, `username` only
+# on Instagram/TikTok, `availableForDMs` on Instagram/TikTok/Facebook, and
+# UnavailableContact/WidgetContact have none of them. The header must branch on
 # __typename — `scope` names the inbox side of the conversation (which WA
 # number, which IG account), not the contact.
 fragment InboxContactDetail on Contact {
@@ -1262,6 +1310,9 @@ fragment InboxContactDetail on Contact {
   }
   ... on TikTokContact {
     username
+    availableForDMs
+  }
+  ... on FacebookContact {
     availableForDMs
   }
 }
