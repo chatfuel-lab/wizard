@@ -89,8 +89,11 @@ describe('blockPluginsForFlow', () => {
     expect(keys.some((key) => key.startsWith('widget'))).toBe(false);
   });
 
+  it('offers Facebook its switch to a human agent and the neutral set', () => {
+    expect(blockPluginsForFlow(flow('facebook')).map((p) => p.key)).toEqual(['facebookSwitchToHuman', ...NEUTRAL_KEYS]);
+  });
+
   it('falls back to the neutral set alone on unknown platforms', () => {
-    expect(blockPluginsForFlow(flow('facebook')).map((p) => p.key)).toEqual(NEUTRAL_KEYS);
     expect(blockPluginsForFlow(flow('brand-new-platform')).map((p) => p.key)).toEqual(NEUTRAL_KEYS);
   });
 });

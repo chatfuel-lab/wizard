@@ -1,14 +1,36 @@
 import type { ChannelScopes } from '../types';
 
 /** The platforms a platform link can connect or refresh, in the order the page lists them. */
-export const LINK_PLATFORMS = ['whatsapp', 'instagram', 'tiktok'] as const;
+export const LINK_PLATFORMS = ['whatsapp', 'instagram', 'tiktok', 'facebook'] as const;
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number];
+
+/** The link platforms that hold one asset each and get a card of their own; Facebook is a list. */
+export const SLOT_PLATFORMS = ['whatsapp', 'instagram', 'tiktok'] as const;
+export type SlotPlatform = (typeof SLOT_PLATFORMS)[number];
 
 export const PLATFORM_TITLES: Record<LinkPlatform, string> = {
   whatsapp: 'WhatsApp',
   instagram: 'Instagram',
   tiktok: 'TikTok',
+  facebook: 'Facebook',
 };
+
+/**
+ * What a platform link can still do for the Facebook pages the bot has.
+ *
+ * The dashboard connects any number of pages, but a link deals in one: a
+ * connection link is refused once the bot has a page (the visitor picks one
+ * page on Chatfuel's side, and the server answers `ContactScopeAlreadyConnected`
+ * when there is already one), and an access refresh link binds to whichever
+ * page the server finds first. So Connect is offered with no page, Refresh
+ * access with exactly one, and neither with two or more — a refresh that could
+ * land on the wrong page is not a button.
+ */
+export function facebookLinkAction(pages: readonly ChannelAsset[]): 'connect' | 'refresh' | null {
+  if (pages.length === 0) return 'connect';
+  if (pages.length === 1) return 'refresh';
+  return null;
+}
 
 /** One connected asset, reduced to what a card prints. */
 export interface ChannelAsset {

@@ -1,7 +1,7 @@
 {
   "id": "channels",
   "name": "Channels",
-  "description": "The channels connected to the bot — the WhatsApp number, the Instagram account, the TikTok account, the Facebook pages and the web widget — with Disconnect, and one-press connecting for WhatsApp, Instagram and TikTok: the app mints a one-shot platform link, hands the browser to the page Chatfuel serves for the platform's OAuth, and is brought back here with the channel connected. Refresh access re-grants the permissions on a channel already connected. A role without Configure: Edit sees the connection state and nothing to change.",
+  "description": "The channels connected to the bot — the WhatsApp number, the Instagram account, the TikTok account, the Facebook pages and the web widget — with Disconnect, and one-press connecting for WhatsApp, Instagram, TikTok and the first Facebook page: the app mints a one-shot platform link, hands the browser to the page Chatfuel serves for the platform's OAuth, and is brought back here with the channel connected. Refresh access re-grants the permissions on a channel already connected (for Facebook, while the bot has exactly one page). A role without Configure: Edit sees the connection state and nothing to change.",
   "status": "ready",
   "requires": [],
   "recommends": [],

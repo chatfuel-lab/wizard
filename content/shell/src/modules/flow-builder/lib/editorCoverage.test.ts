@@ -48,6 +48,7 @@ const READ_ONLY_BY_SCHEMA = [
   'WhatsAppSwitchToChatWithHumanAgentBlockElement',
   'InstagramSwitchToChatWithHumanAgentBlockElement',
   'TikTokSwitchToChatWithHumanAgentBlockElement',
+  'FacebookSwitchToChatWithHumanAgentBlockElement',
 ];
 
 describe('editor coverage', () => {
@@ -57,8 +58,8 @@ describe('editor coverage', () => {
     expect(Object.keys(ELEMENT_LABELS).sort()).toEqual(decided.sort());
   });
 
-  it('covers all 29 concrete BlockElement typenames', () => {
-    expect(Object.keys(ELEMENT_LABELS)).toHaveLength(29);
+  it('covers all 30 concrete BlockElement typenames', () => {
+    expect(Object.keys(ELEMENT_LABELS)).toHaveLength(30);
   });
 
   it('registers exactly the dedicated typenames in the inspector table, each with a lazy editor', () => {

@@ -10,7 +10,7 @@ import {
   type MessageAction,
 } from '~ui';
 import { messageDirection, senderLabel } from '../lib/direction';
-import { deliveryError, deliveryStatus, readPayload, type MessagePayload } from '../lib/messagePayload';
+import { adReferral, deliveryError, deliveryStatus, readPayload, type MessagePayload } from '../lib/messagePayload';
 import type { MessageEntry } from '../lib/threadStore';
 import { AudioBubble } from './bubbles/AudioBubble';
 import { ButtonsBubble } from './bubbles/ButtonsBubble';
@@ -182,6 +182,7 @@ export function MessageView({ entry }: { entry: MessageEntry }) {
   }
 
   const direction = messageDirection(node);
+  const fromAd = adReferral(node);
   return (
     <MessageBubble
       direction={direction}
@@ -197,6 +198,7 @@ export function MessageView({ entry }: { entry: MessageEntry }) {
       error={deliveryError(node)}
       actions={actionsSlot(payloadActions(payload))}
     >
+      {fromAd ? <p className="mb-1 text-xs text-text-muted">{fromAd}</p> : null}
       {payloadContent(payload)}
     </MessageBubble>
   );

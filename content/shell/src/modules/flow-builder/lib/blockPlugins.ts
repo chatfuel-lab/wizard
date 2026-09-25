@@ -16,8 +16,8 @@
  * Platform gating is client-side and mirrors lib/plugins.ts: platform-specific
  * families are offered only on flows of that platform; platform-neutral action
  * families (condition, contact-property ops, send JSON, summarize chat,
- * redirect) are offered everywhere. An unknown/foreign platform (e.g.
- * `facebook`, which has no flow-builder blocks of its own) gets the neutral
+ * redirect) are offered everywhere. `facebook` has one family of its own,
+ * the switch to a human agent. An unknown/foreign platform gets the neutral
  * set only — never crash, never guess.
  *
  * aiAgent is the ONE family with an extra creation arg
@@ -30,6 +30,8 @@ import {
   CreateAiAgentBlockDocument,
   CreateClearContactPropertyBlockConnectedDocument,
   CreateClearContactPropertyBlockDocument,
+  CreateFacebookSwitchToHumanBlockConnectedDocument,
+  CreateFacebookSwitchToHumanBlockDocument,
   CreateInstagramSwitchToHumanBlockConnectedDocument,
   CreateInstagramSwitchToHumanBlockDocument,
   CreateRedirectToFlowBlockConnectedDocument,
@@ -265,7 +267,7 @@ export const BLOCK_PLUGIN_CATALOG: readonly BlockPluginDef[] = [
     platform: 'whatsapp',
     entryPoint: true,
   },
-  // --- Instagram / TikTok ---
+  // --- Instagram / TikTok / Facebook ---
   {
     key: 'instagramSwitchToHuman',
     label: 'Human agent (Instagram)',
@@ -279,6 +281,13 @@ export const BLOCK_PLUGIN_CATALOG: readonly BlockPluginDef[] = [
     document: CreateTikTokSwitchToHumanBlockDocument,
     connectedDocument: CreateTikTokSwitchToHumanBlockConnectedDocument,
     platform: 'tiktok',
+  },
+  {
+    key: 'facebookSwitchToHuman',
+    label: 'Human agent (Facebook)',
+    document: CreateFacebookSwitchToHumanBlockDocument,
+    connectedDocument: CreateFacebookSwitchToHumanBlockConnectedDocument,
+    platform: 'facebook',
   },
   // --- Platform-neutral actions ---
   {

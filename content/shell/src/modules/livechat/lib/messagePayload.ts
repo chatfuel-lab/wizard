@@ -1,6 +1,7 @@
 import { formatFileSize, type MessageAction, type MessageStatus } from '~ui';
 import {
   AudioTranscriptionStatus,
+  FacebookMessageReferralSourceType,
   FacebookMessageStatus,
   FileStatus,
   InstagramMessageStatus,
@@ -173,6 +174,8 @@ export const PAYLOAD_ON_WIRE: readonly MessageNode['__typename'][] = [
   'FacebookInAudioMessage',
   'FacebookInFileMessage',
   'FacebookInPostCommentMessage',
+  'FacebookInButtonClickMessage',
+  'FacebookInRefLinkOpenMessage',
   'FacebookOutTextMessage',
   'FacebookOutImageMessage',
   'FacebookOutVideoMessage',
@@ -522,16 +525,22 @@ export function readPayload(node: MessageNode): MessagePayload {
     case 'InstagramInAdCommentMessage':
     case 'InstagramInStoryReplyMessage':
       return comment(node.__typename, node.text, instagramSource(node.mediaContainer.media));
-    /* `FacebookPost` is an id and nothing else: the source exists, and there
-       is nothing to say about it. */
+    /* The page post the comment was left on. The page is the owner, and the
+       thread already says which page it is, so no owner line. */
     case 'FacebookInPostCommentMessage':
-      return comment(node.__typename, node.text, {
-        kind: 'post',
-        owner: null,
-        caption: null,
-        url: null,
-        thumbnailUrl: null,
-      });
+      return comment(
+        node.__typename,
+        node.text,
+        node.post.isUnknown
+          ? { kind: 'unknown', owner: null, caption: null, url: null, thumbnailUrl: null }
+          : {
+              kind: 'post',
+              owner: null,
+              caption: node.post.message.trim() || null,
+              url: node.post.permalinkURL || null,
+              thumbnailUrl: usableUrl(node.post.image),
+            },
+      );
     case 'TikTokInTextPostCommentMessage':
       return comment(
         node.__typename,
@@ -558,6 +567,12 @@ export function readPayload(node: MessageNode): MessagePayload {
       return tap(node.button.title, node.button.url);
     case 'WebWidgetCallPhoneButtonClickMessage':
       return tap(node.button.title, node.button.phone);
+    case 'FacebookInButtonClickMessage':
+      return tap(node.title, null);
+    /* The ref is what the link was minted with — `m.me/<page>?ref=<ref>` — and
+       it is the one thing that tells two m.me links apart. */
+    case 'FacebookInRefLinkOpenMessage':
+      return tap('Opened an m.me link', node.ref.trim() ? `ref: ${node.ref.trim()}` : null);
 
     // ── System ───────────────────────────────────────────────────────────
     case 'SystemConversationSummaryMessage':
@@ -725,4 +740,29 @@ export function deliveryStatus(node: MessageNode): MessageStatus | undefined {
 /** The red footnote under the bubble, or nothing. See `messageErrors.ts`. */
 export function deliveryError(node: MessageNode): string | undefined {
   return messageErrorText(node.errors);
+}
+
+/**
+ * The line above an inbound Facebook message that came from a
+ * Click-to-Messenger ad — "From an ad: <title>" — and null for everything else.
+ *
+ * Only the five Facebook In types carry `fbReferral`, and only a referral whose
+ * `sourceType` is `Ad` is one: `Unknown` is Meta saying there was a referral it
+ * could not classify, which is nothing an operator can act on.
+ */
+export function adReferral(node: MessageNode): string | null {
+  switch (node.__typename) {
+    case 'FacebookInTextMessage':
+    case 'FacebookInImageMessage':
+    case 'FacebookInVideoMessage':
+    case 'FacebookInAudioMessage':
+    case 'FacebookInFileMessage': {
+      const referral = node.fbReferral;
+      if (!referral || referral.sourceType !== FacebookMessageReferralSourceType.Ad) return null;
+      const title = referral.adTitle?.trim();
+      return title ? `From an ad: ${title}` : 'From an ad';
+    }
+    default:
+      return null;
+  }
 }

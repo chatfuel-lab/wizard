@@ -34,6 +34,7 @@ describe('pluginsForBlock', () => {
     expect(keys.some((key) => key.startsWith('whatsApp'))).toBe(false);
     expect(keys).not.toContain('instagramSwitchToHuman');
     expect(keys).not.toContain('tiktokSwitchToHuman');
+    expect(keys).not.toContain('facebookSwitchToHuman');
   });
 
   it('offers whatsapp + neutral plugins on a WhatsApp block, never widget ones', () => {
@@ -44,8 +45,14 @@ describe('pluginsForBlock', () => {
     expect(keys.some((key) => key.startsWith('widget'))).toBe(false);
   });
 
+  it('offers Facebook its switch to a human agent and the neutral set', () => {
+    const keys = pluginsForBlock(block('facebook')).map((p) => p.key);
+    expect(keys).toContain('facebookSwitchToHuman');
+    for (const neutral of NEUTRAL_KEYS) expect(keys).toContain(neutral);
+    expect(keys).toHaveLength(NEUTRAL_KEYS.length + 1);
+  });
+
   it('falls back to the neutral set alone on unknown platforms', () => {
-    expect(pluginsForBlock(block('facebook')).map((p) => p.key)).toEqual(NEUTRAL_KEYS);
     expect(pluginsForBlock(block('brand-new-platform')).map((p) => p.key)).toEqual(NEUTRAL_KEYS);
   });
 });

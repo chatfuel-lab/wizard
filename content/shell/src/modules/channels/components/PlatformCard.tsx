@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { Button, Card, ConfirmDialog, IconInstagram, IconTikTok, IconWhatsApp, Tag } from '~ui';
-import { PLATFORM_TITLES, type ChannelAsset, type LinkPlatform } from '../lib/channels';
+import { PLATFORM_TITLES, type ChannelAsset, type LinkPlatform, type SlotPlatform } from '../lib/channels';
 import { errorMessage } from '../lib/errors';
 
 export interface PlatformCardProps {
-  platform: LinkPlatform;
+  platform: SlotPlatform;
   asset: ChannelAsset | null;
   canManage: boolean;
   pending: readonly string[];
@@ -13,7 +13,7 @@ export interface PlatformCardProps {
   onDisconnect(scopeId: string): Promise<void>;
 }
 
-const ICONS: Record<LinkPlatform, ReactNode> = {
+const ICONS: Record<SlotPlatform, ReactNode> = {
   whatsapp: <IconWhatsApp size={16} />,
   instagram: <IconInstagram size={16} />,
   tiktok: <IconTikTok size={16} />,

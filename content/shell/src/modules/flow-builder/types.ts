@@ -20,7 +20,7 @@ export type ApiClient = ModuleClient;
 export type FlowT = FlowPartsFragment;
 /** One block incl. its blockElements (concrete-type casts — never "simplify" to interface casts). */
 export type BlockT = BlockPartsFragment;
-/** One element ("plugin" card) — 29 concrete typenames + runtime unknowns. */
+/** One element ("plugin" card) — 30 concrete typenames + runtime unknowns. */
 export type ElementT = ElementPartsFragment;
 /**
  * One edge. ConnectionID is synthesized per-request server-side — NEVER

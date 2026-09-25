@@ -76,13 +76,34 @@ describe('the module renders', () => {
 
   it('offers the one action that fits each platform', () => {
     const html = page(ready(connected), true);
-    // WhatsApp is connected: re-grant its permissions, or drop it.
-    expect(html).toContain('Refresh access');
+    // WhatsApp and the one Facebook page are connected: re-grant, or drop.
+    expect((html.match(/>Refresh access</g) ?? []).length).toBe(2);
     // Instagram and TikTok are not: the hand-off that connects one.
     expect(html).toContain('>Connect<');
     // The WhatsApp card and the Facebook row — never the widget, which the
     // server refuses to disconnect.
     expect((html.match(/>Disconnect</g) ?? []).length).toBe(2);
+  });
+
+  it('offers Facebook a link while the bot has no page, and neither link once it has two', () => {
+    const none = page(ready({ ...connected, facebook: [] }), true);
+    const facebookCard = none.slice(none.indexOf('Facebook'), none.indexOf('Web widget'));
+    expect(facebookCard).toContain('>Connect<');
+
+    const two = page(
+      ready({
+        ...connected,
+        facebook: [
+          { scopeId: 's-fb1', label: 'Acme Page', detail: null },
+          { scopeId: 's-fb2', label: 'Beta Page', detail: null },
+        ],
+      }),
+      true,
+    );
+    const twoCard = two.slice(two.indexOf('Facebook'), two.indexOf('Web widget'));
+    expect(twoCard).not.toContain('>Connect<');
+    expect(twoCard).not.toContain('Refresh access');
+    expect((twoCard.match(/>Disconnect</g) ?? []).length).toBe(2);
   });
 
   it('prints no row for a channel with no name, rather than a blank one', () => {

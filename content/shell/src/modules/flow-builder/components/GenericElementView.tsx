@@ -6,11 +6,12 @@ const SWITCH_TO_HUMAN = new Set([
   'WhatsAppSwitchToChatWithHumanAgentBlockElement',
   'InstagramSwitchToChatWithHumanAgentBlockElement',
   'TikTokSwitchToChatWithHumanAgentBlockElement',
+  'FacebookSwitchToChatWithHumanAgentBlockElement',
 ]);
 
 /**
  * Read-only view for the element types the API exposes no setters for
- * (widget entry point, the switch-to-human quartet) — and the crash-proof
+ * (widget entry point, the five switch-to-human elements) — and the crash-proof
  * fallback for typenames this bundle has never heard of.
  */
 export function GenericElementView({ element }: { element: ElementT }) {

@@ -294,9 +294,9 @@ fragment PlatformConnectionLinkParts on PlatformConnectionLink {
   }
 }
 
-# `connectedContactScope` is an interface; the three concrete types the enum
+# `connectedContactScope` is an interface; the four concrete types the enum
 # allows are selected, and `__typename` tells them apart. TikTok's `username`
-# is nullable, Instagram's is not.
+# is nullable, Instagram's is not. A Facebook refresh link is bound to ONE page.
 fragment PlatformAccessRefreshLinkParts on PlatformAccessRefreshLink {
   linkID
   url
@@ -329,6 +329,12 @@ fragment PlatformAccessRefreshLinkParts on PlatformAccessRefreshLink {
         name
       }
     }
+    ... on PublicFacebookContactScope {
+      facebookPage {
+        id
+        name
+      }
+    }
   }
 }
 
@@ -347,6 +353,9 @@ fragment ActivePlatformLinks on Bot {
     tiktok {
       ...PlatformConnectionLinkParts
     }
+    facebook {
+      ...PlatformConnectionLinkParts
+    }
   }
   activePlatformAccessRefreshLinks {
     whatsapp {
@@ -356,6 +365,9 @@ fragment ActivePlatformLinks on Bot {
       ...PlatformAccessRefreshLinkParts
     }
     tiktok {
+      ...PlatformAccessRefreshLinkParts
+    }
+    facebook {
       ...PlatformAccessRefreshLinkParts
     }
   }

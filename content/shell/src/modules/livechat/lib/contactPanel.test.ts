@@ -62,6 +62,13 @@ describe('contactIdentity', () => {
     expect(rows(true)).not.toContain('Direct messages');
   });
 
+  it('says a Messenger contact cannot be written to first, and nothing else about them', () => {
+    const rows = (availableForDMs: boolean) =>
+      contactIdentity(contact({ __typename: 'FacebookContact', availableForDMs, scope: { __typename: 'X', id: 's' } }));
+    expect(rows(false)).toEqual([{ label: 'Direct messages', value: 'Closed' }]);
+    expect(rows(true)).toEqual([]);
+  });
+
   /* `scope` names the inbox side of the conversation — which number, which
      account — and the label has to say so or it reads as the contact's own. */
   it('names which of your own inboxes this arrived on', () => {

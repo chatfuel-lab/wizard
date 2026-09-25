@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AutomationsFacebookPostsDocument } from '~api/generated/automations/graphql';
+import {
+  AutomationsFacebookPostsDocument,
+  AutomationsFacebookPostsSyncDocument,
+  AutomationsFacebookPostsSyncStatusDocument,
+  FbPagePostsSyncStatus,
+} from '~api/generated/automations/graphql';
 import { useAutomations } from '../AutomationsContext';
 import { errorMessage } from '../lib/errors';
 import type { FacebookPostNode } from '../types';
@@ -21,9 +26,21 @@ export interface FacebookPostsApi {
   hasNext: boolean;
   loadMore: () => void;
   reload: () => void;
+  /** A sync from Facebook is in flight. */
+  refreshing: boolean;
+  /** Pull the page's latest posts from Facebook, wait for them, then re-read. Rejects with what to show. */
+  refreshFromFacebook: (pageId: string) => Promise<void>;
 }
 
 const PAGE_SIZE = 20;
+/** How many of the latest posts a manual refresh asks Facebook for — Instagram's refetch count. */
+export const SYNC_COUNT = 30;
+/**
+ * How long a refresh waits for `fbPagePostsSyncStatusUpdated` to say
+ * `finished` before re-reading anyway. The sync answers `true` at once and the
+ * posts land later; a status that never comes is not a reason to hang.
+ */
+export const SYNC_WAIT_MS = 15_000;
 
 /**
  * Cursor-paginated read over `facebookPage.posts` for the Facebook post scopes.
@@ -40,6 +57,7 @@ export function useFacebookPosts({ enabled, pageSize = PAGE_SIZE }: FacebookPost
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const generation = useRef(0);
 
   const loadPage = useCallback(
@@ -100,5 +118,55 @@ export function useFacebookPosts({ enabled, pageSize = PAGE_SIZE }: FacebookPost
   }, [hasNext, loading, loadingMore, loadPage, endCursor]);
   const reload = useCallback(() => loadPage(null), [loadPage]);
 
-  return { page, connected, nodes, loading, loadingMore, error, hasNext, loadMore, reload };
+  const refreshFromFacebook = useCallback(
+    async (pageId: string) => {
+      setRefreshing(true);
+      setError(null);
+      let off: () => void = () => undefined;
+      try {
+        /* Subscribe before asking, so a sync that finishes fast is not missed. */
+        const finished = new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, SYNC_WAIT_MS);
+          off = client.subscribe(
+            AutomationsFacebookPostsSyncStatusDocument,
+            { pageID: pageId },
+            {
+              next: (data) => {
+                if (data.fbPagePostsSyncStatusUpdated === FbPagePostsSyncStatus.Finished) {
+                  clearTimeout(timer);
+                  resolve();
+                }
+              },
+              error: () => undefined,
+            },
+          );
+        });
+        await client.mutate(AutomationsFacebookPostsSyncDocument, { pageID: pageId, count: SYNC_COUNT });
+        await finished;
+        loadPage(null);
+      } catch (err) {
+        const message = errorMessage(err);
+        setError(message);
+        throw new Error(message, { cause: err });
+      } finally {
+        off();
+        setRefreshing(false);
+      }
+    },
+    [client, loadPage],
+  );
+
+  return {
+    page,
+    connected,
+    nodes,
+    loading,
+    loadingMore,
+    error,
+    hasNext,
+    loadMore,
+    reload,
+    refreshing,
+    refreshFromFacebook,
+  };
 }

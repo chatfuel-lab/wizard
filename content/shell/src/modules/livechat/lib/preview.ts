@@ -83,6 +83,8 @@ function previewWords(last: LastMessageNode): string | null {
     case 'WebWidgetOpenURLButtonClickMessage':
     case 'WebWidgetCallPhoneButtonClickMessage':
       return words(last.button.title);
+    case 'FacebookInButtonClickMessage':
+      return words(last.title);
     default:
       return null;
   }

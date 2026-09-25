@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { getDocMeta } from '~api';
 import { FuelyAutomationScope } from '~api/generated/automations/graphql';
 import type { PreviewMessageNode } from '../types';
-import { parsePreviewPlatform, platformOfScope, sendDocumentFor, targetKey, toRow } from './preview';
+import {
+  COMMENT_PREVIEW_SCOPES,
+  commentSendDocument,
+  parsePreviewPlatform,
+  platformOfScope,
+  sendDocumentFor,
+  targetKey,
+  toRow,
+} from './preview';
 
 /* The row model, the merge, the watermark and the session reducer are `~ui`'s
    `lib/testChat` and are tested there. What is left here is what this module
@@ -47,6 +55,10 @@ describe('platform → send document', () => {
     expect(parsePreviewPlatform('threads')).toBeNull();
     expect(parsePreviewPlatform(null)).toBeNull();
   });
+  it('sends a comment, not a DM, only in the Facebook post comments scope', () => {
+    expect([...COMMENT_PREVIEW_SCOPES]).toEqual([FuelyAutomationScope.FacebookPostComments]);
+    expect(getDocMeta(commentSendDocument as never).name).toBe('AutomationsPreviewFacebookPostCommentSend');
+  });
   it('targetKey names the automation, empty for none', () => {
     expect(targetKey({ kind: 'automation', id: 'a' })).toBe('automation:a');
     expect(targetKey(null)).toBe('');
@@ -73,6 +85,17 @@ describe('row model', () => {
     expect(toRow(node({ __typename: 'WebWidgetTextMessage', sender: contact }))).toMatchObject({ kind: 'in' });
     expect(toRow(node({ __typename: 'TikTokInTextMessage' }))).toMatchObject({ kind: 'in' });
     expect(toRow(node({ __typename: 'FacebookOutTextMessage', sender: mia }))).toMatchObject({ kind: 'out' });
+  });
+
+  it('shows a test comment and its public reply as text rows', () => {
+    expect(toRow(node({ __typename: 'FacebookInPostCommentMessage', text: 'price?' }))).toMatchObject({
+      kind: 'in',
+      text: 'price?',
+      supported: true,
+    });
+    expect(
+      toRow(node({ __typename: 'FacebookOutPublicCommentReplyMessage', sender: mia, text: 'Sent you a DM' })),
+    ).toMatchObject({ kind: 'out', text: 'Sent you a DM', supported: true });
   });
   it('maps the system trio and the typing hint', () => {
     expect(

@@ -1,5 +1,5 @@
 import { Alert, Button, IconFacebook, IconRefresh, IconWidget, PageBody, PageHeader, Spinner } from '~ui';
-import { LINK_PLATFORMS, PLATFORM_TITLES, type LinkPlatform } from '../lib/channels';
+import { facebookLinkAction, PLATFORM_TITLES, SLOT_PLATFORMS, type LinkPlatform } from '../lib/channels';
 import type { ChannelsState } from '../lib/channelsStore';
 import type { HandOffResult } from '../lib/returnUrl';
 import { ChannelListCard } from './ChannelListCard';
@@ -18,8 +18,9 @@ export interface ChannelsPageProps {
 }
 
 /**
- * The page, drawn from state alone: a card per platform that takes a link,
- * then the Facebook pages and the web widget as read-only lists.
+ * The page, drawn from state alone: a card per platform that holds one asset,
+ * then the Facebook pages as a list that also takes a link, and the web widget
+ * as a read-only list.
  *
  * A role without Configure: Edit sees what is connected and no control to
  * change it.
@@ -35,6 +36,7 @@ export function ChannelsPage({
   onDisconnect,
 }: ChannelsPageProps) {
   const { scopes, pending } = state;
+  const facebookBusy = pending.includes('connect:facebook') || pending.includes('refresh:facebook');
 
   return (
     <>
@@ -84,7 +86,7 @@ export function ChannelsPage({
             </div>
           ) : scopes.state === 'ready' ? (
             <>
-              {LINK_PLATFORMS.map((platform) => (
+              {SLOT_PLATFORMS.map((platform) => (
                 <PlatformCard
                   key={platform}
                   platform={platform}
@@ -103,6 +105,16 @@ export function ChannelsPage({
                 canDisconnect={canManage}
                 pending={pending}
                 onDisconnect={onDisconnect}
+                link={
+                  canManage
+                    ? {
+                        action: facebookLinkAction(scopes.channels.facebook),
+                        busy: facebookBusy,
+                        onConnect: () => onConnect('facebook'),
+                        onRefreshAccess: () => onRefreshAccess('facebook'),
+                      }
+                    : undefined
+                }
               />
               <ChannelListCard
                 title="Web widget"

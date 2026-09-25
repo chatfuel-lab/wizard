@@ -868,6 +868,12 @@ export enum FacebookPermissionGroupName {
   WhatsApp = 'WhatsApp'
 }
 
+export type FacebookPreviewResponsesPostCommentSendInput = {
+  clientId?: InputMaybe<Scalars['ClientMID']['input']>;
+  postMessage: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+};
+
 export enum FacebookSendMessageAttachmentType {
   Audio = 'audio',
   Image = 'image',
@@ -1848,6 +1854,7 @@ export enum Platform {
 }
 
 export enum PlatformOperationLinkPlatform {
+  Facebook = 'facebook',
   Instagram = 'instagram',
   Tiktok = 'tiktok',
   Whatsapp = 'whatsapp'

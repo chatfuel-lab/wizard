@@ -5,7 +5,7 @@ import { useCatalog } from '../../AutomationsCatalogContext';
 import { useAutomationRecords } from '../../AutomationsStoreContext';
 import { usePreviewSession } from '../../hooks/usePreviewSession';
 import { selectBase, selectCustoms } from '../../lib/automationsStore';
-import { platformOfScope, type PreviewTarget } from '../../lib/preview';
+import { COMMENT_PREVIEW_SCOPES, platformOfScope, type PreviewTarget } from '../../lib/preview';
 import { platformOf, scopeLabel } from '../../lib/scopes';
 import { PlatformGlyph } from './PlatformGlyph';
 
@@ -34,8 +34,8 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
   const isAll = scope === FuelyAutomationScope.All;
   const record = automationId ? (store.state.byId[automationId] ?? null) : null;
   const target = useMemo<PreviewTarget | null>(
-    () => (record && !isAll ? { kind: 'automation', id: record.id } : null),
-    [record, isAll],
+    () => (record && !isAll ? { kind: 'automation', id: record.id, scope } : null),
+    [record, isAll, scope],
   );
   const preview = usePreviewSession(target);
 
@@ -134,6 +134,9 @@ export function TestPanel({ scope, automationId, onPick }: TestPanelProps) {
           {record.isBase ? 'This source is off' : 'This rule is off'} — the test still answers, customers would not get
           this.
         </Alert>
+      ) : null}
+      {COMMENT_PREVIEW_SCOPES.has(scope) ? (
+        <Alert tone="info">What you send here arrives as a comment on a page post.</Alert>
       ) : null}
       {!connected && scopePlatform ? (
         <Alert tone="info">{scopePlatform} is not connected — the test answers, no customer can reach it yet.</Alert>

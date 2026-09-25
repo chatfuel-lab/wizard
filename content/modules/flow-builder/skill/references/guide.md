@@ -14,7 +14,7 @@ Flow ─ blocks[]        (16 concrete Block types, x/y canvas coords)
      ─ startingPointBlock
      ─ entryPoints[]   (denormalized: the EntryPointBlock subset of blocks)
 
-Block ─ blockElements[]   (the "plugin" cards, 29 concrete BlockElement types)
+Block ─ blockElements[]   (the "plugin" cards, 30 concrete BlockElement types)
 Element ─ buttons/rows/handles (ComponentHandleID — connection sources)
 ```
 
@@ -37,12 +37,12 @@ Element ─ buttons/rows/handles (ComponentHandleID — connection sources)
 | WhatsApp content | `WhatsAppText/Image/Video/Audio/Document BlockElement` | stackable in one block |
 | WhatsApp interactive | `WhatsAppTextAndButtons/TextAndURL/List/Template BlockElement` | one card per block |
 | Widget content | `WidgetTextAndButton BlockElement` (note singular "Button"), `WidgetImageBlockElement` | stackable |
-| Actions | `SetCondition`, `SetContactProperty`, `ClearContactProperty`, `SendJson`, `SummarizeChat` (AI), 4× `<Platform>SwitchToChatWithHumanAgent` | stackable |
+| Actions | `SetCondition`, `SetContactProperty`, `ClearContactProperty`, `SendJson`, `SummarizeChat` (AI), 5× `<Platform>SwitchToChatWithHumanAgent` | stackable |
 | Redirect | `RedirectToFlowBlockElement` | own block |
 | Entry points | `WidgetEntryPoint`, `DefaultReply`, `TriggeredMessage`, `WhatsAppOneTimeNotification`, `WhatsAppScheduledMessage` `BlockElement` | own block, toggleable |
 | AI agent | `FuelyAIAgentBlockElement` (current), `AiAgentBlockElement` (deprecated legacy), `AiAgentCustomBlockElement` (editable prompt) | own block |
 
-There is **no gallery, carousel, quick-replies or delay plugin** in this API. Platform gating is client-side (filter your add-menu by `Flow.platform`); `facebook` has no flow-builder blocks at all.
+There is **no gallery, carousel, quick-replies or delay plugin** in this API. Platform gating is client-side (filter your add-menu by `Flow.platform`); `facebook` has one block of its own — `facebookSwitchToChatWithHumanAgent*` (`FacebookSwitchToChatWithHumanAgentBlockElement`, no setters) — and otherwise takes the platform-neutral actions and AI blocks.
 
 ## Creating things
 

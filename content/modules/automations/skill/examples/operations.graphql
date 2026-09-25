@@ -991,6 +991,18 @@ query AutomationsFacebookPosts($botID: BotID!, $first: Int!, $after: FbPagePostC
   }
 }
 
+# Ask the page for its latest posts. The answer is `true` at once and the posts
+# land later: `fbPagePostsSyncStatusUpdated(pageID)` says `finished` when they
+# have — re-read `AutomationsFacebookPosts` then. The dashboard never calls it;
+# the picker does before a manual refresh, the way Instagram's refetch does.
+mutation AutomationsFacebookPostsSync($pageID: FbPageID!, $count: Int!) {
+  fbPageSyncLatestPosts(pageID: $pageID, count: $count)
+}
+
+subscription AutomationsFacebookPostsSyncStatus($pageID: FbPageID!) {
+  fbPagePostsSyncStatusUpdated(pageID: $pageID)
+}
+
 # Meta ads for the ListOfAds filter. One cursor per ad account; the drawer pages
 # per account. `metaAdId` is what the setter takes (any string ≤ limit is accepted;
 # a pasted Ads Manager URL is too long — parse `selected_ad_ids=` client-side).
@@ -1076,6 +1088,12 @@ fragment AutomationsPvMessage on Message {
     text
   }
   ... on FacebookOutTextMessage {
+    text
+  }
+  ... on FacebookInPostCommentMessage {
+    text
+  }
+  ... on FacebookOutPublicCommentReplyMessage {
     text
   }
   ... on SystemTypingMessage {
@@ -1165,6 +1183,21 @@ mutation AutomationsPreviewTikTokTextSend($botID: BotID!, $conversationID: Conve
 
 mutation AutomationsPreviewFacebookTextSend($botID: BotID!, $conversationID: ConversationID!, $message: FacebookTextMessageSendInput!) {
   previewResponsesFacebookTextSend(botID: $botID, conversationID: $conversationID, message: $message) {
+    ...AutomationsPvMessage
+  }
+}
+
+# A test COMMENT on a page post, for a Facebook · Post comments session: the
+# automation answers it with its public reply and/or its private reply, the
+# way it would a real comment. `postMessage` is the text of the post the
+# comment is left on — the AI reads it as context; empty is accepted.
+# Instagram's counterpart (`postCaption`) is not in this schema snapshot.
+mutation AutomationsPreviewFacebookPostCommentSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $comment: FacebookPreviewResponsesPostCommentSendInput!
+) {
+  previewResponsesFacebookPostCommentSend(botID: $botID, conversationID: $conversationID, comment: $comment) {
     ...AutomationsPvMessage
   }
 }

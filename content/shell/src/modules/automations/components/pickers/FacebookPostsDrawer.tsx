@@ -9,14 +9,16 @@ import {
   IconExternal,
   IconFacebook,
   IconImage,
+  IconRefresh,
   IconSearch,
   Input,
   Label,
   Tag,
   safeHref,
+  useToast,
 } from '~ui';
 import { useCatalog } from '../../AutomationsCatalogContext';
-import { useFacebookPosts } from '../../hooks/useFacebookPosts';
+import { SYNC_COUNT, useFacebookPosts } from '../../hooks/useFacebookPosts';
 import type { FacebookPostNode } from '../../types';
 import { PICKER_DRAWER_WIDTH } from './InstagramMediaDrawer';
 import { LoadMoreRow, MediaThumb, PickerFooter, PickerLoading, SelectedBadge, usePickerSelection } from './pickerParts';
@@ -48,6 +50,7 @@ export function FacebookPostsDrawer({ open, onClose, selected, onChange, maxItem
   const catalog = useCatalog();
   const facebook = catalog.channels.find((c) => c.platform === 'Facebook');
   const posts = useFacebookPosts({ enabled: open });
+  const toast = useToast();
   const pick = usePickerSelection(open, selected, maxItems);
   const [query, setQuery] = useState('');
 
@@ -62,6 +65,21 @@ export function FacebookPostsDrawer({ open, onClose, selected, onChange, maxItem
     onClose();
   };
   const pageName = posts.page?.name ?? facebook?.handle ?? 'Facebook page';
+
+  const refresh = async () => {
+    if (!posts.page) return;
+    try {
+      await posts.refreshFromFacebook(posts.page.id);
+      toast.show({
+        title: 'Refreshed from Facebook',
+        description: `The latest ${SYNC_COUNT} posts were pulled in.`,
+        tone: 'success',
+        duration: 3000,
+      });
+    } catch {
+      /* the hook set its inline error */
+    }
+  };
 
   return (
     <Drawer
@@ -98,6 +116,18 @@ export function FacebookPostsDrawer({ open, onClose, selected, onChange, maxItem
                 {connected === false ? 'No page connected' : connected ? 'Connected page' : 'Checking the connection…'}
               </div>
             </div>
+            {connected && canEdit ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void refresh()}
+                disabled={posts.refreshing || posts.loading}
+                aria-label="Refresh from Facebook"
+              >
+                <IconRefresh size={14} className={posts.refreshing ? 'motion-safe:animate-spin' : ''} />
+                <span className="hidden @min-[24rem]:inline">Refresh from Facebook</span>
+              </Button>
+            ) : null}
           </div>
           {connected ? (
             <div className="relative">

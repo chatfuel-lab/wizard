@@ -89,6 +89,9 @@ type Mutation {
   botAttributeCreateDefaultVal(botID: BotID!, attributeName: AttributeName!, defaultValue: String!): Bot!
   botAttributeUpdateDefaultVal(botID: BotID!, attributeName: AttributeName!, defaultValue: String!): Bot!
   botAttributeDeleteDefaultVal(botID: BotID!, attributeName: AttributeName!): Bot!
+  facebookSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
+  facebookSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
+  facebookSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
   instagramSwitchToChatWithHumanAgentCreateWithBlock(flowID: FlowID!, positionX: Int!, positionY: Int!): Flow!
   instagramSwitchToChatWithHumanAgentCreateWithBlockAndConnection(flowID: FlowID!, request: UndefinedTargetBlockConnectionCreateRequest!, positionX: Int!, positionY: Int!): Flow!
   instagramSwitchToChatWithHumanAgentCreateInBlock(blockID: BlockID!): ActionBlock!
@@ -386,6 +389,7 @@ type Mutation {
   facebookTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput!): FacebookOutTextMessage!
   facebookAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: FacebookAttachmentMessageSendInput!): FacebookOutAttachment
   previewResponsesFacebookTextSend(botID: BotID!, conversationID: ConversationID!, message: FacebookTextMessageSendInput): FacebookInTextMessage
+  previewResponsesFacebookPostCommentSend(botID: BotID!, conversationID: ConversationID!, comment: FacebookPreviewResponsesPostCommentSendInput!): FacebookInPostCommentMessage
   instagramTextMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramTextMessageSendInput!): InstagramOutTextMessage!
   instagramAttachmentMessageSend(botID: BotID!, conversationID: ConversationID!, message: InstagramAttachmentMessageSendInput!): InstagramOutAttachment
   previewResponsesInstagramTextSend(botID: BotID!, conversationID: ConversationID!, message: InstagramTextMessageSendInput): InstagramInTextMessage
@@ -2289,6 +2293,7 @@ enum PlatformOperationLinkPlatform {
   instagram
   whatsapp
   tiktok
+  facebook
 }
 
 type PlatformConnectionLink {
@@ -2320,12 +2325,14 @@ type ActivePlatformConnectionLinks {
   whatsapp: PlatformConnectionLink
   instagram: PlatformConnectionLink
   tiktok: PlatformConnectionLink
+  facebook: PlatformConnectionLink
 }
 
 type ActivePlatformAccessRefreshLinks {
   whatsapp: PlatformAccessRefreshLink
   instagram: PlatformAccessRefreshLink
   tiktok: PlatformAccessRefreshLink
+  facebook: PlatformAccessRefreshLink
 }
 
 scalar PreVerifiedBusinessPhoneNumberID
@@ -2775,6 +2782,12 @@ enum FacebookSendMessageAttachmentType {
   image
   audio
   video
+}
+
+input FacebookPreviewResponsesPostCommentSendInput {
+  text: String!
+  clientId: ClientMID
+  postMessage: String!
 }
 
 input FacebookAttachmentMessageSendInput {
@@ -4880,6 +4893,7 @@ type FbPagePostInfo {
 
 type FbPagePost {
   id: FbPostID!
+  isUnknown: Boolean!
   pageID: FbPageID!
   message: String!
   permalinkURL: String!
@@ -4973,6 +4987,13 @@ type ButtonValidationError implements BlockElementError {
   code: String!
   message: String
   buttonID: String!
+}
+
+type FacebookSwitchToChatWithHumanAgentBlockElement implements BlockElement {
+  id: BlockElementID!
+  errors: [BlockElementError!]!
+  createdAt: Time!
+  platform: Platform!
 }
 
 type InstagramSwitchToChatWithHumanAgentBlockElement implements BlockElement {
@@ -5748,6 +5769,26 @@ type FacebookInFileMessage implements Message {
   fbReferral: FacebookMessageReferral
 }
 
+type FacebookInRefLinkOpenMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  ref: String!
+}
+
+type FacebookInButtonClickMessage implements Message {
+  id: MessageID
+  sentTime: Time!
+  updatedAt: Time!
+  sender: MessageSender!
+  clientId: ClientMID!
+  errors: [MessageError!]!
+  title: String!
+}
+
 type FacebookInPostCommentMessage implements Message {
   id: MessageID
   sentTime: Time!
@@ -5757,6 +5798,7 @@ type FacebookInPostCommentMessage implements Message {
   errors: [MessageError!]!
   text: String!
   commentID: String!
+  post: FbPagePost!
   publicReplyMessages: [Message!]!
   privateReplyMessages: [Message!]!
 }
@@ -6675,6 +6717,7 @@ type FacebookContact implements Contact {
   lastConversationMessageTime: Time
   unreadMessagesCount: Int!
   unhandledSwitchToHuman: Boolean!
+  availableForDMs: Boolean!
   note: String
   conversation: Conversation
 }

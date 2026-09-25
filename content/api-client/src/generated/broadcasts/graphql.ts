@@ -868,6 +868,12 @@ export enum FacebookPermissionGroupName {
   WhatsApp = 'WhatsApp'
 }
 
+export type FacebookPreviewResponsesPostCommentSendInput = {
+  clientId?: InputMaybe<Scalars['ClientMID']['input']>;
+  postMessage: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+};
+
 export enum FacebookSendMessageAttachmentType {
   Audio = 'audio',
   Image = 'image',
@@ -1848,6 +1854,7 @@ export enum Platform {
 }
 
 export enum PlatformOperationLinkPlatform {
+  Facebook = 'facebook',
   Instagram = 'instagram',
   Tiktok = 'tiktok',
   Whatsapp = 'whatsapp'
@@ -2449,6 +2456,8 @@ type BroadcastElementErrors_ClearContactPropertyBlockElement_Fragment = { __type
 
 type BroadcastElementErrors_DefaultReplyBlockElement_Fragment = { __typename?: 'DefaultReplyBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', code: string, message?: string | null } | { __typename: 'ButtonValidationError', code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
+type BroadcastElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment = { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', code: string, message?: string | null } | { __typename: 'ButtonValidationError', code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
+
 type BroadcastElementErrors_FuelyAiAgentBlockElement_Fragment = { __typename?: 'FuelyAIAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', code: string, message?: string | null } | { __typename: 'ButtonValidationError', code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
 type BroadcastElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment = { __typename?: 'InstagramSwitchToChatWithHumanAgentBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', code: string, message?: string | null } | { __typename: 'ButtonValidationError', code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
@@ -2499,7 +2508,7 @@ type BroadcastElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragmen
 
 type BroadcastElementErrors_WidgetTextAndButtonBlockElement_Fragment = { __typename?: 'WidgetTextAndButtonBlockElement', errors: Array<{ __typename: 'AiAgentRuleError', code: string, message?: string | null } | { __typename: 'ButtonValidationError', code: string, message?: string | null } | { __typename: 'ComponentProcessingError', code: string, message?: string | null } | { __typename: 'ComponentValidationError', code: string, message?: string | null } | { __typename: 'MainTextValidationError', code: string, message?: string | null } | { __typename: 'SendJsonHeaderError', code: string, message?: string | null } | { __typename: 'SendJsonResponseParsingRuleError', code: string, message?: string | null } | { __typename: 'SendJsonURLParamError', code: string, message?: string | null } | { __typename: 'SummarizeChatEntryValidationError', code: string, message?: string | null } | { __typename: 'WhatsAppTemplateParamValueRequiredError', paramName: string, code: string, message?: string | null } | { __typename: 'WhatsAppTemplateURLButtonParamValueRequiredError', buttonID: string, paramName: string, code: string, message?: string | null }> };
 
-export type BroadcastElementErrorsFragment = BroadcastElementErrors_AiAgentBlockElement_Fragment | BroadcastElementErrors_AiAgentCustomBlockElement_Fragment | BroadcastElementErrors_ClearContactPropertyBlockElement_Fragment | BroadcastElementErrors_DefaultReplyBlockElement_Fragment | BroadcastElementErrors_FuelyAiAgentBlockElement_Fragment | BroadcastElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_RedirectToFlowBlockElement_Fragment | BroadcastElementErrors_SendJsonBlockElement_Fragment | BroadcastElementErrors_SetConditionBlockElement_Fragment | BroadcastElementErrors_SetContactPropertyBlockElement_Fragment | BroadcastElementErrors_SummarizeChatBlockElement_Fragment | BroadcastElementErrors_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_TriggeredMessageBlockElement_Fragment | BroadcastElementErrors_WhatsAppAudioBlockElement_Fragment | BroadcastElementErrors_WhatsAppDocumentBlockElement_Fragment | BroadcastElementErrors_WhatsAppImageBlockElement_Fragment | BroadcastElementErrors_WhatsAppListBlockElement_Fragment | BroadcastElementErrors_WhatsAppOneTimeNotificationBlockElement_Fragment | BroadcastElementErrors_WhatsAppScheduledMessageBlockElement_Fragment | BroadcastElementErrors_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_WhatsAppTemplateBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextAndButtonsBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextAndUrlBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextBlockElement_Fragment | BroadcastElementErrors_WhatsAppVideoBlockElement_Fragment | BroadcastElementErrors_WidgetEntryPointBlockElement_Fragment | BroadcastElementErrors_WidgetImageBlockElement_Fragment | BroadcastElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_WidgetTextAndButtonBlockElement_Fragment;
+export type BroadcastElementErrorsFragment = BroadcastElementErrors_AiAgentBlockElement_Fragment | BroadcastElementErrors_AiAgentCustomBlockElement_Fragment | BroadcastElementErrors_ClearContactPropertyBlockElement_Fragment | BroadcastElementErrors_DefaultReplyBlockElement_Fragment | BroadcastElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_FuelyAiAgentBlockElement_Fragment | BroadcastElementErrors_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_RedirectToFlowBlockElement_Fragment | BroadcastElementErrors_SendJsonBlockElement_Fragment | BroadcastElementErrors_SetConditionBlockElement_Fragment | BroadcastElementErrors_SetContactPropertyBlockElement_Fragment | BroadcastElementErrors_SummarizeChatBlockElement_Fragment | BroadcastElementErrors_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_TriggeredMessageBlockElement_Fragment | BroadcastElementErrors_WhatsAppAudioBlockElement_Fragment | BroadcastElementErrors_WhatsAppDocumentBlockElement_Fragment | BroadcastElementErrors_WhatsAppImageBlockElement_Fragment | BroadcastElementErrors_WhatsAppListBlockElement_Fragment | BroadcastElementErrors_WhatsAppOneTimeNotificationBlockElement_Fragment | BroadcastElementErrors_WhatsAppScheduledMessageBlockElement_Fragment | BroadcastElementErrors_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_WhatsAppTemplateBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextAndButtonsBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextAndUrlBlockElement_Fragment | BroadcastElementErrors_WhatsAppTextBlockElement_Fragment | BroadcastElementErrors_WhatsAppVideoBlockElement_Fragment | BroadcastElementErrors_WidgetEntryPointBlockElement_Fragment | BroadcastElementErrors_WidgetImageBlockElement_Fragment | BroadcastElementErrors_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElementErrors_WidgetTextAndButtonBlockElement_Fragment;
 
 type BroadcastElement_AiAgentBlockElement_Fragment = (
   { __typename: 'AiAgentBlockElement', id: string }
@@ -2519,6 +2528,11 @@ type BroadcastElement_ClearContactPropertyBlockElement_Fragment = (
 type BroadcastElement_DefaultReplyBlockElement_Fragment = (
   { __typename: 'DefaultReplyBlockElement', id: string }
   & BroadcastElementErrors_DefaultReplyBlockElement_Fragment
+);
+
+type BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment = (
+  { __typename: 'FacebookSwitchToChatWithHumanAgentBlockElement', id: string }
+  & BroadcastElementErrors_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
 );
 
 type BroadcastElement_FuelyAiAgentBlockElement_Fragment = (
@@ -2655,7 +2669,7 @@ type BroadcastElement_WidgetTextAndButtonBlockElement_Fragment = (
   & BroadcastElementErrors_WidgetTextAndButtonBlockElement_Fragment
 );
 
-export type BroadcastElementFragment = BroadcastElement_AiAgentBlockElement_Fragment | BroadcastElement_AiAgentCustomBlockElement_Fragment | BroadcastElement_ClearContactPropertyBlockElement_Fragment | BroadcastElement_DefaultReplyBlockElement_Fragment | BroadcastElement_FuelyAiAgentBlockElement_Fragment | BroadcastElement_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_RedirectToFlowBlockElement_Fragment | BroadcastElement_SendJsonBlockElement_Fragment | BroadcastElement_SetConditionBlockElement_Fragment | BroadcastElement_SetContactPropertyBlockElement_Fragment | BroadcastElement_SummarizeChatBlockElement_Fragment | BroadcastElement_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_TriggeredMessageBlockElement_Fragment | BroadcastElement_WhatsAppAudioBlockElement_Fragment | BroadcastElement_WhatsAppDocumentBlockElement_Fragment | BroadcastElement_WhatsAppImageBlockElement_Fragment | BroadcastElement_WhatsAppListBlockElement_Fragment | BroadcastElement_WhatsAppOneTimeNotificationBlockElement_Fragment | BroadcastElement_WhatsAppScheduledMessageBlockElement_Fragment | BroadcastElement_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_WhatsAppTemplateBlockElement_Fragment | BroadcastElement_WhatsAppTextAndButtonsBlockElement_Fragment | BroadcastElement_WhatsAppTextAndUrlBlockElement_Fragment | BroadcastElement_WhatsAppTextBlockElement_Fragment | BroadcastElement_WhatsAppVideoBlockElement_Fragment | BroadcastElement_WidgetEntryPointBlockElement_Fragment | BroadcastElement_WidgetImageBlockElement_Fragment | BroadcastElement_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_WidgetTextAndButtonBlockElement_Fragment;
+export type BroadcastElementFragment = BroadcastElement_AiAgentBlockElement_Fragment | BroadcastElement_AiAgentCustomBlockElement_Fragment | BroadcastElement_ClearContactPropertyBlockElement_Fragment | BroadcastElement_DefaultReplyBlockElement_Fragment | BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_FuelyAiAgentBlockElement_Fragment | BroadcastElement_InstagramSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_RedirectToFlowBlockElement_Fragment | BroadcastElement_SendJsonBlockElement_Fragment | BroadcastElement_SetConditionBlockElement_Fragment | BroadcastElement_SetContactPropertyBlockElement_Fragment | BroadcastElement_SummarizeChatBlockElement_Fragment | BroadcastElement_TikTokSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_TriggeredMessageBlockElement_Fragment | BroadcastElement_WhatsAppAudioBlockElement_Fragment | BroadcastElement_WhatsAppDocumentBlockElement_Fragment | BroadcastElement_WhatsAppImageBlockElement_Fragment | BroadcastElement_WhatsAppListBlockElement_Fragment | BroadcastElement_WhatsAppOneTimeNotificationBlockElement_Fragment | BroadcastElement_WhatsAppScheduledMessageBlockElement_Fragment | BroadcastElement_WhatsAppSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_WhatsAppTemplateBlockElement_Fragment | BroadcastElement_WhatsAppTextAndButtonsBlockElement_Fragment | BroadcastElement_WhatsAppTextAndUrlBlockElement_Fragment | BroadcastElement_WhatsAppTextBlockElement_Fragment | BroadcastElement_WhatsAppVideoBlockElement_Fragment | BroadcastElement_WidgetEntryPointBlockElement_Fragment | BroadcastElement_WidgetImageBlockElement_Fragment | BroadcastElement_WidgetSwitchToChatWithHumanAgentBlockElement_Fragment | BroadcastElement_WidgetTextAndButtonBlockElement_Fragment;
 
 type BroadcastBlock_AiAgentBlock_Fragment = { __typename: 'AiAgentBlock', id: string, name: string, blockElements: Array<(
     { __typename?: 'AiAgentBlockElement' }
@@ -2669,6 +2683,9 @@ type BroadcastBlock_AiAgentBlock_Fragment = { __typename: 'AiAgentBlock', id: st
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -2759,6 +2776,9 @@ type BroadcastBlock_ClearContactPropertyBlock_Fragment = { __typename: 'ClearCon
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -2847,6 +2867,9 @@ type BroadcastBlock_DefaultReplyBlock_Fragment = { __typename: 'DefaultReplyBloc
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -2937,6 +2960,9 @@ type BroadcastBlock_RedirectToFlowBlock_Fragment = { __typename: 'RedirectToFlow
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3025,6 +3051,9 @@ type BroadcastBlock_RegularActionBlock_Fragment = { __typename: 'RegularActionBl
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -3115,6 +3144,9 @@ type BroadcastBlock_RegularContentBlock_Fragment = { __typename: 'RegularContent
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3203,6 +3235,9 @@ type BroadcastBlock_SetConditionBlock_Fragment = { __typename: 'SetConditionBloc
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -3293,6 +3328,9 @@ type BroadcastBlock_SetContactPropertyBlock_Fragment = { __typename: 'SetContact
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3381,6 +3419,9 @@ type BroadcastBlock_TriggeredMessageBlock_Fragment = { __typename: 'TriggeredMes
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -3471,6 +3512,9 @@ type BroadcastBlock_WhatsAppListBlock_Fragment = { __typename: 'WhatsAppListBloc
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3559,6 +3603,9 @@ type BroadcastBlock_WhatsAppOneTimeNotificationBlock_Fragment = { __typename: 'W
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -3649,6 +3696,9 @@ type BroadcastBlock_WhatsAppScheduledMessageBlock_Fragment = { __typename: 'What
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3737,6 +3787,9 @@ type BroadcastBlock_WhatsAppTemplateBlock_Fragment = { __typename: 'WhatsAppTemp
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
@@ -3827,6 +3880,9 @@ type BroadcastBlock_WhatsAppTextAndButtonsBlock_Fragment = { __typename: 'WhatsA
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -3916,6 +3972,9 @@ type BroadcastBlock_WhatsAppTextAndUrlBlock_Fragment = { __typename: 'WhatsAppTe
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
   ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
+  ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment
   ) | (
@@ -4004,6 +4063,9 @@ type BroadcastBlock_WidgetEntryPointBlock_Fragment = { __typename: 'WidgetEntryP
   ) | (
     { __typename?: 'DefaultReplyBlockElement' }
     & BroadcastElement_DefaultReplyBlockElement_Fragment
+  ) | (
+    { __typename?: 'FacebookSwitchToChatWithHumanAgentBlockElement' }
+    & BroadcastElement_FacebookSwitchToChatWithHumanAgentBlockElement_Fragment
   ) | (
     { __typename?: 'FuelyAIAgentBlockElement' }
     & BroadcastElement_FuelyAiAgentBlockElement_Fragment

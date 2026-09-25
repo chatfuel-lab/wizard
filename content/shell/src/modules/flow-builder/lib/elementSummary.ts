@@ -46,6 +46,7 @@ export const ELEMENT_LABELS: Record<string, string> = {
   WhatsAppSwitchToChatWithHumanAgentBlockElement: 'Human agent (WhatsApp)',
   InstagramSwitchToChatWithHumanAgentBlockElement: 'Human agent (Instagram)',
   TikTokSwitchToChatWithHumanAgentBlockElement: 'Human agent (TikTok)',
+  FacebookSwitchToChatWithHumanAgentBlockElement: 'Human agent (Facebook)',
   FuelyAIAgentBlockElement: 'Fuely AI agent',
   AiAgentBlockElement: 'AI agent (legacy)',
   AiAgentCustomBlockElement: 'AI agent (custom prompt)',
@@ -180,6 +181,7 @@ export function describeElement(element: ElementT): ElementSummary {
     case 'WhatsAppSwitchToChatWithHumanAgentBlockElement':
     case 'InstagramSwitchToChatWithHumanAgentBlockElement':
     case 'TikTokSwitchToChatWithHumanAgentBlockElement':
+    case 'FacebookSwitchToChatWithHumanAgentBlockElement':
       return done('Hands the chat to a human agent');
     case 'FuelyAIAgentBlockElement':
       return done(`${element.templateID} · ${plural(element.rules.length, 'rule')}`);
@@ -294,6 +296,7 @@ export function elementRows(element: ElementT): SummaryRow[] {
     case 'WhatsAppSwitchToChatWithHumanAgentBlockElement':
     case 'InstagramSwitchToChatWithHumanAgentBlockElement':
     case 'TikTokSwitchToChatWithHumanAgentBlockElement':
+    case 'FacebookSwitchToChatWithHumanAgentBlockElement':
       break;
     case 'FuelyAIAgentBlockElement':
       push('Template', element.templateID);

@@ -24,6 +24,7 @@ const API_PLATFORM: Record<LinkPlatform, PlatformOperationLinkPlatform> = {
   whatsapp: PlatformOperationLinkPlatform.Whatsapp,
   instagram: PlatformOperationLinkPlatform.Instagram,
   tiktok: PlatformOperationLinkPlatform.Tiktok,
+  facebook: PlatformOperationLinkPlatform.Facebook,
 };
 
 export interface ChannelsStore {
