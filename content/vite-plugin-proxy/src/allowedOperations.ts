@@ -166,6 +166,7 @@ export const ALLOWED_ROOT_FIELDS: ReadonlySet<string> = new Set([
   'moveFlowToGroup',
   'previewResponsesFacebookPostCommentSend',
   'previewResponsesFacebookTextSend',
+  'previewResponsesInstagramPostCommentSend',
   'previewResponsesInstagramTextSend',
   'previewResponsesStartForBot',
   'previewResponsesStartForFuelyAutomation',

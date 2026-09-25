@@ -19,8 +19,12 @@
   on the canvas or added inside a block, like the other four platforms'.
 - **The Facebook post picker refreshes from Facebook**, and waits for the new
   posts to land before it re-reads.
-- The Facebook · Post comments test chat sends what you type as a comment on a
-  page post, so the automation answers it the way it answers a real one.
+- **Test comment replies.** On Instagram · Posts & Reels and Facebook · Post
+  comments the AI Agent's test panel is a post — one the automation watches,
+  drawn at random — with a comment field. Leave a comment and the automation
+  answers it the way it answers a real one: the public reply shows under your
+  comment, and when it also writes in the DM, Test DMs opens that conversation
+  to carry on. Restart tries again on a fresh post.
 - **Pick the AI model the bot answers with.** The AI Agent's Default · All
   channels page has an AI model card: every model the bot may use, with its
   input and output price per million tokens, the one in use marked. It is one

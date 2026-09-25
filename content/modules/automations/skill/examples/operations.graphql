@@ -1048,6 +1048,19 @@ query AutomationsMetaAds($botID: BotID!, $platforms: [Platform!]!, $first: Int!,
 # not import another module's generated documents. Text-only sends.
 # ============================================================
 
+# The public reply under a test comment, as the comment carries it.
+fragment AutomationsPvReply on Message {
+  __typename
+  id
+  clientId
+  ... on FacebookOutPublicCommentReplyMessage {
+    text
+  }
+  ... on InstagramOutPublicCommentReplyMessage {
+    text
+  }
+}
+
 fragment AutomationsPvMessage on Message {
   __typename
   id
@@ -1092,8 +1105,20 @@ fragment AutomationsPvMessage on Message {
   }
   ... on FacebookInPostCommentMessage {
     text
+    publicReplyMessages {
+      ...AutomationsPvReply
+    }
   }
   ... on FacebookOutPublicCommentReplyMessage {
+    text
+  }
+  ... on InstagramInFeedCommentMessage {
+    text
+    publicReplyMessages {
+      ...AutomationsPvReply
+    }
+  }
+  ... on InstagramOutPublicCommentReplyMessage {
     text
   }
   ... on SystemTypingMessage {
@@ -1187,11 +1212,23 @@ mutation AutomationsPreviewFacebookTextSend($botID: BotID!, $conversationID: Con
   }
 }
 
-# A test COMMENT on a page post, for a Facebook · Post comments session: the
-# automation answers it with its public reply and/or its private reply, the
-# way it would a real comment. `postMessage` is the text of the post the
-# comment is left on — the AI reads it as context; empty is accepted.
-# Instagram's counterpart (`postCaption`) is not in this schema snapshot.
+# A test COMMENT on a post, for an Instagram · Posts & Reels or Facebook ·
+# Post comments session. The server makes a throwaway post carrying the text
+# you send (`postCaption` / `postMessage` — the AI reads it as context; empty
+# is accepted) and delivers the comment to the pinned automation, which
+# answers it the way it would a real one: a public reply under the comment
+# and/or a private reply in the DM. The public reply arrives as its own
+# message and in the comment's `publicReplyMessages`.
+mutation AutomationsPreviewInstagramPostCommentSend(
+  $botID: BotID!
+  $conversationID: ConversationID!
+  $comment: InstagramPreviewResponsesPostCommentSendInput!
+) {
+  previewResponsesInstagramPostCommentSend(botID: $botID, conversationID: $conversationID, comment: $comment) {
+    ...AutomationsPvMessage
+  }
+}
+
 mutation AutomationsPreviewFacebookPostCommentSend(
   $botID: BotID!
   $conversationID: ConversationID!

@@ -10,7 +10,10 @@ selects saving on change with an undo; real pickers for Instagram media,
 Facebook posts and Meta ads, teammates and contact attributes; duplicate, copy
 settings to other sources, delete with restore, every rule of a source on / off,
 templates in the New-rule dialog. The Test panel is a preview chat pinned to
-the source's Default or the rule the reader last opened.
+the source's Default or the rule the reader last opened — on Instagram · Posts
+& Reels and Facebook · Post comments it is a post instead: leave a test
+comment, see the public reply nested under it, then Test DMs for the private
+reply (`components/panel/CommentPreview.tsx`).
 
 The Default · All channels page also carries the **AI model** card: which
 OpenAI model the bot answers with, and its price per million tokens. It is a
