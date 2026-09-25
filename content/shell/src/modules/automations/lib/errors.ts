@@ -64,6 +64,7 @@ export const MESSAGES: Record<string, string> = {
   PreviewResponsesFuelyAutomationScopeNotPreviewable:
     'Default cannot be tested on its own — pick a source; its Default rules apply there.',
   PreviewResponsesFuelyAutomationDoesNotExist: 'This automation no longer exists — reload the page.',
+  OpenAIModelNotAvailable: 'That model is not available for this bot — pick another one.',
   InternalServerError: 'The server could not handle that — check the value and try again.',
 };
 

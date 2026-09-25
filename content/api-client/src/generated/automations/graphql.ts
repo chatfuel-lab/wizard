@@ -83,6 +83,7 @@ export type Scalars = {
   MetaAdCursor: { input: string; output: string; }
   MetaAdID: { input: string; output: string; }
   MetaAdSynthID: { input: string; output: string; }
+  OpenAIModel: { input: string; output: string; }
   PlatformOperationLinkID: { input: string; output: string; }
   PostID: { input: string; output: string; }
   PreVerifiedBusinessPhoneNumberID: { input: string; output: string; }
@@ -673,6 +674,7 @@ export enum DefinedErrorCode {
   NotEnoughPermissions = 'NotEnoughPermissions',
   NumberAlreadyRegisteredInWaba = 'NumberAlreadyRegisteredInWABA',
   OAuthInstagramAccountMismatch = 'OAuthInstagramAccountMismatch',
+  OpenAiModelNotAvailable = 'OpenAIModelNotAvailable',
   PhoneAutoConnectionInProgress = 'PhoneAutoConnectionInProgress',
   PhoneNotVerified = 'PhoneNotVerified',
   PlatformNotSupportedForOperationLink = 'PlatformNotSupportedForOperationLink',
@@ -2936,6 +2938,28 @@ export type AutomationsPreviewFacebookPostCommentSendMutationVariables = Exact<{
 
 export type AutomationsPreviewFacebookPostCommentSendMutation = { __typename?: 'Mutation', previewResponsesFacebookPostCommentSend?: { __typename: 'FacebookInPostCommentMessage', text: string, id?: string | null, clientId: string, sentTime: string, updatedAt: string, sender: { __typename: 'AdminMessageSender', id: string, name: string } | { __typename: 'AutomationMessageSender', id: string, name: string } | { __typename: 'ContactMessageSender', id: string, name: string } | { __typename: 'FacebookAppSender', id: string, name: string } | { __typename: 'InstagramAppSender', id: string, name: string } | { __typename: 'TikTokAppSender', id: string, name: string } | { __typename: 'WhatsappBusinessAppSender', id: string, name: string }, errors: Array<{ __typename?: 'MessageError', code: MessageErrorCode, date: string }> } | null };
 
+export type AutomationsAiModelQueryVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+}>;
+
+
+export type AutomationsAiModelQuery = { __typename?: 'Query', bot: { __typename?: 'Bot', id: string, openAIConfig: { __typename?: 'BotOpenAIConfig', model?: string | null }, openAIModelOptions: Array<{ __typename?: 'OpenAIModelOption', model: string, isDefault: boolean }> } };
+
+export type AutomationsBotSetOpenAiModelMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+  openAIModel: Scalars['OpenAIModel']['input'];
+}>;
+
+
+export type AutomationsBotSetOpenAiModelMutation = { __typename?: 'Mutation', botSetOpenAIModel: { __typename?: 'Bot', id: string, openAIConfig: { __typename?: 'BotOpenAIConfig', model?: string | null } } };
+
+export type AutomationsBotUnsetOpenAiModelMutationVariables = Exact<{
+  botID: Scalars['BotID']['input'];
+}>;
+
+
+export type AutomationsBotUnsetOpenAiModelMutation = { __typename?: 'Mutation', botUnsetOpenAIModel: { __typename?: 'Bot', id: string, openAIConfig: { __typename?: 'BotOpenAIConfig', model?: string | null } } };
+
 export class TypedDocumentString<TResult, TVariables>
   extends String
   implements DocumentTypeDecoration<TResult, TVariables>
@@ -4074,3 +4098,34 @@ mutation AutomationsPreviewFacebookPostCommentSend($botID: BotID!, $conversation
   }
 }
 ${AutomationsPvMessageFragmentDoc}`) as unknown as TypedDocumentString<AutomationsPreviewFacebookPostCommentSendMutation, AutomationsPreviewFacebookPostCommentSendMutationVariables>;
+export const AutomationsAiModelDocument = new TypedDocumentString(`
+query AutomationsAIModel($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    openAIConfig {
+      model
+    }
+    openAIModelOptions {
+      model
+      isDefault
+    }
+  }
+}`) as unknown as TypedDocumentString<AutomationsAiModelQuery, AutomationsAiModelQueryVariables>;
+export const AutomationsBotSetOpenAiModelDocument = new TypedDocumentString(`
+mutation AutomationsBotSetOpenAIModel($botID: BotID!, $openAIModel: OpenAIModel!) {
+  botSetOpenAIModel(botID: $botID, openAIModel: $openAIModel) {
+    id
+    openAIConfig {
+      model
+    }
+  }
+}`) as unknown as TypedDocumentString<AutomationsBotSetOpenAiModelMutation, AutomationsBotSetOpenAiModelMutationVariables>;
+export const AutomationsBotUnsetOpenAiModelDocument = new TypedDocumentString(`
+mutation AutomationsBotUnsetOpenAIModel($botID: BotID!) {
+  botUnsetOpenAIModel(botID: $botID) {
+    id
+    openAIConfig {
+      model
+    }
+  }
+}`) as unknown as TypedDocumentString<AutomationsBotUnsetOpenAiModelMutation, AutomationsBotUnsetOpenAiModelMutationVariables>;

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Alert, Button, EmptyState, IconSparkles, PageBody, Skeleton } from '~ui';
-import type { FuelyAutomationScope } from '~api/generated/automations/graphql';
+import { FuelyAutomationScope } from '~api/generated/automations/graphql';
 import { useAutomationRecords } from '../../AutomationsStoreContext';
 import { typenameOfKey, type AutomationsParams, type SettingKey } from '../../lib/automationsParams';
 import { isInitialLoad, selectBase, selectCustoms } from '../../lib/automationsStore';
 import { allowsCustomAutomations } from '../../lib/scopes';
 import type { AutomationsRole, SettingTypename } from '../../types';
+import { AiModelCard } from './AiModelCard';
 import { BaseCard } from './BaseCard';
 import { RulesList } from './RulesList';
 import { ScopeHeader } from './ScopeHeader';
@@ -106,6 +107,7 @@ export function ScopePage({
         ) : base ? (
           <>
             <ScopeHeader base={base} customs={customs} canEdit={canEdit} />
+            {scope === FuelyAutomationScope.All ? <AiModelCard canChange={role.canConfigure && !role.loading} /> : null}
             <BaseCard
               base={base}
               canEdit={canEdit}

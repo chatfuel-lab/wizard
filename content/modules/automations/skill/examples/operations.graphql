@@ -1201,3 +1201,45 @@ mutation AutomationsPreviewFacebookPostCommentSend(
     ...AutomationsPvMessage
   }
 }
+
+# ============================================================
+# AI model — which OpenAI model the bot answers with
+# ============================================================
+
+# Per BOT, not per scope: one value for every automation, flow and AI agent on
+# the bot, with no inheritance. `openAIConfig.model` null = the server default,
+# which is the option marked `isDefault`. An admin may have set a model that is
+# not among the options — show its raw id then. Reading needs Bot · View.
+query AutomationsAIModel($botID: BotID!) {
+  bot(id: $botID) {
+    id
+    openAIConfig {
+      model
+    }
+    openAIModelOptions {
+      model
+      isDefault
+    }
+  }
+}
+
+# Configure · Edit, not Ai · Edit. A model outside `openAIModelOptions` answers
+# OpenAIModelNotAvailable. To go back to the default, UNSET rather than set the
+# default's id — a set pins today's default and keeps it when the default moves.
+mutation AutomationsBotSetOpenAIModel($botID: BotID!, $openAIModel: OpenAIModel!) {
+  botSetOpenAIModel(botID: $botID, openAIModel: $openAIModel) {
+    id
+    openAIConfig {
+      model
+    }
+  }
+}
+
+mutation AutomationsBotUnsetOpenAIModel($botID: BotID!) {
+  botUnsetOpenAIModel(botID: $botID) {
+    id
+    openAIConfig {
+      model
+    }
+  }
+}

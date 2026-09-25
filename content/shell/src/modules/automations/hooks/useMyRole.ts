@@ -10,16 +10,19 @@ export interface MyRole {
   canView: boolean;
   /** Ai: Edit — settings, toggles and custom automations. */
   canEdit: boolean;
+  /** Configure: Edit — the bot's AI model, which is a bot setting rather than an AI one. */
+  canConfigure: boolean;
 }
 
 /* Edit implies View by listing both pairs under the view gate — the API keeps
    the two actions independent, so nothing infers one from the other. */
-const GATES: RoleGateSpec<'canView' | 'canEdit'> = {
+const GATES: RoleGateSpec<'canView' | 'canEdit' | 'canConfigure'> = {
   canView: [
     { object: PermissionObject.Ai, action: PermissionAllowedAction.Edit },
     { object: PermissionObject.Ai, action: PermissionAllowedAction.View },
   ],
   canEdit: [{ object: PermissionObject.Ai, action: PermissionAllowedAction.Edit }],
+  canConfigure: [{ object: PermissionObject.Configure, action: PermissionAllowedAction.Edit }],
 };
 
 /**

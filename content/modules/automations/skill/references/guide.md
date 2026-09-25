@@ -133,6 +133,17 @@ What the workspace needs besides the automations, in one query plus an independe
 - **Facebook posts** (the post comments picker) — `facebookPage.posts(first, after)` off the `FacebookContactScope`, cursor-paginated. **Refresh from Facebook** calls `fbPageSyncLatestPosts(pageID, count: 30)`, which answers `true` at once; the posts land when `fbPagePostsSyncStatusUpdated(pageID)` says `finished` (the picker waits up to 15 s, then re-reads). Post ids saved through `ListOfPosts` are checked against the connected page.
 - **Instagram media** (the posts / stories pickers) — `instagramMediasConnection` (posts + reels; `thumbnailPreview` often null; captions null), `instagramAccount.media(id)` (unknown id → null), `instagramAccountRefetchLatestMedias(count: 30)` (it lengthens the list — call it before showing the picker). Without Instagram: nested `InstagramDoesNotConnected` plus a "Cannot return null" companion error.
 
+## The AI model — per bot
+
+`bot.openAIConfig.model` is the OpenAI model every AI answer on the bot is written with — all scopes, flows and AI agents. It is **not** a `FuelySetting`: there is no per-scope value and no inheritance.
+
+- `bot.openAIModelOptions { model isDefault }` lists what may be picked; `openAIConfig.model` null means the option with `isDefault`. An admin may have set a model outside the options — print its raw id, and keep it on screen even though it cannot be picked again.
+- `botSetOpenAIModel(botID, openAIModel)` / `botUnsetOpenAIModel(botID)` → `Bot`. **Configure · Edit**, not Ai · Edit. A model outside the options answers `OpenAIModelNotAvailable`.
+- To go back to the default, **unset** — setting the default's id pins it, and the bot keeps it when Chatfuel moves the default.
+- The API carries ids only: no names, no prices. `lib/aiModels.ts` holds the dashboard's table (OpenAI list price + Chatfuel's 10%, US$ per 1M tokens); an unknown id gets dashes, not a guess.
+
+Operations: `AutomationsAIModel`, `AutomationsBotSetOpenAIModel`, `AutomationsBotUnsetOpenAIModel` — a query of their own, so a failure there never blanks the automations.
+
 ## Preview — the Test panel
 
 `previewResponsesStartForFuelyAutomation(botID, fuelyAutomationID)` pins a **real conversation** to one automation — enabled and filters bypassed, routing not emulated; the All base is refused (`PreviewResponsesFuelyAutomationScopeNotPreviewable`). The panel is always open beside the scope page and pins to the source's Default or the rule the reader last opened. Send by the session's platform, subscribe first, merge by `clientId`, restart = a new start plus a client watermark. The whole thing, with the timings and what is not available, is `test-panel.md`.
@@ -151,6 +162,7 @@ What the workspace needs besides the automations, in one query plus an independe
 10. `FuelySettingSendEventsToMeta` and `WhatsAppBusinessAccount.hasMetaConversionsAPIPermission` are in the schema — the `ads-optimization` module owns them (see its skill). Do not build them here as a setting type in this module's editors.
 11. The `fuelyConfig*` behaviour setters are not in this schema, `fuelyConfigBookingSetAIAutonomyLevel` included: AI behaviour is configured per scope through `fuelyAutomation*`. A design that reaches for one — bookings' Autonomy card is the usual case — wants the per-scope setting instead.
 12. The preview session pinned to a disabled automation still answers; the All base is not previewable.
+13. The AI model is per bot and gated on Configure · Edit, not Ai · Edit — a role that edits every automation may still be unable to change it, and the reverse.
 
 ## Operations
 

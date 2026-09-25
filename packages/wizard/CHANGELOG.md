@@ -21,6 +21,11 @@
   posts to land before it re-reads.
 - The Facebook · Post comments test chat sends what you type as a comment on a
   page post, so the automation answers it the way it answers a real one.
+- **Pick the AI model the bot answers with.** The AI Agent's Default · All
+  channels page has an AI model card: every model the bot may use, with its
+  input and output price per million tokens, the one in use marked. It is one
+  setting for the whole bot, changed with the Configure · Edit permission, and
+  going back to the default follows the default rather than pinning it.
 
 ## 0.4.3 — 2026-09-21
 

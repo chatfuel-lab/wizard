@@ -1,7 +1,7 @@
 {
   "id": "automations",
   "name": "AI Agent",
-  "description": "AI Agent: the rail of 18 per-scope sources beside the selected source's page — the Default rules and the custom rules, all 15 setting types, inheritance and compare, drafts for prompts and lists, real pickers for Instagram media, Facebook posts, Meta ads, teammates and attributes, duplicate / copy-to / delete with restore — and an always-open Test panel that runs the preview chat pinned to the source's Default or one rule. Live via the fan-out subscription, ⌘K, keyboard, undo.",
+  "description": "AI Agent: the rail of 18 per-scope sources beside the selected source's page — the Default rules and the custom rules, all 15 setting types, inheritance and compare, drafts for prompts and lists, real pickers for Instagram media, Facebook posts, Meta ads, teammates and attributes, duplicate / copy-to / delete with restore — the bot's AI model on the Default · All channels page, and an always-open Test panel that runs the preview chat pinned to the source's Default or one rule. Live via the fan-out subscription, ⌘K, keyboard, undo.",
   "status": "ready",
   "requires": [],
   "recommends": [
@@ -45,6 +45,11 @@
       "object": "Ai",
       "action": "Edit",
       "requiredFor": "every write, the composites (duplicate, copy, every rule on / off) and the test chat (managers cannot test)"
+    },
+    {
+      "object": "Configure",
+      "action": "Edit",
+      "requiredFor": "changing the AI model the bot answers with, a bot setting rather than an AI one"
     }
   ]
 }

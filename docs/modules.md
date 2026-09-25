@@ -12,7 +12,7 @@ wizard with `--embed`.
 | `deals` | yes | Board, table and forecast by sales stage. Drag-and-drop that works on touch, keyboard stage moves, per-card optimistic rollback. Requires `contacts`. |
 | `bookings` | yes | Day/week/month calendar, appointments, staff with weekly hours and Google Calendar sync, services catalog, availability-driven booking. |
 | `knowledge-base` | yes | Everything the AI knows: business profile, notes, FAQs, product catalog, import and export, a character-budget breakdown, and the questions the assistant had to hand to a human. |
-| `automations` | yes | Per-scope AI rules across every channel and entry point, with inheritance, compare, drafts, and an always-open test chat. |
+| `automations` | yes | Per-scope AI rules across every channel and entry point, with inheritance, compare, drafts, an always-open test chat, and the AI model the bot answers with. |
 | `coworker` | yes | The operator's own AI assistant, on a page of its own. Reads the current screen, can navigate the app, and asks before changing anything. |
 | `flow-builder` | yes | Visual flow editor: canvas, inspector, block and connection editing, a Test panel. |
 | `ads-optimization` | yes | Conversion reporting for click-to-WhatsApp ads: event sets over the ad automations, and the conversions each reports back to Meta. |

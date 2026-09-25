@@ -118,5 +118,7 @@ export interface AutomationsRole {
   canView: boolean;
   /** `Ai: Edit` — every write, and the test chat (managers cannot test). */
   canEdit: boolean;
+  /** `Configure: Edit` — the bot's AI model. */
+  canConfigure: boolean;
   loading: boolean;
 }
