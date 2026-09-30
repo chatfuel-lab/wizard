@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **The module list no longer repeats itself.** A module with a long
+  description, once checked or under the cursor, wrapped onto several lines,
+  the list grew taller than the terminal, and every key press left a copy of it
+  behind. Each module is now one line, its description cut to the width.
+
 ## 0.5.0 — 2026-09-25
 
 ### Added
