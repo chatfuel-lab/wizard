@@ -1,4 +1,5 @@
 import { PassThrough } from 'node:stream';
+import { stripVTControlCharacters } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { checklist, type ChecklistOptions } from '../src/prompts/checklist';
 
@@ -107,5 +108,25 @@ describe('checklist', () => {
     expect(frames).toContain('enter to check');
     expect(frames).toContain('enter to uncheck');
     expect(frames).toContain('enter to continue');
+  });
+
+  it('keeps a row with a long hint to one terminal line', async () => {
+    const columns = Object.getOwnPropertyDescriptor(process.stdout, 'columns');
+    Object.defineProperty(process.stdout, 'columns', { value: 40, configurable: true });
+    try {
+      const hint = 'a description far longer than the forty columns this terminal has';
+      const { frames } = await press([ENTER, ...toContinue(4), ENTER], {
+        options: [{ value: 'bookings', label: 'Bookings', hint }, ...OPTIONS],
+      });
+      // The frame is hard-wrapped at the width before it is written, so a row
+      // that did not fit would put its key name on a line of its own.
+      const lines = stripVTControlCharacters(frames).split('\n');
+      const rows = lines.filter((line) => line.includes('Bookings'));
+      expect(rows.some((row) => row.includes('enter to check'))).toBe(true);
+      expect(rows.some((row) => row.includes('enter to uncheck'))).toBe(true);
+    } finally {
+      if (columns) Object.defineProperty(process.stdout, 'columns', columns);
+      else delete (process.stdout as { columns?: number }).columns;
+    }
   });
 });

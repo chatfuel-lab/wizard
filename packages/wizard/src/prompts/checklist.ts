@@ -64,6 +64,14 @@ function symbol(state: State): string {
   }
 }
 
+/** The text cut to `max` characters, the last of them an ellipsis when cut. */
+function fit(text: string, max: number): string {
+  const chars = [...text];
+  if (chars.length <= max) return text;
+  if (max <= 0) return '';
+  return `${chars.slice(0, max - 1).join('')}${s('…', '.')}`;
+}
+
 /**
  * Returned by validate() when enter lands on an option row. The base prompt has
  * no other way to say "do not submit this"; a validation message is the veto.
@@ -170,18 +178,29 @@ class ChecklistPrompt<T> extends Prompt<T[]> {
     return this.options.slice(start, start + room).map((option, i) => ({ option, index: start + i }));
   }
 
+  /**
+   * One option, never more than one terminal line. The window above counts
+   * options as lines; a row that wraps makes the frame taller than the screen,
+   * and the lines that scroll off the top can no longer be erased - every
+   * keypress then leaves a copy of the list behind. So the label and hint are
+   * cut to the width, and the key name at the end is kept whole.
+   */
   private optionRow(option: ChecklistOption<T>, index: number): string {
     const active = this.cursor === index;
     const checked = this.checked.has(index);
-    const hint = option.hint ? ` ${pc.dim(`(${option.hint})`)}` : '';
-    const box = checked
-      ? pc.green(S_CHECKBOX_SELECTED)
-      : active
-        ? pc.cyan(S_CHECKBOX_ACTIVE)
-        : pc.dim(S_CHECKBOX_INACTIVE);
-    if (!active) return `${box} ${pc.dim(option.label)}${checked ? hint : ''}`;
-    const key = pc.dim(checked ? 'enter to uncheck' : 'enter to check');
-    return `${box} ${option.label}${hint}  ${key}`;
+    const box = checked ? S_CHECKBOX_SELECTED : active ? S_CHECKBOX_ACTIVE : S_CHECKBOX_INACTIVE;
+    const styledBox = checked ? pc.green(box) : active ? pc.cyan(box) : pc.dim(box);
+    const key = active ? `  ${checked ? 'enter to uncheck' : 'enter to check'}` : '';
+    const hint = option.hint && (active || checked) ? ` (${option.hint})` : '';
+
+    // The bar and its two spaces sit before the box, one space after it.
+    const columns = process.stdout.columns;
+    const room = columns ? columns - 3 - box.length - 1 - key.length - 1 : Number.POSITIVE_INFINITY;
+    const label = fit(option.label, room);
+    const fittedHint = fit(hint, room - [...label].length);
+
+    const styledLabel = active ? label : pc.dim(label);
+    return `${styledBox} ${styledLabel}${pc.dim(fittedHint)}${pc.dim(key)}`;
   }
 
   private continueRow(): string {
