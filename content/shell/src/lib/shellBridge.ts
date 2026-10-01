@@ -66,6 +66,49 @@ const PATH_KEY_ALIASES: Readonly<Record<string, string>> = {
   campaigns: 'broadcasts',
   campaign: 'broadcasts',
   newsletter: 'broadcasts',
+  fuelyaiprofile: 'automations',
+  fuelyaitaskschats: 'automations',
+  fuelyaitasksoperations: 'automations',
+  fuelyaitasksreminders: 'automations',
+  fuelyaicomments: 'automations',
+  fuelyaiautomations: 'automations',
+  automationid: 'automations',
+  keywords: 'automations',
+  fuelyaibroadcasts: 'broadcasts',
+  knowledgebasegeneral: 'knowledge-base',
+  knowledgebasefaq: 'knowledge-base',
+  knowledgebasecatalog: 'knowledge-base',
+  knowledgebasespecialists: 'knowledge-base',
+  knowledgebasegooglecalendarsync: 'knowledge-base',
+  calendarsettings: 'bookings',
+  calendarreminders: 'bookings',
+  calendarmessagessource: 'bookings',
+  flowid: 'flow-builder',
+  conversationid: 'livechat',
+  settingswhatsapp: 'channels',
+  settingswhatsappconnect: 'channels',
+  settingsinstagram: 'channels',
+  settingsinstagramconnect: 'channels',
+  settingstiktok: 'channels',
+  settingstiktokconnect: 'channels',
+  settingsfacebook: 'channels',
+  settingsfacebookconnect: 'channels',
+  settingswebwidget: 'channels',
+  settingswebwidgetconnect: 'channels',
+};
+
+const PATH_KEY_PARAMS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  knowledgebasegeneral: { source: 'profile' },
+  knowledgebasefaq: { source: 'faq' },
+  knowledgebasecatalog: { source: 'products' },
+  knowledgebasespecialists: { source: 'team' },
+};
+
+const ID_PARAMS: Readonly<Record<string, string>> = {
+  flowid: 'flow',
+  conversationid: 'c',
+  automationid: 'automation',
+  chats: 'c',
 };
 
 /**
@@ -85,6 +128,38 @@ export function resolveDestination(destinations: readonly Destination[], pathKey
     destinations.find((d) => normalize(d.id) === want) ??
     (aliased ? (destinations.find((d) => d.id === aliased) ?? null) : null)
   );
+}
+
+export interface Resolved {
+  destination: Destination;
+  params: URLSearchParams;
+}
+
+const resolveSegment = (
+  destinations: readonly Destination[],
+  name: string,
+  id: string | undefined,
+): Resolved | null => {
+  const destination = resolveDestination(destinations, name);
+  if (!destination) return null;
+  const key = normalize(name);
+  const params = new URLSearchParams(PATH_KEY_PARAMS[key]);
+  const idParam = ID_PARAMS[key];
+  if (idParam && id) params.set(idParam, id.slice(0, MAX_ACTION_PARAM_LENGTH));
+  return { destination, params };
+};
+
+export function resolvePathKey(destinations: readonly Destination[], pathKey: unknown): Resolved | null {
+  if (typeof pathKey !== 'string') return null;
+  const segments = pathKey.split('/').map((segment) => segment.trim());
+  if (segments.length === 1) return resolveSegment(destinations, pathKey, undefined);
+  if (!pathKey.startsWith('/')) return resolveSegment(destinations, segments[0]!, segments[1]);
+  const parts = segments.filter(Boolean);
+  for (let i = parts.length - 1; i >= 0; i -= 1) {
+    const resolved = resolveSegment(destinations, parts[i]!, parts[i + 1]);
+    if (resolved) return resolved;
+  }
+  return null;
 }
 
 /**
@@ -142,15 +217,17 @@ export function createShellBridge(deps: BridgeDeps): ShellBridge {
       if (action.actionType !== 'navigate') {
         return { ok: false, label: `I don’t know how to “${action.actionType}” in this dashboard` };
       }
-      const target = resolveDestination(deps.destinations, action.parameters.pathKey);
-      if (!target) {
+      const resolved = resolvePathKey(deps.destinations, action.parameters.pathKey);
+      if (!resolved) {
         const named = typeof action.parameters.pathKey === 'string' ? action.parameters.pathKey : '';
         return {
           ok: false,
           label: named ? `There is no “${named}” page here` : 'That navigation had no destination',
         };
       }
-      const params = actionParams(action.parameters);
+      const target = resolved.destination;
+      const params = resolved.params;
+      for (const [key, value] of actionParams(action.parameters)) params.set(key, value);
       const from = deps.currentUrl();
       const to = buildUrl(target.id, params);
       if (from === to) return { ok: true, label: `Already on ${target.title}` };

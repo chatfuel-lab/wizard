@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { actionParams, createShellBridge, resolveDestination, type Destination } from './shellBridge';
+import { actionParams, createShellBridge, resolveDestination, resolvePathKey, type Destination } from './shellBridge';
 
 /**
  * Ids and titles as the registry carries them — including the two modules
@@ -76,6 +76,86 @@ describe('resolveDestination', () => {
   });
 });
 
+const ALL_DESTINATIONS: Destination[] = [
+  ...DESTINATIONS,
+  { id: 'bookings', title: 'Bookings' },
+  { id: 'broadcasts', title: 'Broadcasts' },
+  { id: 'channels', title: 'Channels' },
+];
+
+const resolved = (pathKey: unknown, destinations: Destination[] = ALL_DESTINATIONS) => {
+  const result = resolvePathKey(destinations, pathKey);
+  return result ? { id: result.destination.id, params: Object.fromEntries(result.params) } : null;
+};
+
+describe('resolvePathKey', () => {
+  it.each([
+    ['FuelyAIAutomations', 'automations'],
+    ['FuelyAIProfile', 'automations'],
+    ['FuelyAITasksChats', 'automations'],
+    ['FuelyAITasksOperations', 'automations'],
+    ['FuelyAITasksReminders', 'automations'],
+    ['FuelyAIComments', 'automations'],
+    ['Keywords', 'automations'],
+    ['FuelyAIBroadcasts', 'broadcasts'],
+    ['KnowledgeBase', 'knowledge-base'],
+    ['KnowledgeBaseGoogleCalendarSync', 'knowledge-base'],
+    ['Calendar', 'bookings'],
+    ['CalendarSettings', 'bookings'],
+    ['CalendarReminders', 'bookings'],
+    ['CalendarMessagesSource', 'bookings'],
+    ['Flows', 'flow-builder'],
+    ['Chats', 'livechat'],
+    ['SettingsWhatsApp', 'channels'],
+    ['SettingsInstagram', 'channels'],
+    ['SettingsTikTok', 'channels'],
+    ['SettingsFacebook', 'channels'],
+    ['SettingsWebWidget', 'channels'],
+    ['SettingsWhatsAppConnect', 'channels'],
+    ['SettingsWebWidgetConnect', 'channels'],
+  ])('lands the agent page key %s on %s', (pathKey, id) => {
+    expect(resolved(pathKey)).toEqual({ id, params: {} });
+  });
+
+  it('opens the knowledge base on the source the key names', () => {
+    expect(resolved('KnowledgeBaseGeneral')).toEqual({ id: 'knowledge-base', params: { source: 'profile' } });
+    expect(resolved('KnowledgeBaseFAQ')).toEqual({ id: 'knowledge-base', params: { source: 'faq' } });
+    expect(resolved('KnowledgeBaseCatalog')).toEqual({ id: 'knowledge-base', params: { source: 'products' } });
+    expect(resolved('KnowledgeBaseSpecialists')).toEqual({ id: 'knowledge-base', params: { source: 'team' } });
+  });
+
+  it('carries the id of a parameterized key as the module deep link', () => {
+    expect(resolved('FlowID/f1')).toEqual({ id: 'flow-builder', params: { flow: 'f1' } });
+    expect(resolved('ConversationID/c9')).toEqual({ id: 'livechat', params: { c: 'c9' } });
+    expect(resolved('AutomationID/a7')).toEqual({ id: 'automations', params: { automation: 'a7' } });
+    expect(resolved('FlowID/')).toEqual({ id: 'flow-builder', params: {} });
+  });
+
+  it('reads a raw Chatfuel path by the segment that names a page', () => {
+    expect(resolved('/automation/bot1/chats/c9')).toEqual({ id: 'livechat', params: { c: 'c9' } });
+    expect(resolved('/automation/bot1/nowhere')).toBeNull();
+  });
+
+  it('leaves the pages this shell does not have unresolved', () => {
+    for (const pathKey of ['Billing', 'SettingsTeammates', 'SettingsAPI', 'SettingsChats', 'PreviewChat']) {
+      expect(resolved(pathKey)).toBeNull();
+    }
+  });
+
+  it('resolves to nothing when the target module is not installed', () => {
+    const without = ALL_DESTINATIONS.filter((d) => !['channels', 'flow-builder', 'livechat'].includes(d.id));
+    expect(resolved('SettingsWhatsApp', without)).toBeNull();
+    expect(resolved('FlowID/f1', without)).toBeNull();
+    expect(resolved('/automation/bot1/chats/c9', without)).toBeNull();
+  });
+
+  it('refuses anything that is not a usable name', () => {
+    expect(resolved(undefined)).toBeNull();
+    expect(resolved('')).toBeNull();
+    expect(resolved('/')).toBeNull();
+  });
+});
+
 describe('actionParams', () => {
   it('takes scalars and drops anything structural', () => {
     const params = actionParams({ params: { c: 'abc', n: 7, ok: true, deep: { a: 1 }, arr: [1], nil: null } });
@@ -141,6 +221,23 @@ describe('createShellBridge.run', () => {
     const { api, navigate } = bridge();
     api.run({ actionType: 'navigate', parameters: { pathKey: 'Deals', params: { deal: 'c1' } } });
     expect(navigate).toHaveBeenCalledWith('deals', new URLSearchParams('deal=c1'));
+  });
+
+  it('deep-links a parameterized key, explicit params winning', () => {
+    const { api, navigate } = bridge();
+    const result = api.run({ actionType: 'navigate', parameters: { pathKey: 'FlowID/f1', params: { b: 'b2' } } });
+    expect(result).toMatchObject({ ok: true, label: 'Opened Flows' });
+    expect(navigate).toHaveBeenCalledWith('flow-builder', new URLSearchParams('flow=f1&b=b2'));
+    api.run({ actionType: 'navigate', parameters: { pathKey: 'FlowID/f1', params: { flow: 'f2' } } });
+    expect(navigate).toHaveBeenLastCalledWith('flow-builder', new URLSearchParams('flow=f2'));
+  });
+
+  it('reports a known agent key whose module is not installed', () => {
+    const { api, navigate } = bridge();
+    const result = api.run({ actionType: 'navigate', parameters: { pathKey: 'SettingsWhatsApp' } });
+    expect(result.ok).toBe(false);
+    expect(result.label).toContain('SettingsWhatsApp');
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('does nothing, and says so, for a page that is not here', () => {
