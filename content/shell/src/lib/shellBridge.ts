@@ -97,10 +97,6 @@ const PATH_KEY_ALIASES: Readonly<Record<string, string>> = {
   settingswebwidgetconnect: 'channels',
 };
 
-/**
- * Where a page name lands inside its module, for the modules that deep-link:
- * the knowledge base opens on a source rather than on its overview.
- */
 const PATH_KEY_PARAMS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   knowledgebasegeneral: { source: 'profile' },
   knowledgebasefaq: { source: 'faq' },
@@ -108,11 +104,6 @@ const PATH_KEY_PARAMS: Readonly<Record<string, Readonly<Record<string, string>>>
   knowledgebasespecialists: { source: 'team' },
 };
 
-/**
- * `FlowID/<id>`, `ConversationID/<id>`, and the `chats/<id>` segment of a raw
- * Chatfuel path: the name picks the module, the id goes on as that module's
- * own deep-link param.
- */
 const ID_PARAMS: Readonly<Record<string, string>> = {
   flowid: 'flow',
   conversationid: 'c',
@@ -158,11 +149,6 @@ const resolveSegment = (
   return { destination, params };
 };
 
-/**
- * A `pathKey` as the assistant sends it: a page name, a parameterized
- * `Name/<id>`, or a raw Chatfuel path like `/automation/<botId>/chats/<id>`,
- * where the rightmost segment that names a page wins.
- */
 export function resolvePathKey(destinations: readonly Destination[], pathKey: unknown): Resolved | null {
   if (typeof pathKey !== 'string') return null;
   const segments = pathKey.split('/').map((segment) => segment.trim());
