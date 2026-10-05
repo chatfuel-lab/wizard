@@ -21,8 +21,8 @@
   "dependencies": {
     "graphql": "^16.9.0",
     "https-proxy-agent": "^9.0.0",
-    "undici": "^8.10.0",
-    "ws": "^8.18.0"
+    "undici": "^8.11.2",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@chatfuel/api-client": "workspace:*",
